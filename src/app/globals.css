@@ -1,0 +1,314 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+@font-face {
+  font-family: "Cooper Hewitt";
+  src: url("../fonts/cooperhewitt-book.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Cooper Hewitt";
+  src: url("../fonts/cooperhewitt-medium.woff2") format("woff2");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Cooper Hewitt";
+  src: url("../fonts/cooperhewitt-bold.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  color-scheme: light;
+  --fin-blue: #274285;
+  --fin-blue-hover: #1e3269;
+  --fin-sky: #0f89cb;
+  --fin-gold: #edb717;
+  --fin-red: #e23e4e;
+  --fin-red-accessible: #c73544;
+  --fin-white: #fff;
+  --fin-ink: #151d2e;
+  --fin-muted: #505d70;
+  --fin-canvas: #f5f7fa;
+  --fin-border: #d1d5db;
+  --fin-line: #e3e7ed;
+  --fin-soft-blue: #eef3fc;
+  --fin-green: #176b43;
+  --fin-soft-green: #e7f5ec;
+  --fin-amber: #775100;
+  --fin-soft-amber: #fff2cc;
+  --fin-danger: #a02534;
+  --fin-soft-danger: #fbecef;
+  --fin-focus: #3579d4;
+  --background: var(--fin-canvas);
+  --foreground: var(--fin-ink);
+  --card: var(--fin-white);
+  --card-foreground: var(--fin-ink);
+  --popover: var(--fin-white);
+  --popover-foreground: var(--fin-ink);
+  --primary: var(--fin-blue);
+  --primary-foreground: var(--fin-white);
+  --secondary: var(--fin-white);
+  --secondary-foreground: var(--fin-blue);
+  --muted: #f8fafc;
+  --muted-foreground: var(--fin-muted);
+  --accent: var(--fin-soft-blue);
+  --accent-foreground: var(--fin-blue);
+  --destructive: var(--fin-danger);
+  --border: var(--fin-line);
+  --input: var(--fin-border);
+  --ring: var(--fin-focus);
+  --chart-1: var(--fin-blue);
+  --chart-2: var(--fin-sky);
+  --chart-3: var(--fin-gold);
+  --chart-4: var(--fin-red);
+  --chart-5: var(--fin-green);
+  --radius: 16px;
+  --sidebar: var(--fin-blue);
+  --sidebar-foreground: var(--fin-white);
+  --sidebar-primary: var(--fin-white);
+  --sidebar-primary-foreground: var(--fin-blue);
+  --sidebar-accent: var(--fin-white);
+  --sidebar-accent-foreground: var(--fin-blue);
+  --sidebar-border: rgb(255 255 255 / 0.22);
+  --sidebar-ring: var(--fin-white);
+  --success: var(--fin-green);
+  --success-soft: var(--fin-soft-green);
+  --warning: var(--fin-amber);
+  --warning-soft: var(--fin-soft-amber);
+  --danger-soft: var(--fin-soft-danger);
+}
+
+@theme inline {
+  --font-sans: "Cooper Hewitt", ui-sans-serif, system-ui, sans-serif;
+  --font-heading: "Cooper Hewitt", ui-sans-serif, system-ui, sans-serif;
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
+  --color-danger-soft: var(--danger-soft);
+  --color-sky: var(--fin-sky);
+  --color-gold: var(--fin-gold);
+  --color-crimson: var(--fin-red);
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 16px;
+  --radius-2xl: 16px;
+  --radius-3xl: 16px;
+  --radius-4xl: 16px;
+}
+
+.dark {
+  --background: var(--fin-ink);
+  --foreground: var(--fin-white);
+  --card: #1c2740;
+  --card-foreground: var(--fin-white);
+  --popover: #1c2740;
+  --popover-foreground: var(--fin-white);
+  --primary: #8eace8;
+  --primary-foreground: var(--fin-ink);
+  --secondary: #243456;
+  --secondary-foreground: var(--fin-white);
+  --muted: #243456;
+  --muted-foreground: #c5d0e0;
+  --accent: #243456;
+  --accent-foreground: var(--fin-white);
+  --destructive: #ffb4b8;
+  --border: #ffffff1a;
+  --input: #ffffff26;
+  --ring: var(--fin-focus);
+  --sidebar: var(--fin-blue);
+  --sidebar-foreground: var(--fin-white);
+  --sidebar-primary: var(--fin-white);
+  --sidebar-primary-foreground: var(--fin-blue);
+  --sidebar-accent: #1e3269;
+  --sidebar-accent-foreground: var(--fin-white);
+  --sidebar-border: #ffffff1a;
+  --sidebar-ring: var(--fin-focus);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    @apply font-sans text-base;
+  }
+  body {
+    @apply bg-background text-foreground;
+    margin: 0;
+    font-weight: 500;
+    line-height: 1.5;
+  }
+  button,
+  input,
+  select,
+  textarea {
+    font: inherit;
+  }
+  button {
+    cursor: pointer;
+  }
+  :focus-visible {
+    outline: 3px solid var(--fin-focus);
+    outline-offset: 3px;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      scroll-behavior: auto !important;
+      transition: none !important;
+      animation: none !important;
+    }
+  }
+}
+
+/* Navigation institutionnelle : surfaces unies et contraste lisible. */
+.institution-sidebar,
+[data-slot="sidebar"][data-mobile="true"] {
+  --sidebar: var(--fin-blue);
+  --sidebar-foreground: #ffffff;
+  --sidebar-primary: #ffffff;
+  --sidebar-primary-foreground: var(--fin-blue);
+  --sidebar-accent: #1e3269;
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: #e3e7ed;
+  --sidebar-ring: #ffffff;
+}
+
+.institution-sidebar [data-slot="sidebar-group-label"],
+[data-mobile="true"] [data-slot="sidebar-group-label"] {
+  color: #ffffffb8;
+  font-size: 12px;
+  margin-bottom: 8px;
+}
+
+.institution-sidebar [data-slot="sidebar-menu-button"][data-active],
+[data-mobile="true"] [data-slot="sidebar-menu-button"][data-active] {
+  background: #ffffff;
+  color: var(--fin-blue);
+  font-weight: 700;
+}
+
+.institution-sidebar [data-slot="sidebar-separator"],
+[data-mobile="true"] [data-slot="sidebar-separator"] {
+  background: #ffffff26;
+}
+
+.login-page {
+  min-height: 100svh;
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  padding: 20px;
+  background: var(--fin-white);
+}
+.login-identity {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 48px;
+  padding: 44px 48px 30px;
+  border-radius: 24px;
+  background: var(--fin-blue);
+  color: var(--fin-white);
+}
+.login-ministry { display: grid; gap: 6px; }
+.login-ministry > span { font-size: 12px; color: #ffffffb8; }
+.login-ministry > strong { font-size: 17px; }
+.login-brand { display: flex; flex-direction: column; gap: 32px; padding-block: 24px; }
+.login-emblem { position: relative; display: block; width: 112px; height: 112px; overflow: hidden; }
+.login-emblem img { position: absolute; top: 0; left: 0; height: 112px; width: auto; max-width: none; }
+.login-brand h1 { font-size: clamp(32px, 3.5vw, 52px); line-height: 1.15; font-weight: 700; letter-spacing: -1.5px; }
+.login-identity-footer { display: flex; justify-content: space-between; gap: 16px; font-size: 12px; color: #ffffffb8; }
+.login-access { position: relative; display: flex; align-items: center; justify-content: center; padding: 72px 48px; }
+.login-form-container { width: 100%; max-width: 380px; display: flex; flex-direction: column; gap: 36px; }
+.login-heading { display: flex; flex-direction: column; gap: 12px; }
+.login-section-label { font-size: 12px; color: var(--fin-muted); }
+.login-heading h2 { font-size: 36px; line-height: 1.2; letter-spacing: -1px; font-weight: 700; color: var(--fin-ink); }
+.login-heading p { font-size: 14px; color: var(--fin-muted); }
+.login-form-container [data-slot="button"] { min-height: 48px; }
+.login-assistance { font-size: 12px; line-height: 1.8; color: var(--fin-ink); }
+.login-assistance span { color: var(--fin-muted); }
+.login-access-footer { position: absolute; bottom: 30px; font-size: 12px; color: var(--fin-muted); }
+@media (min-width: 1500px) {
+  .login-identity { padding: 56px 64px 36px; }
+}
+@media (max-width: 1023px) {
+  .login-page { padding: 12px; grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr); }
+  .login-identity { padding: 32px 28px; }
+  .login-access { padding-inline: 32px; }
+  .login-identity-footer { flex-direction: column; gap: 4px; }
+}
+@media (max-width: 767px) {
+  .login-page { grid-template-columns: minmax(0, 1fr); padding: 12px; align-content: start; }
+  .login-identity { gap: 28px; padding: 24px; border-radius: 18px; }
+  .login-ministry { gap: 4px; }
+  .login-ministry > span { font-size: 10px; }
+  .login-ministry > strong { font-size: 14px; }
+  .login-brand { flex-direction: row; align-items: center; gap: 20px; padding: 0; }
+  .login-emblem { width: 64px; height: 64px; flex-shrink: 0; }
+  .login-emblem img { height: 64px; }
+  .login-brand h1 { font-size: 26px; letter-spacing: -0.7px; }
+  .login-identity-footer { display: none; }
+  .login-access { padding: 40px 20px 64px; }
+  .login-form-container { gap: 28px; }
+  .login-heading { gap: 8px; }
+  .login-heading h2 { font-size: 30px; }
+  .login-access-footer { bottom: 12px; }
+}
+
+.login-form-container {
+  max-width: 444px;
+  padding: 32px;
+  border: 1px solid var(--fin-line);
+  border-radius: 20px;
+  background: var(--fin-white);
+  box-shadow: 0 8px 32px rgb(21 29 46 / 4%);
+}
+@media (max-width: 767px) {
+  .login-access { padding-inline: 4px; }
+  .login-form-container { padding: 24px 20px; border-radius: 16px; }
+}
