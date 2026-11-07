@@ -28,7 +28,6 @@ export default function LoginPage() {
           <div className="login-heading">
             <span className="login-section-label">Accès à la plateforme</span>
             <h2 id="connexion-title">Connexion</h2>
-            <p>Identifiez-vous pour accéder à votre espace.</p>
           </div>
           <LoginForm />
           <p className="login-assistance">Un problème d’accès ?<br /><span>Contactez votre administrateur.</span></p>

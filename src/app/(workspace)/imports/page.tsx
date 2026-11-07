@@ -16,7 +16,7 @@ type Run = { id: string; status: string; createdReports: number; skippedReports:
 type History = { runs: Run[]; page: number; size: number; total: number; scheduleEnabled: boolean; cron: string; timezone: string; active: boolean; nextRun: string | null };
 const statuses: Record<string, string> = { queued: "En attente", running: "En cours", completed: "Terminé", failed: "Échec" };
 const triggers: Record<string, string> = { manual: "Manuel", retry: "Relance", scheduled: "Automatique", startup: "Démarrage" };
-const errors: Record<string, string> = { "circuit-open": "API temporairement suspendue après plusieurs échecs. Réessayez dans une minute.", interrupted: "Interrompu après arrêt du service", "missing-photo": "Photos manquantes", source: "Source indisponible", "page-limit": "Limite de pages atteinte", "import-error": "Traitement interrompu", "dispatch-error": "Lancement impossible" };
+const errors: Record<string, string> = { "circuit-open": "Récupération temporairement indisponible. Réessayez dans une minute.", interrupted: "Import interrompu. Relancez la période.", "missing-photo": "Photos manquantes", source: "Récupération des signalements indisponible", "page-limit": "Import incomplet. Réduisez la période et relancez.", "import-error": "Traitement interrompu", "dispatch-error": "Impossible de lancer l’import. Réessayez." };
 function time(value: string) { return new Intl.DateTimeFormat("fr-FR", { dateStyle: "short", timeStyle: "short", timeZone: "Africa/Kinshasa" }).format(new Date(value)); }
 
 export default function Page({ searchParams }: PageProps<"/imports">) {

@@ -1,4 +1,4 @@
-export type AccountRole = "AGENT" | "SUPERVISOR" | "AUDITOR" | "ADMINISTRATOR";
+export type AccountRole = "AGENT" | "SUPERVISOR" | "AUDITOR" | "ADMINISTRATOR" | "CELLULE" | "CABINET" | "PAYMASTER";
 
 export type Account = {
   id: string;
@@ -33,6 +33,9 @@ const ROLE_LABELS: Record<AccountRole, string> = {
   SUPERVISOR: "Superviseur",
   AUDITOR: "Auditeur",
   ADMINISTRATOR: "Administrateur",
+  CELLULE: "Cellule fiscale",
+  CABINET: "Cabinet",
+  PAYMASTER: "Gestionnaire de paiement",
 };
 
 export function roleLabel(role: AccountRole): string {

@@ -67,6 +67,18 @@ export async function readJson<T>(path: string): Promise<T> {
   return (await response.json()) as T;
 }
 
+export async function readOutcome<T>(path: string): Promise<{ ok: true; body: T } | { ok: false; message: string }> {
+  const response = await fetch(new URL(path, backendUrl()), {
+    cache: "no-store",
+    headers: { cookie: await cookieHeader() },
+  });
+  if (response.ok) {
+    return { ok: true, body: (await response.json()) as T };
+  }
+  const error = (await response.json().catch(() => null)) as ApiError | null;
+  return { ok: false, message: error?.message ?? "Les informations saisies ne sont pas acceptées." };
+}
+
 export async function readOptionalJson<T>(path: string): Promise<T | null> {
   const response = await fetch(new URL(path, backendUrl()), {
     cache: "no-store",
@@ -129,6 +141,26 @@ export async function writeJson<T = null>(path: string, method: string, body?: u
     if (response.status === 204) {
       return { ok: true, body: null };
     }
+    const text = await response.text();
+    return { ok: true, body: text ? (JSON.parse(text) as T) : null };
+  }
+  const error = (await response.json().catch(() => null)) as ApiError | null;
+  return { ok: false, message: error?.message ?? "Les informations saisies ne sont pas acceptées." };
+}
+
+export async function writeForm<T = null>(path: string, formData: FormData): Promise<WriteResult<T>> {
+  const token = await protectionToken();
+  const response = await fetch(new URL(path, backendUrl()), {
+    method: "POST",
+    cache: "no-store",
+    headers: {
+      cookie: await cookieHeader(),
+      "X-XSRF-TOKEN": token,
+    },
+    body: formData,
+  });
+  await storeCookies(response);
+  if (response.ok) {
     const text = await response.text();
     return { ok: true, body: text ? (JSON.parse(text) as T) : null };
   }

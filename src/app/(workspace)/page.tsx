@@ -27,6 +27,7 @@ async function Dashboard() {
   const account = await readCurrentAccount();
   if (!account) redirect("/connexion");
   const admin = account.role === "ADMINISTRATOR";
+  const reader = ["AGENT", "SUPERVISOR", "AUDITOR", "ADMINISTRATOR"].includes(account.role);
   const [reports, accounts, availability] = await Promise.all([
     readReports().catch(() => null),
     admin ? readAccounts().catch(() => null) : Promise.resolve(null),
@@ -44,6 +45,7 @@ async function Dashboard() {
       </div>
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         <Card><CardHeader><CardTitle>Signalements enregistrés</CardTitle></CardHeader><CardContent><p className="text-4xl font-bold tabular-nums text-primary">{reports?.total.toLocaleString("fr-FR") ?? "—"}</p><Link href="/signalements" className="mt-4 inline-block text-sm text-primary underline-offset-4 hover:underline">Consulter les signalements</Link></CardContent></Card>
+        {reader ? <Card><CardHeader><CardTitle>Indicateurs</CardTitle></CardHeader><CardContent><p className="text-sm text-muted-foreground">La semaine et le mois sont calculés à la lecture.</p><Link href="/indicateurs" className="mt-4 inline-block text-sm text-primary underline-offset-4 hover:underline">Consulter les indicateurs</Link></CardContent></Card> : null}
         {admin ? <Card><CardHeader><CardTitle>Comptes utilisateurs</CardTitle></CardHeader><CardContent><p className="text-4xl font-bold tabular-nums text-primary">{accounts?.total.toLocaleString("fr-FR") ?? "—"}</p><Link href="/comptes" className="mt-4 inline-block text-sm text-primary underline-offset-4 hover:underline">Gérer les comptes</Link></CardContent></Card> : null}
         <Card><CardHeader><CardTitle>État du service</CardTitle></CardHeader><CardContent><Badge variant={availability.available ? "success" : "destructive"}>{availability.available ? "Disponible" : "Indisponible"}</Badge><p className="mt-4 text-sm text-muted-foreground">{availability.message}</p></CardContent></Card>
       </div>

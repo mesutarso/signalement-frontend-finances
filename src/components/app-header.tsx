@@ -9,11 +9,36 @@ import { roleLabel } from "@/modules/access/model/account";
 const PAGE_LABELS: Record<string, string> = {
   "/": "Tableau de bord",
   "/signalements": "Signalements",
+  "/dossiers": "Dossiers",
+  "/points": "Points",
+  "/primes": "Primes",
+  "/etats": "États de paiement",
+  "/contribuables": "Contribuables",
+  "/echantillons": "Échantillons",
+  "/tirages": "Tirages",
+  "/declarants": "Situation du déclarant",
+  "/indicateurs": "Indicateurs",
+  "/corrections": "Corrections",
+  "/reexamens": "Réexamens",
+  "/messages": "Messages",
+  "/regles": "Règles",
+  "/courriers": "Courriers",
   "/imports": "Imports",
+  "/indices": "Indices",
+  "/supervision": "Contrôle",
+  "/journal": "Journal",
   "/compte": "Mon compte",
   "/comptes": "Comptes",
   "/connexion": "Connexion",
 };
+
+function pageLabel(pathname: string): string {
+  return Object.entries(PAGE_LABELS)
+    .filter(([path]) => path !== "/")
+    .sort((left, right) => right[0].length - left[0].length)
+    .find(([path]) => pathname === path || pathname.startsWith(`${path}/`))?.[1]
+    ?? (pathname === "/" ? "Tableau de bord" : "Signalements");
+}
 
 export function AppHeader({ account }: { account: Account | null }) {
   const pathname = usePathname();
@@ -23,7 +48,7 @@ export function AppHeader({ account }: { account: Account | null }) {
       <div className="flex min-w-0 items-center gap-3 md:gap-5">
         <SidebarTrigger />
         <nav aria-label="Fil d’Ariane" className="flex min-w-0 items-center gap-4 text-sm">
-          <span aria-current="page" className="truncate font-bold">{PAGE_LABELS[pathname] ?? "Signalements"}</span>
+          <span aria-current="page" className="truncate font-bold">{pageLabel(pathname)}</span>
         </nav>
       </div>
       {account ? (

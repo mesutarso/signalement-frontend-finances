@@ -5,9 +5,21 @@ import { useState } from "react";
 import { Dialog } from "@base-ui/react/dialog";
 import { Button } from "@/components/ui/button";
 import { Empty, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
-import type { ReportPhoto } from "@/modules/report/model/report";
+import type { PhotoRequest, ReportPhoto } from "@/modules/report/model/report";
+import { PhotoReading } from "@/modules/report/ui/photo-reading";
+import { PhotoRequestPanel } from "@/modules/report/ui/photo-request-panel";
 
-export function ReportPhotos({ reportId, photos }: { reportId: string; photos: ReportPhoto[] }) {
+export function ReportPhotos({
+  reportId,
+  photos,
+  photoRequests,
+  canRequest,
+}: {
+  reportId: string;
+  photos: ReportPhoto[];
+  photoRequests: PhotoRequest[];
+  canRequest: boolean;
+}) {
   const [selected, setSelected] = useState(0);
   const [failed, setFailed] = useState<string | null>(null);
   if (!photos.length) return <Empty><EmptyHeader><EmptyTitle>Aucune pièce jointe</EmptyTitle></EmptyHeader></Empty>;
@@ -33,6 +45,8 @@ export function ReportPhotos({ reportId, photos }: { reportId: string; photos: R
         </Dialog.Portal>
       </Dialog.Root>
       {photos.length > 1 ? <div aria-label="Choisir une pièce jointe" className="flex gap-2 overflow-x-auto pb-2">{photos.map((item, index) => <button key={item.id} type="button" aria-label={`Afficher la pièce ${index + 1}`} aria-pressed={selected === index} onClick={() => setSelected(index)} className="relative h-20 w-24 shrink-0 overflow-hidden rounded-md border bg-muted aria-pressed:ring-2 aria-pressed:ring-foreground"><Image src={`/signalements/${reportId}/photos/${item.id}`} alt="" fill unoptimized sizes="96px" className="object-contain p-1" /></button>)}</div> : null}
+      <PhotoReading reportId={reportId} photo={photo} canRequest={canRequest} />
+      <PhotoRequestPanel reportId={reportId} photo={photo} requests={photoRequests} canRequest={canRequest} />
     </div>
   );
 }

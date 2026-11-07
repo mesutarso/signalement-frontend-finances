@@ -51,6 +51,9 @@ export function AccountForm({ onSuccess }: { onSuccess?: () => void }) {
             <NativeSelectOption value="SUPERVISOR">Superviseur</NativeSelectOption>
             <NativeSelectOption value="AUDITOR">Auditeur</NativeSelectOption>
             <NativeSelectOption value="ADMINISTRATOR">Administrateur</NativeSelectOption>
+            <NativeSelectOption value="CELLULE">Cellule fiscale</NativeSelectOption>
+            <NativeSelectOption value="CABINET">Cabinet</NativeSelectOption>
+            <NativeSelectOption value="PAYMASTER">Gestionnaire de paiement</NativeSelectOption>
           </NativeSelect>
         </Field>
         {error ? <FieldError>{error}</FieldError> : null}

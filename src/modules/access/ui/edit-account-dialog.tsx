@@ -9,7 +9,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { updateAccount } from "@/modules/access/actions/update-account";
 import { roleLabel, type Account, type AccountRole } from "@/modules/access/model/account";
 
-const roles: AccountRole[] = ["AGENT", "SUPERVISOR", "AUDITOR", "ADMINISTRATOR"];
+const roles: AccountRole[] = ["AGENT", "SUPERVISOR", "AUDITOR", "ADMINISTRATOR", "CELLULE", "CABINET", "PAYMASTER"];
 
 function EditForm({ account, onSuccess, onPending }: { account: Account; onSuccess: () => void; onPending: (pending: boolean) => void }) {
   const [error, submit, pending] = useActionState(async (current: string | null, data: FormData) => {

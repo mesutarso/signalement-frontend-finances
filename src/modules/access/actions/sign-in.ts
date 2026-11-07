@@ -9,9 +9,10 @@ export async function signIn(_current: string | null, formData: FormData): Promi
   if (typeof input === "string") {
     return input;
   }
-  const result = await writeJson("/api/auth", "POST", input);
+  const result = await writeJson<{ role?: string }>("/api/auth", "POST", input);
   if (!result.ok) {
     return result.message;
   }
-  redirect("/signalements");
+  const role = result.body?.role;
+  redirect(role === "CELLULE" || role === "CABINET" || role === "PAYMASTER" ? "/etats" : "/signalements");
 }

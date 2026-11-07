@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-const PROTECTED = ["/compte", "/comptes", "/signalements", "/imports"];
+const PROTECTED = ["/compte", "/comptes", "/signalements", "/imports", "/indices", "/journal", "/supervision", "/dossiers", "/courriers", "/points", "/primes", "/etats", "/contribuables", "/echantillons", "/tirages", "/declarants", "/indicateurs", "/corrections", "/reexamens", "/messages", "/regles"];
 
 function protectedPath(pathname: string): boolean {
   return PROTECTED.some((path) => pathname === path || pathname.startsWith(`${path}/`));
@@ -46,6 +46,40 @@ export const config = {
     "/signalements/:path*",
     "/imports",
     "/imports/:path*",
+    "/indices",
+    "/indices/:path*",
+    "/journal",
+    "/journal/:path*",
+    "/supervision",
+    "/supervision/:path*",
+    "/dossiers",
+    "/dossiers/:path*",
+    "/courriers",
+    "/courriers/:path*",
+    "/points",
+    "/points/:path*",
+    "/primes",
+    "/primes/:path*",
+    "/etats",
+    "/etats/:path*",
+    "/contribuables",
+    "/contribuables/:path*",
+    "/echantillons",
+    "/echantillons/:path*",
+    "/tirages",
+    "/tirages/:path*",
+    "/declarants",
+    "/declarants/:path*",
+    "/indicateurs",
+    "/indicateurs/:path*",
+    "/corrections",
+    "/corrections/:path*",
+    "/reexamens",
+    "/reexamens/:path*",
+    "/messages",
+    "/messages/:path*",
+    "/regles",
+    "/regles/:path*",
     "/connexion",
   ],
 };

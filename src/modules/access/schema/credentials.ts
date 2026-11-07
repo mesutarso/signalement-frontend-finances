@@ -25,7 +25,7 @@ export function readAccount(formData: FormData): AccountInput | string {
   if (passwordError) {
     return passwordError;
   }
-  if (!["AGENT", "SUPERVISOR", "AUDITOR", "ADMINISTRATOR"].includes(role)) {
+  if (!["AGENT", "SUPERVISOR", "AUDITOR", "ADMINISTRATOR", "CELLULE", "CABINET", "PAYMASTER"].includes(role)) {
     return "Choisissez un rôle.";
   }
   return { username, password, role };
