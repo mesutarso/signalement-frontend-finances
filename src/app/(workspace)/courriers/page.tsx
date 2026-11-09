@@ -6,10 +6,11 @@ import { readCurrentAccount } from "@/modules/access/queries/read-current-accoun
 import { calendarLabel, reportedAtLabel } from "@/modules/report/model/report";
 import { PrepareLetterForm } from "@/modules/report/ui/prepare-letter-form";
 import { Alert, AlertTitle } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
 import { TablePagination } from "@/components/table-pagination";
+import { Page, PageHeader, PageSkeleton } from "@/components/page";
+import { Badge } from "@/components/ui/badge";
+import { ViewTabs } from "@/components/view-tabs";
+import { Ledger, LedgerEmpty, LedgerItem } from "@/components/ledger";
 
 type Letter = {
   id: string;
@@ -36,7 +37,7 @@ const STATUS: Record<string, string> = {
 };
 
 export default function LettersPage({ searchParams }: PageProps<"/courriers">) {
-  return <Suspense fallback={<Skeleton className="h-96 w-full" />}><Letters searchParams={searchParams} /></Suspense>;
+  return <Suspense fallback={<PageSkeleton />}><Letters searchParams={searchParams} /></Suspense>;
 }
 
 async function Letters({ searchParams }: Pick<PageProps<"/courriers">, "searchParams">) {
@@ -54,37 +55,29 @@ async function Letters({ searchParams }: Pick<PageProps<"/courriers">, "searchPa
   const letters = await readJson<Page>(`/api/letters?status=${status}&page=${page}`).catch(() => null);
   const canPrepare = account.role === "SUPERVISOR" || account.role === "ADMINISTRATOR";
   return (
-    <section className="mx-auto flex w-full max-w-6xl flex-col gap-6">
-      <div className="grid gap-2">
-        <h1 className="text-3xl font-bold text-primary">Courriers</h1>
-      </div>
-      {canPrepare ? <PrepareLetterForm /> : null}
-      <form className="flex flex-wrap gap-2" method="get">
-        {FILTERS.map((filter) => (
-          <Button key={filter.value} type="submit" name="status" value={filter.value} variant={filter.value === status ? "default" : "outline"}>{filter.label}</Button>
-        ))}
-      </form>
-      {!letters ? <Alert variant="destructive"><AlertTitle>Les courriers sont indisponibles. Actualisez la page.</AlertTitle></Alert> : letters.items.length === 0 ? <p className="text-sm text-muted-foreground">{status === "waiting" ? "Aucun courrier validé n'attend de réponse." : "Aucun courrier."}</p> : (
-        <>
-          <div className="grid gap-4">
-            {letters.items.map((letter) => (
-              <Card key={letter.id}>
-                <CardHeader className="gap-2">
-                  <CardTitle>{letter.reference}</CardTitle>
-                  <p className="text-sm font-bold">{STATUS[letter.status] ?? letter.status}</p>
-                  <p className="text-sm text-muted-foreground">Semaine du {calendarLabel(letter.periodStart)} au {calendarLabel(letter.periodEnd)}</p>
-                </CardHeader>
-                <CardContent className="grid gap-2">
-                  <p className="text-xs text-muted-foreground">Préparé le {reportedAtLabel(letter.preparedAt)}. Envoi non enregistré.</p>
-                  {letter.reason ? <p className="text-sm">Motif : {letter.reason}</p> : null}
-                  <Link href={`/courriers/${letter.id}`} className="w-fit text-sm text-primary underline-offset-4 hover:underline">Ouvrir le courrier</Link>
-                </CardContent>
-              </Card>
-            ))}
+    <Page className="max-w-6xl">
+      <PageHeader title="Courriers" actions={canPrepare ? <PrepareLetterForm /> : undefined} />
+      <div className="grid gap-5">
+        <ViewTabs label="Filtrer les courriers" items={FILTERS.map((filter) => ({ href: `/courriers?status=${filter.value}`, label: filter.label, active: filter.value === status }))} />
+        {!letters ? <Alert variant="destructive"><AlertTitle>Les courriers sont indisponibles. Actualisez la page.</AlertTitle></Alert> : letters.items.length === 0 ? <LedgerEmpty className="border-t-0">{status === "waiting" ? "Aucun courrier validé n'attend de réponse." : "Aucun courrier."}</LedgerEmpty> : (
+          <div className="grid gap-5">
+            <Ledger>
+              {letters.items.map((letter) => (
+                <LedgerItem
+                  key={letter.id}
+                  title={<Link className="ref text-sm font-medium underline-offset-4 hover:text-primary hover:underline" href={`/courriers/${letter.id}`}>{letter.reference}</Link>}
+                  status={<Badge variant={letter.status === "validated" ? "success" : letter.status === "returned" ? "warning" : "outline"}>{STATUS[letter.status] ?? letter.status}</Badge>}
+                >
+                  <p>Semaine du {calendarLabel(letter.periodStart)} au {calendarLabel(letter.periodEnd)}</p>
+                  <p className="text-muted-foreground">Préparé le {reportedAtLabel(letter.preparedAt)}. Envoi non enregistré.</p>
+                  {letter.reason ? <p>Motif : {letter.reason}</p> : null}
+                </LedgerItem>
+              ))}
+            </Ledger>
+            <TablePagination page={letters.page} size={letters.size} total={letters.total} label="Pagination des courriers" />
           </div>
-          <TablePagination page={letters.page} size={letters.size} total={letters.total} label="Pagination des courriers" />
-        </>
-      )}
-    </section>
+        )}
+      </div>
+    </Page>
   );
 }

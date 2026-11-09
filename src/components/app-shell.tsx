@@ -1,3 +1,4 @@
+import { cookies } from "next/headers";
 import { AppSidebar } from "@/modules/access/ui/app-sidebar";
 import { readCurrentAccount } from "@/modules/access/queries/read-current-account";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
@@ -11,15 +12,16 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
   } catch {
     account = null;
   }
+  const defaultOpen = (await cookies()).get("sidebar_state")?.value !== "false";
 
   return (
     <TooltipProvider>
-      <SidebarProvider style={{ "--sidebar-width": "17.5rem", "--sidebar-width-icon": "4rem" } as React.CSSProperties}>
+      <SidebarProvider defaultOpen={defaultOpen} style={{ "--sidebar-width": "16.5rem", "--sidebar-width-icon": "4rem" } as React.CSSProperties}>
         <AppSidebar account={account} />
         <SidebarInset id="contenu">
           <AppHeader account={account} />
-          <div className="mx-auto flex w-full max-w-[1440px] flex-1 flex-col px-5 py-8 md:px-10 md:py-10">{children}</div>
-          <footer className="flex flex-wrap items-center justify-between gap-2 px-5 py-5 text-xs text-muted-foreground md:px-10">
+          <div className="flex w-full max-w-[1440px] flex-1 flex-col px-4 pt-8 pb-14 sm:px-6 md:px-10 md:pt-12 lg:px-14">{children}</div>
+          <footer className="flex flex-wrap items-center justify-between gap-x-6 gap-y-1 border-t px-4 py-4 text-xs text-muted-foreground sm:px-6 md:px-10 lg:px-14">
             <span>Ministère des Finances</span>
             <span>République démocratique du Congo</span>
           </footer>

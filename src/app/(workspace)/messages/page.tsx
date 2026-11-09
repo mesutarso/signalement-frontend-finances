@@ -6,8 +6,9 @@ import { reportedAtLabel } from "@/modules/report/model/report";
 import { ModelForm } from "@/modules/report/ui/model-form";
 import { MessageForm } from "@/modules/report/ui/reference-forms";
 import { Alert, AlertTitle } from "@/components/ui/alert";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Page, PageHeader, PageSection, PageSkeleton } from "@/components/page";
+import { ActionDialog } from "@/components/action-dialog";
+import { Ledger, LedgerEmpty, LedgerItem } from "@/components/ledger";
 
 type Item = { id: string; reportReference: string; kind: string; body: string; preparedAt: string };
 type Page = { items: Item[]; page: number; size: number; total: number };
@@ -23,7 +24,7 @@ const KINDS: Record<string, string> = {
 };
 
 export default function MessagesPage() {
-  return <Suspense fallback={<Skeleton className="h-96 w-full" />}><Messages /></Suspense>;
+  return <Suspense fallback={<PageSkeleton />}><Messages /></Suspense>;
 }
 
 async function Messages() {
@@ -38,30 +39,38 @@ async function Messages() {
   const models = await readJson<Models>("/api/document-models").catch(() => null);
   const canPrepare = account.role === "SUPERVISOR" || account.role === "ADMINISTRATOR";
   return (
-    <section className="mx-auto flex w-full max-w-6xl flex-col gap-6">
-      <div className="grid gap-2">
-        <h1 className="text-3xl font-bold text-primary">Messages</h1>
-        <p className="max-w-3xl text-sm text-muted-foreground">Le message préparé est le canal vers le déclarant. Il n&apos;est pas envoyé par SMS ni par courriel. Un nouveau modèle vaut pour les messages suivants.</p>
-      </div>
-      {canPrepare ? <MessageForm /> : null}
-      {canPrepare ? <ModelForm /> : null}
+    <Page className="max-w-6xl">
+      <PageHeader
+        title="Messages"
+        description="Le message préparé est le canal vers le déclarant. Il n'est pas envoyé par SMS ni par courriel. Un nouveau modèle vaut pour les messages suivants."
+        actions={canPrepare ? (
+          <>
+            <ActionDialog label="Nouveau modèle" title="Enregistrer un modèle"><ModelForm /></ActionDialog>
+            <ActionDialog label="Préparer un message" title="Préparer un message" variant="default"><MessageForm /></ActionDialog>
+          </>
+        ) : undefined}
+      />
+      {!messages ? <Alert variant="destructive"><AlertTitle>Les messages sont indisponibles. Actualisez la page.</AlertTitle></Alert> : messages.items.length === 0 ? <LedgerEmpty>Aucun message préparé.</LedgerEmpty> : (
+        <Ledger>
+          {messages.items.map((item) => (
+            <LedgerItem key={item.id} title={KINDS[item.kind] ?? item.kind} meta={`Préparé le ${reportedAtLabel(item.preparedAt)}`}>
+              <p className="ref text-muted-foreground">{item.reportReference}</p>
+              <p>{item.body}</p>
+            </LedgerItem>
+          ))}
+        </Ledger>
+      )}
       {models && models.models.length > 0 ? (
-        <Card>
-          <CardHeader className="gap-2"><CardTitle>Modèles en vigueur</CardTitle></CardHeader>
-          <CardContent className="grid gap-2 text-sm">
-            {models.models.map((model) => <p key={model.kind}><span className="font-bold">{KINDS[model.kind] ?? model.kind}. </span>{model.body}</p>)}
-          </CardContent>
-        </Card>
+        <PageSection title="Modèles en vigueur">
+          <Ledger>
+            {models.models.map((model) => (
+              <LedgerItem key={model.kind} title={KINDS[model.kind] ?? model.kind} className="py-3.5">
+                <p>{model.body}</p>
+              </LedgerItem>
+            ))}
+          </Ledger>
+        </PageSection>
       ) : null}
-      {!messages ? <Alert variant="destructive"><AlertTitle>Les messages sont indisponibles. Actualisez la page.</AlertTitle></Alert> : messages.items.length === 0 ? <p className="text-sm text-muted-foreground">Aucun message préparé.</p> : messages.items.map((item) => (
-        <Card key={item.id}>
-          <CardHeader className="gap-2"><CardTitle>{item.reportReference}</CardTitle></CardHeader>
-          <CardContent className="grid gap-2 text-sm">
-            <p>{KINDS[item.kind] ?? item.kind} · préparé le {reportedAtLabel(item.preparedAt)}</p>
-            <p>{item.body}</p>
-          </CardContent>
-        </Card>
-      ))}
-    </section>
+    </Page>
   );
 }

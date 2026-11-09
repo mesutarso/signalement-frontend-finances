@@ -6,9 +6,10 @@ import { readCurrentAccount } from "@/modules/access/queries/read-current-accoun
 import { reportedAtLabel } from "@/modules/report/model/report";
 import { Alert, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { TablePagination } from "@/components/table-pagination";
+import { Page, PageHeader, PageSkeleton } from "@/components/page";
+import { Badge } from "@/components/ui/badge";
 
 type Entry = {
   id: string;
@@ -137,7 +138,7 @@ const OBJECTS: Record<string, string> = {
 };
 
 export default function JournalPage({ searchParams }: PageProps<"/journal">) {
-  return <Suspense fallback={<Skeleton className="h-96 w-full" />}><Journal searchParams={searchParams} /></Suspense>;
+  return <Suspense fallback={<PageSkeleton />}><Journal searchParams={searchParams} /></Suspense>;
 }
 
 async function Journal({ searchParams }: Pick<PageProps<"/journal">, "searchParams">) {
@@ -160,37 +161,35 @@ async function Journal({ searchParams }: Pick<PageProps<"/journal">, "searchPara
   if (objectId) query.set("objectId", objectId);
   const journal = await readJson<Page>(`/api/audit?${query}`).catch(() => null);
   return (
-    <section className="mx-auto flex w-full max-w-6xl flex-col gap-6">
-      <div className="grid gap-2">
-        <h1 className="text-3xl font-bold text-primary">Journal</h1>
-      </div>
-      <form className="flex flex-wrap items-end gap-3" method="get">
-        <label className="grid gap-1 text-sm font-bold">Du<input className="h-11 rounded-md border border-input bg-card px-3 font-normal" type="date" name="from" defaultValue={from} /></label>
-        <label className="grid gap-1 text-sm font-bold">Au<input className="h-11 rounded-md border border-input bg-card px-3 font-normal" type="date" name="to" defaultValue={to} /></label>
-        <label className="grid min-w-64 flex-1 gap-1 text-sm font-bold">Objet<input className="h-11 rounded-md border border-input bg-card px-3 font-normal" name="objectId" defaultValue={objectId} maxLength={80} /></label>
-        <Button type="submit">Filtrer</Button>
+    <Page className="max-w-6xl">
+      <PageHeader title="Journal" />
+      <form className="flex flex-wrap items-end gap-2" method="get">
+        <label className="grid gap-2 text-[13px] font-medium">Du<input className="h-10 rounded-md border border-input bg-card px-3 text-[15px] font-normal" type="date" name="from" defaultValue={from} /></label>
+        <label className="grid gap-2 text-[13px] font-medium">Au<input className="h-10 rounded-md border border-input bg-card px-3 text-[15px] font-normal" type="date" name="to" defaultValue={to} /></label>
+        <label className="grid min-w-64 flex-1 gap-2 text-[13px] font-medium">Objet<input className="h-10 rounded-md border border-input bg-card px-3 text-[15px] font-normal" name="objectId" defaultValue={objectId} maxLength={80} /></label>
+        <Button type="submit" variant="outline">Filtrer</Button>
       </form>
       {!journal ? <Alert variant="destructive"><AlertTitle>Le journal est indisponible. Actualisez la page.</AlertTitle></Alert> : (
-        <>
+        <div className="grid gap-4">
           <Table aria-label="Journal des actions">
             <TableHeader><TableRow><TableHead>Date</TableHead><TableHead>Action</TableHead><TableHead>Objet</TableHead><TableHead>Résultat</TableHead><TableHead>Auteur</TableHead></TableRow></TableHeader>
             <TableBody>
               {journal.entries.map((entry) => (
                 <TableRow key={entry.id}>
-                  <TableCell>{reportedAtLabel(entry.recordedAt)}</TableCell>
-                  <TableCell>{ACTIONS[entry.action] ?? entry.action}</TableCell>
+                  <TableCell className="text-muted-foreground tabular-nums">{reportedAtLabel(entry.recordedAt)}</TableCell>
+                  <TableCell className="font-medium">{ACTIONS[entry.action] ?? entry.action}</TableCell>
                   <TableCell>{OBJECTS[entry.objectType] ?? entry.objectType}{journalHref(entry.objectType, entry.objectId) ? <> · <Link className="text-primary underline-offset-4 hover:underline" href={journalHref(entry.objectType, entry.objectId) ?? "/journal"}>Ouvrir</Link></> : null}</TableCell>
-                  <TableCell>{entry.result === "allowed" ? "Aboutie" : "Refusée"}</TableCell>
-                  <TableCell>{entry.actorName ?? "—"}</TableCell>
+                  <TableCell><Badge variant={entry.result === "allowed" ? "success" : "destructive"}>{entry.result === "allowed" ? "Aboutie" : "Refusée"}</Badge></TableCell>
+                  <TableCell>{entry.actorName ?? <span className="text-muted-foreground">—</span>}</TableCell>
                 </TableRow>
               ))}
               {journal.entries.length === 0 ? <TableRow><TableCell colSpan={5} className="py-10 text-center text-muted-foreground">Aucune action sur cette période.</TableCell></TableRow> : null}
             </TableBody>
           </Table>
           <TablePagination page={journal.page} size={journal.size} total={journal.total} label="Pagination du journal" />
-        </>
+        </div>
       )}
-    </section>
+    </Page>
   );
 }
 

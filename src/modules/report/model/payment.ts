@@ -69,3 +69,11 @@ export function paymentAttemptLabel(result: string): string {
   if (result === "unknown") return "Résultat à confirmer";
   return result;
 }
+
+export function paymentStatusVariant(status: string): "outline" | "secondary" | "success" | "warning" | "destructive" {
+  if (status === "authorized") return "success";
+  if (status === "controlled" || status === "visaed") return "secondary";
+  if (status === "returned") return "warning";
+  if (status === "refused") return "destructive";
+  return "outline";
+}

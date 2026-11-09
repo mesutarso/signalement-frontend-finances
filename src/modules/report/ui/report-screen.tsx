@@ -1,16 +1,19 @@
-import Link from "next/link";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import { priorityLabel, reportedAtLabel, stateLabel, supervisionResultLabel, type Assignee, type ReportDetail } from "@/modules/report/model/report";
+import { ActionDialog } from "@/components/action-dialog";
+import { Page, PageHeader } from "@/components/page";
+import { priorityLabel, reportedAtLabel, reportedAtParts, supervisionResultLabel, type Assignee, type ReportDetail } from "@/modules/report/model/report";
 import { AssignmentForm } from "@/modules/report/ui/assignment-form";
 import { DuplicateAlerts } from "@/modules/report/ui/duplicate-alerts";
 import { QualificationPanel } from "@/modules/report/ui/qualification-panel";
 import { PointsPanel, type PointMovement } from "@/modules/report/ui/points-panel";
 import { PrimePanel } from "@/modules/report/ui/prime-panel";
 import type { PrimeAccount } from "@/modules/report/model/prime";
-import { ReportActionDialog } from "@/modules/report/ui/report-action-dialog";
+import { PriorityMark, StateTag } from "@/modules/report/ui/report-marks";
+import { ReportInstruction, type InstructionTab } from "@/modules/report/ui/report-instruction";
 import { ReportPhotos } from "@/modules/report/ui/report-photos";
+
+function Unavailable({ children }: { children: React.ReactNode }) {
+  return <p className="text-sm text-muted-foreground">{children}</p>;
+}
 
 export function ReportScreen({
   report,
@@ -28,75 +31,139 @@ export function ReportScreen({
   prime: PrimeAccount | null;
 }) {
   const hasReporter = report.reporterName || report.reporterEmail || report.reporterPhone;
-  return (
-    <section className="mx-auto flex w-full max-w-6xl flex-col gap-5">
-      <Link href="/signalements" className="w-fit text-sm font-bold text-primary underline-offset-4 hover:underline">← Retour aux signalements</Link>
-      <Card>
-        <CardHeader className="gap-4">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <p className="text-xs text-muted-foreground">Reçu le {reportedAtLabel(report.reportedAt)}</p>
-            <Badge variant="secondary">{stateLabel(report.state)}</Badge>
-          </div>
-          <h1 className="max-w-4xl break-words text-2xl leading-tight font-bold text-primary sm:text-3xl">{report.title || "Signalement sans titre"}</h1>
-            <div className="flex flex-wrap justify-end gap-3">
-              {canAssign ? <ReportActionDialog label="Modifier l’affectation" title="Affectation et priorité" primary><AssignmentForm reportId={report.id} version={report.version} priority={report.priority} assigneeId={report.assigneeId} assignees={assignees} /></ReportActionDialog> : null}
-              <ReportActionDialog label={`Voir l’historique (${report.assignments.length})`} title="Historique des affectations">
-              <div className="mt-4 pb-2">{report.assignments.length === 0 ? <p className="text-sm text-muted-foreground">Aucune affectation enregistrée.</p> : <ol className="flex flex-col divide-y">{report.assignments.map((entry, index) => <li key={`${entry.recordedAt}-${index}`} className="grid gap-2 py-4 first:pt-0 last:pb-0"><div className="flex flex-wrap items-center justify-between gap-2"><p className="text-sm font-bold">{entry.assigneeName ? `Affecté à ${entry.assigneeName}` : "Affectation retirée"}</p><span className="text-xs text-muted-foreground">{reportedAtLabel(entry.recordedAt)}</span></div><p className="text-xs text-muted-foreground">Par {entry.actorName ?? "Compte introuvable"} · Priorité {priorityLabel(entry.priority).toLowerCase()}</p></li>)}</ol>}</div>
-              </ReportActionDialog>
-            </div>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-6">
-          <Separator />
-          <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)]">
-            <div className="flex min-w-0 flex-col gap-8">
-              <section aria-labelledby="report-description" className="grid gap-3">
-                <h2 id="report-description" className="text-sm font-bold">Description</h2>
-                <p className="text-sm leading-7 break-words whitespace-pre-wrap">{report.description || "Aucune description renseignée."}</p>
-              </section>
-              {hasReporter ? <section aria-labelledby="report-declarant" className="grid gap-4">
-                <h2 id="report-declarant" className="text-sm font-bold">Déclarant</h2>
-                <dl className="grid gap-4 text-sm">
-                  {report.reporterName ? <div className="grid gap-1"><dt className="text-xs text-muted-foreground">Nom</dt><dd className="break-words font-bold">{report.reporterName}</dd></div> : null}
-                  {report.reporterPhone ? <div className="grid gap-1"><dt className="text-xs text-muted-foreground">Téléphone</dt><dd><a href={`tel:${report.reporterPhone.replace(/[^+\d]/g, "")}`} className="break-all text-primary underline-offset-4 hover:underline">{report.reporterPhone}</a></dd></div> : null}
-                  {report.reporterEmail ? <div className="grid gap-1"><dt className="text-xs text-muted-foreground">E-mail</dt><dd><a href={`mailto:${report.reporterEmail}`} className="break-all text-primary underline-offset-4 hover:underline">{report.reporterEmail}</a></dd></div> : null}
-                </dl>
-              </section> : null}
-              <div className="grid gap-1"><span className="text-xs text-muted-foreground">Référence du signalement</span><span className="break-all text-xs">{report.identifier}</span></div>
-            </div>
-            <section aria-labelledby="report-attachments" className="flex min-w-0 flex-col gap-4">
-              <h2 id="report-attachments" className="text-sm font-bold">Pièces jointes ({report.photos.length})</h2>
-              <ReportPhotos reportId={report.id} photos={report.photos} photoRequests={report.photoRequests} canRequest={canRequest} />
-            </section>
-          </div>
-          <Separator />
-          <section aria-labelledby="report-processing" className="flex flex-col gap-5">
-            <div className="flex flex-wrap items-center justify-between gap-4">
-              <div className="grid gap-1"><h2 id="report-processing" className="text-sm font-bold">Traitement du dossier</h2><p className="text-sm text-muted-foreground">{report.assigneeName ? `Agent responsable : ${report.assigneeName}` : "Aucun agent affecté"}</p></div>
-              <Badge variant={report.priority === "urgent" ? "destructive" : "outline"}>Priorité : {priorityLabel(report.priority)}</Badge>
-            </div>
-            <QualificationPanel reportId={report.id} qualifications={report.qualifications} canDecide={canRequest} />
-            {points ? <PointsPanel reportId={report.id} movements={points.items} net={points.net} canCredit={canAssign} /> : <p className="text-sm text-muted-foreground">Les points sont indisponibles. Actualisez la page.</p>}
-            {prime ? <PrimePanel account={prime} reportId={report.id} canReview={canAssign} /> : <p className="text-sm text-muted-foreground">Les primes sont indisponibles. Actualisez la page.</p>}
-            {report.reviews.length > 0 ? (
-              <section aria-labelledby="report-supervision" className="grid gap-3">
-                <h3 id="report-supervision" className="text-sm font-bold">Contrôle</h3>
-                {report.reviews.map((review) => (
-                  <article key={review.id} className="grid gap-2 rounded-lg border p-4 text-sm">
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                      <p className="font-bold">{supervisionResultLabel(review.result)}</p>
-                      <p className="text-xs text-muted-foreground">{reportedAtLabel(review.recordedAt)}</p>
-                    </div>
-                    <p>{review.reason}</p>
-                    <p className="text-xs text-muted-foreground">Par {review.actorName ?? "Compte introuvable"}. La décision déjà enregistrée reste en place.</p>
-                  </article>
-                ))}
-              </section>
-            ) : null}
-            <DuplicateAlerts reportId={report.id} alerts={report.duplicates} canDecide={canRequest} />
+  const received = reportedAtParts(report.reportedAt);
+  const openDuplicates = report.duplicates.filter((alert) => alert.status === "open").length;
 
+  const tabs: InstructionTab[] = [
+    {
+      value: "qualification",
+      label: "Qualification",
+      count: report.qualifications.length,
+      content: <QualificationPanel reportId={report.id} qualifications={report.qualifications} canDecide={canRequest} />,
+    },
+    {
+      value: "doublons",
+      label: "Doublons",
+      count: report.duplicates.length,
+      attention: openDuplicates > 0,
+      content: <DuplicateAlerts reportId={report.id} alerts={report.duplicates} canDecide={canRequest} />,
+    },
+    {
+      value: "points",
+      label: "Points",
+      count: points?.items.length,
+      content: points ? <PointsPanel reportId={report.id} movements={points.items} net={points.net} canCredit={canAssign} /> : <Unavailable>Les points sont indisponibles. Actualisez la page.</Unavailable>,
+    },
+    {
+      value: "prime",
+      label: "Prime",
+      count: prime?.tiers.length,
+      content: prime ? <PrimePanel account={prime} reportId={report.id} canReview={canAssign} /> : <Unavailable>Les primes sont indisponibles. Actualisez la page.</Unavailable>,
+    },
+  ];
+  if (report.reviews.length > 0) {
+    tabs.push({
+      value: "controle",
+      label: "Contrôle",
+      count: report.reviews.length,
+      content: (
+        <ul className="border-t">
+          {report.reviews.map((review) => (
+            <li key={review.id} className="grid gap-1 border-b py-4 text-sm leading-6">
+              <div className="flex flex-wrap items-baseline justify-between gap-2">
+                <p className="font-bold">{supervisionResultLabel(review.result)}</p>
+                <p className="text-[13px] text-muted-foreground">{reportedAtLabel(review.recordedAt)}</p>
+              </div>
+              <p>{review.reason}</p>
+              <p className="text-[13px] text-muted-foreground">Par {review.actorName ?? "Compte introuvable"}. La décision déjà enregistrée reste en place.</p>
+            </li>
+          ))}
+        </ul>
+      ),
+    });
+  }
+
+  const facts: [string, React.ReactNode][] = [
+    ["État", <StateTag key="state" state={report.state} />],
+    ["Priorité", <PriorityMark key="priority" priority={report.priority} />],
+    ["Agent responsable", report.assigneeName ?? <span key="none" className="text-muted-foreground">Aucun agent affecté</span>],
+    ["Reçu le", <span key="date" className="tabular-nums">{received.date} <span className="text-muted-foreground">à {received.time}</span></span>],
+    ["Référence", <span key="ref" className="ref break-all">{report.identifier}</span>],
+  ];
+
+  return (
+    <Page className="gap-8 md:gap-10">
+      <PageHeader
+        compact
+        back={{ href: "/signalements", label: "Signalements" }}
+        title={report.title || "Signalement sans titre"}
+        actions={
+          <>
+            <ActionDialog label={`Historique (${report.assignments.length})`} title="Historique des affectations" variant="ghost">
+              {report.assignments.length === 0 ? <p className="text-sm text-muted-foreground">Aucune affectation enregistrée.</p> : (
+                <ol className="flex flex-col divide-y">
+                  {report.assignments.map((entry, index) => (
+                    <li key={`${entry.recordedAt}-${index}`} className="grid gap-1 py-3.5 first:pt-0 last:pb-0">
+                      <div className="flex flex-wrap items-baseline justify-between gap-2">
+                        <p className="text-sm font-bold">{entry.assigneeName ? `Affecté à ${entry.assigneeName}` : "Affectation retirée"}</p>
+                        <span className="text-[13px] text-muted-foreground">{reportedAtLabel(entry.recordedAt)}</span>
+                      </div>
+                      <p className="text-[13px] text-muted-foreground">Par {entry.actorName ?? "Compte introuvable"} · Priorité {priorityLabel(entry.priority).toLowerCase()}</p>
+                    </li>
+                  ))}
+                </ol>
+              )}
+            </ActionDialog>
+            {canAssign ? (
+              <ActionDialog label="Modifier l’affectation" title="Affectation et priorité" variant="default">
+                <AssignmentForm reportId={report.id} version={report.version} priority={report.priority} assigneeId={report.assigneeId} assignees={assignees} />
+              </ActionDialog>
+            ) : null}
+          </>
+        }
+      />
+
+      <dl className="-mt-2 grid grid-cols-2 gap-x-6 gap-y-4 border-y border-b-border border-t-foreground py-4 md:grid-cols-[auto_auto_1fr_auto_auto] md:gap-x-12">
+        {facts.map(([label, value]) => (
+          <div key={label} className="grid content-start gap-1.5">
+            <dt className="text-[13px] text-muted-foreground">{label}</dt>
+            <dd className="text-sm">{value}</dd>
+          </div>
+        ))}
+      </dl>
+
+      <div className="grid gap-x-16 gap-y-8 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
+        <section aria-labelledby="report-description" className="grid content-start gap-2">
+          <h2 id="report-description" className="text-[15px] font-bold">Description</h2>
+          <p className="max-w-[68ch] text-[15px] leading-7 break-words whitespace-pre-wrap">{report.description || <span className="text-muted-foreground">Aucune description renseignée.</span>}</p>
+        </section>
+        {hasReporter ? (
+          <section aria-labelledby="report-declarant" className="grid content-start gap-2">
+            <h2 id="report-declarant" className="text-[15px] font-bold">Déclarant</h2>
+            <div className="grid gap-1 text-sm leading-6">
+              {report.reporterName ? <p className="break-words">{report.reporterName}</p> : null}
+              {report.reporterPhone ? <a href={`tel:${report.reporterPhone.replace(/[^+\d]/g, "")}`} className="w-fit break-all text-primary underline-offset-4 hover:underline">{report.reporterPhone}</a> : null}
+              {report.reporterEmail ? <a href={`mailto:${report.reporterEmail}`} className="w-fit break-all text-primary underline-offset-4 hover:underline">{report.reporterEmail}</a> : null}
+            </div>
           </section>
-        </CardContent>
-      </Card>
-    </section>
+        ) : null}
+      </div>
+
+      <div className="grid items-start gap-x-16 gap-y-10 lg:grid-cols-2">
+        <section aria-labelledby="report-attachments" className="grid min-w-0 content-start gap-4">
+          <div className="flex items-baseline justify-between gap-3 border-t border-foreground pt-3.5">
+            <h2 id="report-attachments" className="text-[15px] font-bold">Pièces jointes</h2>
+            <span className="text-[13px] text-muted-foreground tabular-nums">{report.photos.length}</span>
+          </div>
+          <ReportPhotos reportId={report.id} photos={report.photos} photoRequests={report.photoRequests} canRequest={canRequest} />
+        </section>
+        <section aria-label="Traitement du dossier" className="min-w-0">
+          <ReportInstruction
+            tabs={tabs}
+            notice={openDuplicates > 0 ? { tab: "doublons", text: openDuplicates > 1 ? `${openDuplicates} rapprochements sont à vérifier avant de décider.` : "Un rapprochement est à vérifier avant de décider." } : undefined}
+          />
+        </section>
+      </div>
+    </Page>
   );
 }

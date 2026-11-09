@@ -197,6 +197,11 @@ export function reportedAtLabel(value: string): string {
   return `${Number(day)} ${monthName} ${year} à ${hour}:${minute.slice(0, 2)}`;
 }
 
+export function reportedAtParts(value: string): { date: string; time: string } {
+  const [date, time] = reportedAtLabel(value).split(" à ");
+  return { date, time };
+}
+
 const STATES: Record<string, string> = {
   pending: "À traiter",
   assigned: "Affecté",

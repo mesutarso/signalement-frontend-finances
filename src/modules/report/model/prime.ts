@@ -60,3 +60,13 @@ export function primeStatusLabel(status: string): string {
   }
   return status;
 }
+
+export function primeStatusVariant(status: string): "warning" | "success" | "destructive" | "outline" {
+  if (status === "proposed") {
+    return "warning";
+  }
+  if (status === "approved") {
+    return "success";
+  }
+  return status === "returned" ? "destructive" : "outline";
+}

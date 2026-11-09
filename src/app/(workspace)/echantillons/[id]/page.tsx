@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { readJson } from "@/lib/api";
@@ -7,8 +6,10 @@ import { calendarLabel } from "@/modules/report/model/report";
 import { paymentOperatorLabel } from "@/modules/report/model/payment";
 import { ReviewSampleForm } from "@/modules/report/ui/review-sample-form";
 import { Alert, AlertTitle } from "@/components/ui/alert";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Page, PageHeader, PageSkeleton } from "@/components/page";
+import { Badge } from "@/components/ui/badge";
+import { ActionDialog } from "@/components/action-dialog";
+import { Ledger, LedgerItem } from "@/components/ledger";
 
 type Line = { id: string; reference: string; operator: string; amount: number; result: string | null; reason: string | null };
 type Detail = { id: string; reference: string; periodStart: string; periodEnd: string; lines: Line[] };
@@ -16,7 +17,7 @@ type Detail = { id: string; reference: string; periodStart: string; periodEnd: s
 const READERS = ["SUPERVISOR", "AUDITOR", "ADMINISTRATOR"];
 
 export default function SamplePage({ params }: PageProps<"/echantillons/[id]">) {
-  return <Suspense fallback={<Skeleton className="h-96 w-full" />}><Sample params={params} /></Suspense>;
+  return <Suspense fallback={<PageSkeleton />}><Sample params={params} /></Suspense>;
 }
 
 function resultLabel(result: string | null): string {
@@ -41,26 +42,34 @@ async function Sample({ params }: Pick<PageProps<"/echantillons/[id]">, "params"
   const sample = await readJson<Detail>(`/api/payment-samples/${id}`).catch(() => null);
   const canReview = account.role === "SUPERVISOR" || account.role === "ADMINISTRATOR";
   return (
-    <section className="mx-auto flex w-full max-w-6xl flex-col gap-6">
-      <p><Link className="text-sm font-bold text-primary underline-offset-4 hover:underline" href="/echantillons">Échantillons</Link></p>
-      {!sample ? <Alert variant="destructive"><AlertTitle>Cet échantillon est introuvable.</AlertTitle></Alert> : (
+    <Page className="max-w-6xl">
+      {!sample ? (
         <>
-          <div className="grid gap-2">
-            <h1 className="text-3xl font-bold text-primary">{sample.reference}</h1>
-            <p className="text-sm text-muted-foreground">Du {calendarLabel(sample.periodStart)} au {calendarLabel(sample.periodEnd)}. Le contrôle ne modifie pas le paiement.</p>
-          </div>
-          {sample.lines.map((line) => (
-            <Card key={line.id}>
-              <CardHeader className="gap-2"><CardTitle>{line.reference}</CardTitle></CardHeader>
-              <CardContent className="grid gap-3 text-sm">
-                <p>{paymentOperatorLabel(line.operator)} · {line.amount.toLocaleString("fr-FR")} FC · {resultLabel(line.result)}</p>
-                {line.reason ? <p>{line.reason}</p> : null}
-                {canReview && !line.result ? <ReviewSampleForm lineId={line.id} sampleId={sample.id} /> : null}
-              </CardContent>
-            </Card>
-          ))}
+          <PageHeader back={{ href: "/echantillons", label: "Échantillons" }} title="Échantillon introuvable" />
+          <Alert variant="destructive"><AlertTitle>Cet échantillon est introuvable.</AlertTitle></Alert>
+        </>
+      ) : (
+        <>
+          <PageHeader
+            back={{ href: "/echantillons", label: "Échantillons" }}
+            title={<span className="tabular-nums">{sample.reference}</span>}
+            description={`Du ${calendarLabel(sample.periodStart)} au ${calendarLabel(sample.periodEnd)}. Le contrôle ne modifie pas le paiement.`}
+          />
+          <Ledger>
+            {sample.lines.map((line) => (
+              <LedgerItem
+                key={line.id}
+                title={<span className="ref text-sm font-medium">{line.reference}</span>}
+                status={<Badge variant={line.result === "conform" ? "success" : line.result === "anomaly" ? "destructive" : "warning"}>{resultLabel(line.result)}</Badge>}
+                action={canReview && !line.result ? <ActionDialog label="Contrôler" title="Contrôler la ligne" description={line.reference} variant="default" size="sm"><ReviewSampleForm lineId={line.id} sampleId={sample.id} /></ActionDialog> : undefined}
+              >
+                <p className="tabular-nums">{paymentOperatorLabel(line.operator)} · {line.amount.toLocaleString("fr-FR")} FC</p>
+                {line.reason ? <p className="text-muted-foreground">{line.reason}</p> : null}
+              </LedgerItem>
+            ))}
+          </Ledger>
         </>
       )}
-    </section>
+    </Page>
   );
 }

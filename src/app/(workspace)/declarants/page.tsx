@@ -4,8 +4,10 @@ import { readOutcome } from "@/lib/api";
 import { readCurrentAccount } from "@/modules/access/queries/read-current-account";
 import { Alert, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Page, PageHeader, PageSection, PageSkeleton } from "@/components/page";
+import { Badge } from "@/components/ui/badge";
+import { Figure, Figures } from "@/components/figures";
+import { Ledger } from "@/components/ledger";
 
 type Report = { id: string; reference: string; status: string; points: number };
 type Situation = {
@@ -32,7 +34,7 @@ const STATUS: Record<string, string> = {
 };
 
 export default function DeclarantsPage({ searchParams }: PageProps<"/declarants">) {
-  return <Suspense fallback={<Skeleton className="h-96 w-full" />}><Declarants searchParams={searchParams} /></Suspense>;
+  return <Suspense fallback={<PageSkeleton />}><Declarants searchParams={searchParams} /></Suspense>;
 }
 
 async function Declarants({ searchParams }: Pick<PageProps<"/declarants">, "searchParams">) {
@@ -46,33 +48,41 @@ async function Declarants({ searchParams }: Pick<PageProps<"/declarants">, "sear
   const reference = String((await searchParams).reference ?? "").trim();
   const situation = reference ? await readOutcome<Situation>(`/api/declarants?reference=${encodeURIComponent(reference)}`) : null;
   return (
-    <section className="mx-auto flex w-full max-w-6xl flex-col gap-6">
-      <div className="grid gap-2">
-        <h1 className="text-3xl font-bold text-primary">Situation du déclarant</h1>
-        <p className="max-w-3xl text-sm text-muted-foreground">La situation part de la référence d&apos;un signalement. Elle ne reprend aucune information fiscale du vendeur. Les points et les primes affichés suivent la version active. Une autre version reste à part.</p>
-      </div>
-      <form className="flex flex-wrap items-end gap-3" method="get">
-        <label className="grid min-w-64 flex-1 gap-1 text-sm font-bold">Référence du signalement
-          <input className="h-11 rounded-md border border-input bg-card px-3 font-normal" name="reference" defaultValue={reference} maxLength={80} required />
+    <Page className="max-w-6xl">
+      <PageHeader
+        title="Situation du déclarant"
+        description="La situation part de la référence d'un signalement. Elle ne reprend aucune information fiscale du vendeur. Les points et les primes affichés suivent la version active. Une autre version reste à part."
+      />
+      <form className="flex max-w-2xl flex-wrap items-end gap-2" method="get">
+        <label className="grid min-w-64 flex-1 gap-2 text-[13px] font-medium">Référence du signalement
+          <input className="h-11 rounded-md border border-input bg-card px-3 text-base font-normal md:text-[15px]" name="reference" defaultValue={reference} maxLength={80} required />
         </label>
-        <Button type="submit">Consulter</Button>
+        <Button type="submit" className="h-11">Consulter</Button>
       </form>
-      {!situation ? <p className="text-sm text-muted-foreground">Indiquez une référence.</p> : !situation.ok ? <Alert variant="destructive"><AlertTitle>{situation.message}</AlertTitle></Alert> : (
+      {!situation ? null : !situation.ok ? <Alert variant="destructive"><AlertTitle>{situation.message}</AlertTitle></Alert> : (
         <>
-          <Card>
-            <CardHeader className="gap-2"><CardTitle>{situation.body.reference}</CardTitle></CardHeader>
-            <CardContent className="grid gap-2 text-sm">
-              <p>{situation.body.points.toLocaleString("fr-FR")} points · primes {situation.body.primeAmount.toLocaleString("fr-FR")} FC · payé {situation.body.paidAmount.toLocaleString("fr-FR")} FC</p>
-              <p>Plafond {situation.body.ceiling.toLocaleString("fr-FR")} FC · solde {situation.body.remainder.toLocaleString("fr-FR")} FC</p>
-              <p>{situation.body.tickets} ticket{situation.body.tickets > 1 ? "s" : ""} · {situation.body.lots} lot{situation.body.lots > 1 ? "s" : ""}</p>
-              <p>{situation.body.primeApproved ? "Prime approuvée" : "Aucune prime approuvée"} · {situation.body.primePaid ? "Prime payée" : "Aucune prime payée"}</p>
-            </CardContent>
-          </Card>
-          {situation.body.reports.map((report) => (
-            <p key={report.id} className="text-sm">{report.reference} · {STATUS[report.status] ?? report.status} · {report.points.toLocaleString("fr-FR")} points</p>
-          ))}
+          <div className="grid gap-4">
+            <p className="ref text-sm font-medium">{situation.body.reference}</p>
+            <Figures>
+              <Figure label="Points" value={situation.body.points.toLocaleString("fr-FR")} />
+              <Figure label="Primes (FC)" value={situation.body.primeAmount.toLocaleString("fr-FR")} />
+              <Figure label="Payé (FC)" value={situation.body.paidAmount.toLocaleString("fr-FR")} />
+              <Figure label="Solde (FC)" value={situation.body.remainder.toLocaleString("fr-FR")} note={`Plafond de ${situation.body.ceiling.toLocaleString("fr-FR")} FC`} />
+            </Figures>
+            <p className="text-sm leading-6 text-muted-foreground">{situation.body.tickets} ticket{situation.body.tickets > 1 ? "s" : ""} · {situation.body.lots} lot{situation.body.lots > 1 ? "s" : ""} · {situation.body.primeApproved ? "Prime approuvée" : "Aucune prime approuvée"} · {situation.body.primePaid ? "Prime payée" : "Aucune prime payée"}</p>
+          </div>
+          <PageSection title="Signalements">
+            <Ledger>
+              {situation.body.reports.map((report) => (
+                <li key={report.id} className="flex flex-wrap items-center justify-between gap-3 border-b py-3 text-sm">
+                  <span className="ref">{report.reference}</span>
+                  <span className="flex items-center gap-4"><Badge variant="secondary">{STATUS[report.status] ?? report.status}</Badge><span className="w-20 text-right tabular-nums">{report.points.toLocaleString("fr-FR")} points</span></span>
+                </li>
+              ))}
+            </Ledger>
+          </PageSection>
         </>
       )}
-    </section>
+    </Page>
   );
 }

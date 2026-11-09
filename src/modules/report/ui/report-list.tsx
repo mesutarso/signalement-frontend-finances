@@ -1,8 +1,15 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Page, PageHeader } from "@/components/page";
+import { ViewTabs } from "@/components/view-tabs";
 import type { ReportPage } from "@/modules/report/model/report";
 import { ImportButton } from "@/modules/report/ui/import-button";
 import { QueueFilters } from "@/modules/report/ui/queue-filters";
 import { ReportsTable } from "@/modules/report/ui/reports-table";
+
+const SCOPES = [
+  { value: "all", label: "Tous" },
+  { value: "mine", label: "Les miens" },
+  { value: "unassigned", label: "Non affectés" },
+];
 
 export function ReportList({
   page,
@@ -19,17 +26,22 @@ export function ReportList({
   priority: string;
   scope: string;
 }) {
+  function href(value: string) {
+    const params = new URLSearchParams({ scope: value });
+    if (q) params.set("q", q);
+    if (state) params.set("state", state);
+    if (priority) params.set("priority", priority);
+    return `/signalements?${params}`;
+  }
+
   return (
-    <section className="flex flex-col gap-8">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <h1 className="text-3xl font-bold text-primary">Signalements</h1>
-        {canImport ? <ImportButton /> : null}
+    <Page className="gap-8 md:gap-8">
+      <PageHeader title="Signalements" actions={canImport ? <ImportButton /> : null} />
+      <div className="grid gap-5">
+        <ViewTabs label="Affectation" items={SCOPES.map((item) => ({ href: href(item.value), label: item.label, active: item.value === scope }))} />
+        <QueueFilters q={q} state={state} priority={priority} scope={scope} />
       </div>
-      <QueueFilters q={q} state={state} priority={priority} scope={scope} />
-      <Card>
-        <CardHeader><CardTitle>File de travail</CardTitle></CardHeader>
-        <CardContent><ReportsTable page={page} /></CardContent>
-      </Card>
-    </section>
+      <ReportsTable page={page} />
+    </Page>
   );
 }

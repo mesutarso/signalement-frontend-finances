@@ -1,18 +1,26 @@
-import Link from "next/link";
+import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { readJson } from "@/lib/api";
 import { readCurrentAccount } from "@/modules/access/queries/read-current-account";
 import { francs } from "@/modules/report/model/prime";
-import { paymentAttemptLabel, paymentOperatorLabel, paymentStatusLabel, type PaymentStatement } from "@/modules/report/model/payment";
+import { paymentAttemptLabel, paymentOperatorLabel, paymentStatusLabel, paymentStatusVariant, type PaymentStatement } from "@/modules/report/model/payment";
 import { calendarLabel, reportedAtLabel } from "@/modules/report/model/report";
 import { PaymentAttemptForm } from "@/modules/report/ui/payment-attempt-form";
 import { PaymentDecisionForm } from "@/modules/report/ui/payment-decision-form";
 import { Alert, AlertTitle } from "@/components/ui/alert";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Page, PageHeader, PageSection, PageSkeleton } from "@/components/page";
+import { Badge } from "@/components/ui/badge";
+import { ActionDialog } from "@/components/action-dialog";
+import { Ledger, LedgerItem } from "@/components/ledger";
 
 const READERS = ["SUPERVISOR", "AUDITOR", "ADMINISTRATOR", "CELLULE", "CABINET", "PAYMASTER"];
 
-export default async function PaymentStatementPage({ params }: PageProps<"/etats/[id]">) {
+export default function PaymentStatementPage({ params }: PageProps<"/etats/[id]">) {
+  return <Suspense fallback={<PageSkeleton />}><Statement params={params} /></Suspense>;
+}
+
+async function Statement({ params }: Pick<PageProps<"/etats/[id]">, "params">) {
   const account = await readCurrentAccount();
   if (!account) {
     redirect("/connexion");
@@ -30,45 +38,65 @@ export default async function PaymentStatementPage({ params }: PageProps<"/etats
         ? "authorize"
         : null;
   return (
-    <section className="mx-auto flex w-full max-w-6xl flex-col gap-6">
-      <p><Link className="text-sm font-bold text-primary underline-offset-4 hover:underline" href="/etats">États de paiement</Link></p>
-      {!statement ? <Alert variant="destructive"><AlertTitle>Cet état est indisponible. Actualisez la page.</AlertTitle></Alert> : (
+    <Page className="max-w-6xl">
+      {!statement ? (
         <>
-          <div className="grid gap-2">
-            <h1 className="text-3xl font-bold text-primary">{statement.reference}</h1>
-            <p className="text-sm text-muted-foreground">{paymentStatusLabel(statement.status)} · {francs(statement.total)}. Simulation : Airtel Money, M-Pesa, Orange Money, Afrimoney. Aucun argent n&apos;est envoyé.</p>
-            <p className="text-sm">Préparé le {reportedAtLabel(statement.preparedAt)}.</p>
-            {statement.dueOn ? <p className="text-sm">Paiement groupé dû le {calendarLabel(statement.dueOn)}.</p> : null}
-            {statement.reason ? <p className="text-sm">{statement.reason}</p> : null}
-          </div>
-          <div className="grid gap-4">
-            {statement.lines.map((line) => (
-              <Card key={line.id}>
-                <CardHeader className="gap-2">
-                  <CardTitle>{francs(line.amount)}</CardTitle>
-                </CardHeader>
-                <CardContent className="grid gap-3 text-sm">
-                  <p>{line.threshold} points</p>
-                  <p>Numéro de paiement : {line.phone}</p>
-                  {line.attempts.map((attempt) => (
-                    <p key={attempt.id}>{paymentOperatorLabel(attempt.operator)} · {paymentAttemptLabel(attempt.result)} le {reportedAtLabel(attempt.recordedAt)}.{attempt.reference ? ` Référence ${attempt.reference}.` : ""}{attempt.reason ? ` ${attempt.reason}` : ""}</p>
-                  ))}
-                  {statement.status === "authorized" && account.role === "PAYMASTER" && !line.attempts.some((attempt) => attempt.result === "paid") ? (
-                    <PaymentAttemptForm statementId={statement.id} lineId={line.id} settle={line.attempts.at(-1)?.result === "unknown"} />
-                  ) : null}
-                </CardContent>
-              </Card>
+          <PageHeader back={{ href: "/etats", label: "États de paiement" }} title="État indisponible" />
+          <Alert variant="destructive"><AlertTitle>Cet état est indisponible. Actualisez la page.</AlertTitle></Alert>
+        </>
+      ) : (
+        <>
+          <PageHeader
+            back={{ href: "/etats", label: "États de paiement" }}
+            title={<span className="tabular-nums">{francs(statement.total)}</span>}
+            description={<>Référence <span className="ref text-foreground">{statement.reference}</span>. Simulation : Airtel Money, M-Pesa, Orange Money, Afrimoney. Aucun argent n&apos;est envoyé.</>}
+            actions={<Badge variant={paymentStatusVariant(statement.status)}>{paymentStatusLabel(statement.status)}</Badge>}
+          />
+          <ol aria-label="Étapes de validation" className="grid grid-cols-2 gap-x-6 gap-y-5 md:grid-cols-4">
+            {([["Préparé", statement.preparedAt], ["Contrôlé", statement.controlledAt], ["Visé", statement.visaedAt], ["Autorisé", statement.authorizedAt]] as const).map(([label, at]) => (
+              <li key={label} className={at ? "grid gap-1 border-t-2 border-primary pt-2.5" : "grid gap-1 border-t-2 border-border pt-2.5"}>
+                <p className={at ? "text-sm font-bold" : "text-sm text-muted-foreground"}>{label}</p>
+                <p className="text-[13px] leading-5 text-muted-foreground">{at ? reportedAtLabel(at) : "À venir"}</p>
+              </li>
             ))}
-          </div>
-          {statement.exclusions.length > 0 ? (
-            <section className="grid gap-3">
-              <h2 className="text-xl font-bold text-primary">Primes écartées</h2>
-              {statement.exclusions.map((exclusion) => <p key={exclusion.primeId} className="text-sm">{exclusion.reason}</p>)}
-            </section>
+          </ol>
+          {statement.dueOn || statement.reason ? (
+            <div className="-mt-4 grid gap-1 text-sm leading-6">
+              {statement.dueOn ? <p>Paiement groupé dû le {calendarLabel(statement.dueOn)}.</p> : null}
+              {statement.reason ? <p>{statement.reason}</p> : null}
+            </div>
           ) : null}
-          {step ? <PaymentDecisionForm id={statement.id} step={step} /> : null}
+          <PageSection title="Lignes de l'état">
+            <Ledger>
+              {statement.lines.map((line) => (
+                <LedgerItem
+                  key={line.id}
+                  title={<span className="tabular-nums">{francs(line.amount)}</span>}
+                  meta={`${line.threshold} points`}
+                  action={statement.status === "authorized" && account.role === "PAYMASTER" && !line.attempts.some((attempt) => attempt.result === "paid") ? (
+                    <ActionDialog label="Enregistrer le paiement" title="Enregistrer le paiement" description={`${francs(line.amount)} · ${line.phone}`} variant="default" size="sm">
+                      <PaymentAttemptForm statementId={statement.id} lineId={line.id} settle={line.attempts.at(-1)?.result === "unknown"} />
+                    </ActionDialog>
+                  ) : undefined}
+                >
+                  <p>Numéro de paiement : <span className="tabular-nums">{line.phone}</span></p>
+                  {line.attempts.map((attempt) => (
+                    <p key={attempt.id} className="text-muted-foreground">{paymentOperatorLabel(attempt.operator)} · {paymentAttemptLabel(attempt.result)} le {reportedAtLabel(attempt.recordedAt)}.{attempt.reference ? ` Référence ${attempt.reference}.` : ""}{attempt.reason ? ` ${attempt.reason}` : ""}</p>
+                  ))}
+                </LedgerItem>
+              ))}
+            </Ledger>
+          </PageSection>
+          {statement.exclusions.length > 0 ? (
+            <PageSection title="Primes écartées">
+              <Ledger>
+                {statement.exclusions.map((exclusion) => <li key={exclusion.primeId} className="border-b py-3.5 text-sm leading-6">{exclusion.reason}</li>)}
+              </Ledger>
+            </PageSection>
+          ) : null}
+          {step ? <Card><CardHeader><CardTitle>Décision</CardTitle></CardHeader><CardContent className="max-w-lg"><PaymentDecisionForm id={statement.id} step={step} /></CardContent></Card> : null}
         </>
       )}
-    </section>
+    </Page>
   );
 }

@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
-import { Skeleton } from "@/components/ui/skeleton";
+import { PageSkeleton } from "@/components/page";
 import { readCurrentAccount } from "@/modules/access/queries/read-current-account";
 import { readReports } from "@/modules/report/queries/read-reports";
 import { ReportList } from "@/modules/report/ui/report-list";
@@ -11,7 +11,7 @@ function first(value: string | string[] | undefined): string {
 
 export default function Page({ searchParams }: PageProps<"/signalements">) {
   return (
-    <Suspense fallback={<Skeleton className="h-64 w-full" />}>
+    <Suspense fallback={<PageSkeleton />}>
       <ReportsContent searchParams={searchParams} />
     </Suspense>
   );

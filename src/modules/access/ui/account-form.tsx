@@ -16,7 +16,7 @@ export function AccountForm({ onSuccess }: { onSuccess?: () => void }) {
   }, null);
 
   return (
-    <form action={submit} className="max-w-md">
+    <form action={submit}>
       <FieldGroup>
         <Field data-invalid={error ? true : undefined}>
           <FieldLabel htmlFor="new-username">Identifiant</FieldLabel>

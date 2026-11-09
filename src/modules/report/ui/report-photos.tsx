@@ -3,6 +3,8 @@
 import Image from "next/image";
 import { useState } from "react";
 import { Dialog } from "@base-ui/react/dialog";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { ArrowLeft01Icon, ArrowRight01Icon, Cancel01Icon, MaximizeScreenIcon } from "@hugeicons/core-free-icons";
 import { Button } from "@/components/ui/button";
 import { Empty, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
 import type { PhotoRequest, ReportPhoto } from "@/modules/report/model/report";
@@ -22,31 +24,58 @@ export function ReportPhotos({
 }) {
   const [selected, setSelected] = useState(0);
   const [failed, setFailed] = useState<string | null>(null);
-  if (!photos.length) return <Empty><EmptyHeader><EmptyTitle>Aucune pièce jointe</EmptyTitle></EmptyHeader></Empty>;
+  if (!photos.length) return <Empty className="bg-muted"><EmptyHeader><EmptyTitle>Aucune pièce jointe</EmptyTitle></EmptyHeader></Empty>;
   const photo = photos[selected] ?? photos[0];
   const src = `/signalements/${reportId}/photos/${photo.id}`;
+
+  function move(event: React.KeyboardEvent) {
+    if (event.key === "ArrowLeft") setSelected((value) => Math.max(0, value - 1));
+    if (event.key === "ArrowRight") setSelected((value) => Math.min(photos.length - 1, value + 1));
+  }
+
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-3">
       <Dialog.Root>
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <p className="text-sm text-muted-foreground" aria-live="polite">Pièce {selected + 1} sur {photos.length}</p>
-          <Dialog.Trigger render={<Button variant="outline" size="sm" />}>Agrandir la pièce</Dialog.Trigger>
-        </div>
-        <div className="relative flex h-80 items-center justify-center overflow-hidden rounded-lg bg-muted sm:h-[460px]">
-          {failed === photo.id ? <p role="status" className="px-6 text-sm text-muted-foreground">Cette pièce ne peut pas être affichée.</p> : <Image key={photo.id} src={src} alt={`Pièce jointe ${selected + 1}`} fill unoptimized sizes="(max-width: 1024px) 100vw, 65vw" onError={() => setFailed(photo.id)} className="object-contain p-4" />}
+        <div className="relative flex h-80 items-center justify-center overflow-hidden rounded-md bg-muted sm:h-[480px]">
+          {failed === photo.id
+            ? <p role="status" className="px-6 text-sm text-muted-foreground">Cette pièce ne peut pas être affichée.</p>
+            : <Image key={photo.id} src={src} alt={`Pièce jointe ${selected + 1}`} fill unoptimized sizes="(max-width: 1024px) 100vw, 50vw" onError={() => setFailed(photo.id)} className="object-contain p-4" />}
+          <Dialog.Trigger render={<Button variant="outline" size="sm" className="absolute top-3 right-3 bg-card" />}>
+            <HugeiconsIcon icon={MaximizeScreenIcon} strokeWidth={1.75} data-icon="inline-start" />
+            Agrandir
+          </Dialog.Trigger>
+          {photos.length > 1 ? <p className="absolute bottom-3 left-3 rounded-sm bg-card px-1.5 py-0.5 text-xs tabular-nums" aria-live="polite">Pièce {selected + 1} sur {photos.length}</p> : null}
         </div>
         <Dialog.Portal>
-          <Dialog.Backdrop className="fixed inset-0 z-50 bg-black/60" />
-          <Dialog.Popup className="fixed inset-4 z-50 flex flex-col gap-4 rounded-xl bg-card p-4 text-card-foreground shadow-xl sm:inset-8 sm:p-6">
-            <div className="flex items-center justify-between gap-4"><Dialog.Title className="font-bold">Pièce {selected + 1} sur {photos.length}</Dialog.Title><Dialog.Close render={<Button variant="outline" size="sm" />}>Fermer</Dialog.Close></div>
+          <Dialog.Backdrop className="fixed inset-0 z-50 bg-[var(--fin-ink)]/95 transition-opacity duration-150 data-[ending-style]:opacity-0 data-[starting-style]:opacity-0" />
+          <Dialog.Popup onKeyDown={move} className="fixed inset-0 z-50 flex flex-col gap-2 p-3 text-white outline-none transition-opacity duration-150 data-[ending-style]:opacity-0 data-[starting-style]:opacity-0 sm:p-5">
+            <div className="flex items-center justify-between gap-4">
+              <Dialog.Title className="text-sm tabular-nums">Pièce {selected + 1} sur {photos.length}</Dialog.Title>
+              <Dialog.Close aria-label="Fermer" render={<Button variant="ghost" size="icon" className="text-white hover:bg-white/10" />}><HugeiconsIcon icon={Cancel01Icon} strokeWidth={2} /></Dialog.Close>
+            </div>
             <div className="relative min-h-0 flex-1"><Image src={src} alt={`Pièce jointe ${selected + 1} agrandie`} fill unoptimized sizes="100vw" className="object-contain" /></div>
-            <div className="flex flex-wrap justify-between gap-3"><Button variant="outline" size="sm" disabled={selected === 0} onClick={() => setSelected((value) => value - 1)}>Précédente</Button><Button variant="outline" size="sm" disabled={selected === photos.length - 1} onClick={() => setSelected((value) => value + 1)}>Suivante</Button></div>
+            {photos.length > 1 ? (
+              <div className="flex justify-center gap-2">
+                <Button variant="ghost" className="text-white hover:bg-white/10" disabled={selected === 0} onClick={() => setSelected((value) => value - 1)}><HugeiconsIcon icon={ArrowLeft01Icon} strokeWidth={2} data-icon="inline-start" />Précédente</Button>
+                <Button variant="ghost" className="text-white hover:bg-white/10" disabled={selected === photos.length - 1} onClick={() => setSelected((value) => value + 1)}>Suivante<HugeiconsIcon icon={ArrowRight01Icon} strokeWidth={2} data-icon="inline-end" /></Button>
+              </div>
+            ) : null}
           </Dialog.Popup>
         </Dialog.Portal>
       </Dialog.Root>
-      {photos.length > 1 ? <div aria-label="Choisir une pièce jointe" className="flex gap-2 overflow-x-auto pb-2">{photos.map((item, index) => <button key={item.id} type="button" aria-label={`Afficher la pièce ${index + 1}`} aria-pressed={selected === index} onClick={() => setSelected(index)} className="relative h-20 w-24 shrink-0 overflow-hidden rounded-md border bg-muted aria-pressed:ring-2 aria-pressed:ring-foreground"><Image src={`/signalements/${reportId}/photos/${item.id}`} alt="" fill unoptimized sizes="96px" className="object-contain p-1" /></button>)}</div> : null}
-      <PhotoReading key={photo.id} reportId={reportId} photo={photo} canRequest={canRequest} />
-      <PhotoRequestPanel reportId={reportId} photo={photo} requests={photoRequests} canRequest={canRequest} />
+      {photos.length > 1 ? (
+        <div role="group" aria-label="Choisir une pièce jointe" className="flex gap-2 overflow-x-auto p-0.5">
+          {photos.map((item, index) => (
+            <button key={item.id} type="button" aria-label={`Afficher la pièce ${index + 1}`} aria-pressed={selected === index} onClick={() => setSelected(index)} className="relative h-16 w-14 shrink-0 overflow-hidden rounded-sm bg-muted outline-offset-1 transition-opacity not-aria-pressed:opacity-70 hover:opacity-100 aria-pressed:outline-2 aria-pressed:outline-primary">
+              <Image src={`/signalements/${reportId}/photos/${item.id}`} alt="" fill unoptimized sizes="56px" className="object-contain p-0.5" />
+            </button>
+          ))}
+        </div>
+      ) : null}
+      <div className="mt-3 grid gap-7">
+        <PhotoReading key={photo.id} reportId={reportId} photo={photo} canRequest={canRequest} />
+        <PhotoRequestPanel reportId={reportId} photo={photo} requests={photoRequests} canRequest={canRequest} />
+      </div>
     </div>
   );
 }

@@ -1,26 +1,16 @@
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
 import { roleLabel } from "@/modules/access/model/account";
 import { readCurrentAccount } from "@/modules/access/queries/read-current-account";
 import { PasswordForm } from "@/modules/access/ui/password-form";
+import { Page, PageHeader, PageSkeleton } from "@/components/page";
 
-export default function Page() {
+export default function AccountPage() {
   return (
-    <Suspense fallback={<PageFallback />}>
+    <Suspense fallback={<PageSkeleton />}>
       <AccountContent />
     </Suspense>
-  );
-}
-
-function PageFallback() {
-  return (
-    <div className="flex max-w-3xl flex-col gap-6">
-      <Skeleton className="h-9 w-48" />
-      <Skeleton className="h-32 w-full" />
-      <Skeleton className="h-64 w-full" />
-    </div>
   );
 }
 
@@ -31,21 +21,21 @@ async function AccountContent() {
   }
 
   return (
-    <section className="flex max-w-3xl flex-col gap-6">
-      <h1 className="text-3xl font-bold text-primary">Mon compte</h1>
+    <Page className="max-w-3xl">
+      <PageHeader title="Mon compte" />
       <Card>
         <CardHeader>
           <CardTitle>Identité</CardTitle>
         </CardHeader>
         <CardContent>
           <dl className="grid gap-4 sm:grid-cols-2">
-            <div className="flex flex-col gap-1">
-              <dt className="text-sm font-bold text-muted-foreground">Identifiant</dt>
-              <dd>{account.username}</dd>
+            <div className="grid gap-1">
+              <dt className="text-[13px] text-muted-foreground">Identifiant</dt>
+              <dd className="text-[15px]">{account.username}</dd>
             </div>
-            <div className="flex flex-col gap-1">
-              <dt className="text-sm font-bold text-muted-foreground">Rôle</dt>
-              <dd>{roleLabel(account.role)}</dd>
+            <div className="grid gap-1">
+              <dt className="text-[13px] text-muted-foreground">Rôle</dt>
+              <dd className="text-[15px]">{roleLabel(account.role)}</dd>
             </div>
           </dl>
         </CardContent>
@@ -58,6 +48,6 @@ async function AccountContent() {
           <PasswordForm accountId={account.id} />
         </CardContent>
       </Card>
-    </section>
+    </Page>
   );
 }

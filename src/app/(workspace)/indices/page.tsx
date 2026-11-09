@@ -7,9 +7,11 @@ import { calendarLabel, reportedAtLabel } from "@/modules/report/model/report";
 import { AbuseNoteForm } from "@/modules/report/ui/abuse-note-form";
 import { SuspensionForm } from "@/modules/report/ui/suspension-form";
 import { Alert, AlertTitle } from "@/components/ui/alert";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
 import { TablePagination } from "@/components/table-pagination";
+import { Page, PageHeader, PageSection, PageSkeleton } from "@/components/page";
+import { Badge } from "@/components/ui/badge";
+import { ActionDialog } from "@/components/action-dialog";
+import { Ledger, LedgerEmpty, LedgerItem } from "@/components/ledger";
 
 type IndexReport = { id: string; identifier: string; reportedAt: string };
 type Index = {
@@ -35,7 +37,7 @@ const STATUS: Record<string, string> = {
 };
 
 export default function IndicesPage({ searchParams }: PageProps<"/indices">) {
-  return <Suspense fallback={<Skeleton className="h-96 w-full" />}><Indices searchParams={searchParams} /></Suspense>;
+  return <Suspense fallback={<PageSkeleton />}><Indices searchParams={searchParams} /></Suspense>;
 }
 
 async function Indices({ searchParams }: Pick<PageProps<"/indices">, "searchParams">) {
@@ -53,83 +55,96 @@ async function Indices({ searchParams }: Pick<PageProps<"/indices">, "searchPara
   const suspensions = await readJson<{ items: Suspension[] }>("/api/prime-suspensions").catch(() => null);
   const canNote = account.role === "SUPERVISOR" || account.role === "ADMINISTRATOR";
   return (
-    <section className="mx-auto flex w-full max-w-6xl flex-col gap-6">
-      <div className="grid gap-2">
-        <h1 className="text-3xl font-bold text-primary">Indices</h1>
-        <p className="max-w-3xl text-sm text-muted-foreground">Un indice n&apos;est pas une preuve de fraude. La suspension du droit aux primes est une décision séparée. Une prime déjà payée n&apos;est pas reprise.</p>
-      </div>
-      {indices ? <p className="text-sm text-muted-foreground">{indices.retouch} {indices.score}</p> : null}
-      {!indices ? <Alert variant="destructive"><AlertTitle>Les indices sont indisponibles. Actualisez la page.</AlertTitle></Alert> : indices.indices.length === 0 ? <p className="text-sm text-muted-foreground">Aucune image partagée.</p> : (
+    <Page className="max-w-6xl">
+      <PageHeader
+        title="Indices"
+        description="Un indice n'est pas une preuve de fraude. La suspension du droit aux primes est une décision séparée. Une prime déjà payée n'est pas reprise."
+      >
+        {indices ? <p className="text-[13px] leading-5 text-muted-foreground">{indices.retouch} {indices.score}</p> : null}
+      </PageHeader>
+      {!indices ? <Alert variant="destructive"><AlertTitle>Les indices sont indisponibles. Actualisez la page.</AlertTitle></Alert> : (
         <>
-          <div className="grid gap-4">
-            {indices.indices.map((index) => (
-              <Card key={index.fingerprint}>
-                <CardHeader className="gap-2">
-                  <CardTitle>{STATUS[index.status] ?? index.status} · {index.reportCount} signalements</CardTitle>
-                  <p className="text-sm">{index.explanation}</p>
-                </CardHeader>
-                <CardContent className="grid gap-4">
-                  <ul className="grid gap-2 text-sm">
-                    {index.reports.map((report) => (
-                      <li key={report.id}>
-                        <Link href={`/signalements/${report.id}`} className="text-primary underline-offset-4 hover:underline">Signalement {report.identifier}</Link>
-                        <span className="text-muted-foreground"> · Reçu le {reportedAtLabel(report.reportedAt)}</span>
-                      </li>
-                    ))}
-                  </ul>
-                  {index.reason ? <p className="text-sm text-muted-foreground">Motif : {index.reason}{index.actorName ? ` — ${index.actorName}` : ""}{index.recordedAt ? ` · ${reportedAtLabel(index.recordedAt)}` : ""}</p> : null}
-                  {canNote ? <AbuseNoteForm fingerprint={index.fingerprint} /> : null}
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-          <TablePagination page={indices.page} size={indices.size} total={indices.total} label="Pagination des indices" />
+          <PageSection title="Images partagées">
+            {indices.indices.length === 0 ? <LedgerEmpty>Aucune image partagée.</LedgerEmpty> : (
+              <div className="grid gap-5">
+                <Ledger>
+                  {indices.indices.map((index) => (
+                    <LedgerItem
+                      key={index.fingerprint}
+                      title={`${index.reportCount} signalements`}
+                      status={<Badge variant={index.status === "open" ? "warning" : index.status === "noted" ? "secondary" : "outline"}>{STATUS[index.status] ?? index.status}</Badge>}
+                      action={canNote ? <ActionDialog label="Statuer" title="Statuer sur l'indice" description={`${index.reportCount} signalements`} variant="default" size="sm"><AbuseNoteForm fingerprint={index.fingerprint} /></ActionDialog> : undefined}
+                    >
+                      <p>{index.explanation}</p>
+                      <ul className="grid gap-1">
+                        {index.reports.map((report) => (
+                          <li key={report.id}>
+                            <Link href={`/signalements/${report.id}`} className="ref text-primary underline-offset-4 hover:underline">{report.identifier}</Link>
+                            <span className="text-[13px] text-muted-foreground"> · Reçu le {reportedAtLabel(report.reportedAt)}</span>
+                          </li>
+                        ))}
+                      </ul>
+                      {index.reason ? <p className="text-muted-foreground">Motif : {index.reason}{index.actorName ? ` — ${index.actorName}` : ""}{index.recordedAt ? ` · ${reportedAtLabel(index.recordedAt)}` : ""}</p> : null}
+                    </LedgerItem>
+                  ))}
+                </Ledger>
+                <TablePagination page={indices.page} size={indices.size} total={indices.total} label="Pagination des indices" />
+              </div>
+            )}
+          </PageSection>
+          <PageSection title="Signalements en série">
+            {indices.series.length === 0 ? <LedgerEmpty>Aucun signalement en série.</LedgerEmpty> : (
+              <Ledger>
+                {indices.series.map((item) => (
+                  <LedgerItem key={`${item.reportedOn}-${item.reports[0]?.id ?? item.reportCount}`} title={`${item.reportCount} signalements`} meta={calendarLabel(item.reportedOn)}>
+                    <p>{item.explanation}</p>
+                    <ReportRefs reports={item.reports} />
+                  </LedgerItem>
+                ))}
+              </Ledger>
+            )}
+          </PageSection>
+          <PageSection title="Comptes multiples">
+            {indices.accounts.length === 0 ? <LedgerEmpty>Aucun compte multiple.</LedgerEmpty> : (
+              <Ledger>
+                {indices.accounts.map((item) => (
+                  <LedgerItem key={item.reports[0]?.id ?? item.accountCount} title={`${item.accountCount} comptes`} meta={`${item.reportCount} signalements`}>
+                    <p>{item.explanation}</p>
+                    <ReportRefs reports={item.reports} />
+                  </LedgerItem>
+                ))}
+              </Ledger>
+            )}
+          </PageSection>
         </>
       )}
-      {indices && indices.series.length === 0 ? <p className="text-sm text-muted-foreground">Aucun signalement en série.</p> : indices ? (
-        <div className="grid gap-4">
-          {indices.series.map((item) => (
-            <Card key={`${item.reportedOn}-${item.reports[0]?.id ?? item.reportCount}`}>
-              <CardHeader className="gap-2">
-                <CardTitle>{item.reportCount} signalements · {calendarLabel(item.reportedOn)}</CardTitle>
-                <p className="text-sm">{item.explanation}</p>
-              </CardHeader>
-              <CardContent>
-                <ul className="grid gap-2 text-sm">
-                  {item.reports.map((report) => <li key={report.id}><Link href={`/signalements/${report.id}`} className="text-primary underline-offset-4 hover:underline">Signalement {report.reference}</Link></li>)}
-                </ul>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      ) : null}
-      {indices && indices.accounts.length === 0 ? <p className="text-sm text-muted-foreground">Aucun compte multiple.</p> : indices ? (
-        <div className="grid gap-4">
-          {indices.accounts.map((item) => (
-            <Card key={item.reports[0]?.id ?? item.accountCount}>
-              <CardHeader className="gap-2">
-                <CardTitle>{item.accountCount} comptes · {item.reportCount} signalements</CardTitle>
-                <p className="text-sm">{item.explanation}</p>
-              </CardHeader>
-              <CardContent>
-                <ul className="grid gap-2 text-sm">
-                  {item.reports.map((report) => <li key={report.id}><Link href={`/signalements/${report.id}`} className="text-primary underline-offset-4 hover:underline">Signalement {report.reference}</Link></li>)}
-                </ul>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      ) : null}
-      <h2 className="text-xl font-bold text-primary">Droit aux primes</h2>
-      {suspensions && suspensions.items.length === 0 ? <p className="text-sm text-muted-foreground">Aucun droit suspendu.</p> : suspensions ? suspensions.items.map((item) => (
-        <p key={`${item.reference}-${item.recordedAt}`} className="text-sm">{item.reference} · {item.action === "suspended" ? "Suspendu" : "Rétabli"} · {item.reason}</p>
-      )) : <p className="text-sm text-muted-foreground">Le droit aux primes est indisponible.</p>}
-      {canNote ? (
-        <div className="grid gap-6 lg:grid-cols-2">
-          <SuspensionForm action="suspended" label="Suspendre le droit aux primes" />
-          <SuspensionForm action="restored" label="Rétablir le droit aux primes" />
-        </div>
-      ) : null}
-    </section>
+      <PageSection
+        title="Droit aux primes"
+        actions={canNote ? (
+          <>
+            <ActionDialog label="Rétablir" title="Rétablir le droit aux primes"><SuspensionForm action="restored" label="Rétablir le droit aux primes" /></ActionDialog>
+            <ActionDialog label="Suspendre" title="Suspendre le droit aux primes"><SuspensionForm action="suspended" label="Suspendre le droit aux primes" /></ActionDialog>
+          </>
+        ) : undefined}
+      >
+        {!suspensions ? <p className="text-sm text-muted-foreground">Le droit aux primes est indisponible.</p> : suspensions.items.length === 0 ? <LedgerEmpty>Aucun droit suspendu.</LedgerEmpty> : (
+          <Ledger>
+            {suspensions.items.map((item) => (
+              <LedgerItem key={`${item.reference}-${item.recordedAt}`} className="py-3.5" title={<span className="ref text-sm font-medium">{item.reference}</span>} status={<Badge variant={item.action === "suspended" ? "destructive" : "success"}>{item.action === "suspended" ? "Suspendu" : "Rétabli"}</Badge>}>
+                <p>{item.reason}</p>
+              </LedgerItem>
+            ))}
+          </Ledger>
+        )}
+      </PageSection>
+    </Page>
+  );
+}
+
+function ReportRefs({ reports }: { reports: IndexedReport[] }) {
+  return (
+    <ul className="flex flex-wrap gap-x-4 gap-y-1">
+      {reports.map((report) => <li key={report.id}><Link href={`/signalements/${report.id}`} className="ref text-primary underline-offset-4 hover:underline">{report.reference}</Link></li>)}
+    </ul>
   );
 }

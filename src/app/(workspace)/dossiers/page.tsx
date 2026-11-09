@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { readCurrentAccount } from "@/modules/access/queries/read-current-account";
@@ -11,10 +10,11 @@ import {
 } from "@/modules/report/model/report";
 import { readSellerFiles } from "@/modules/report/queries/read-seller-files";
 import { Alert, AlertTitle } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
 import { TablePagination } from "@/components/table-pagination";
+import { Page, PageHeader, PageSkeleton } from "@/components/page";
+import { Badge } from "@/components/ui/badge";
+import { ViewTabs } from "@/components/view-tabs";
+import { Ledger, LedgerEmpty, LedgerItem, ReportLink } from "@/components/ledger";
 
 const FILTERS = [
   { value: "identified", label: "Même numéro d'impôt" },
@@ -22,7 +22,7 @@ const FILTERS = [
 ];
 
 export default function SellerFilesPage({ searchParams }: PageProps<"/dossiers">) {
-  return <Suspense fallback={<Skeleton className="h-96 w-full" />}><SellerFiles searchParams={searchParams} /></Suspense>;
+  return <Suspense fallback={<PageSkeleton />}><SellerFiles searchParams={searchParams} /></Suspense>;
 }
 
 async function SellerFiles({ searchParams }: Pick<PageProps<"/dossiers">, "searchParams">) {
@@ -36,50 +36,44 @@ async function SellerFiles({ searchParams }: Pick<PageProps<"/dossiers">, "searc
   const page = Number.isSafeInteger(number) && number >= 0 ? number : 0;
   const files = await readSellerFiles(status, page).catch(() => null);
   return (
-    <section className="mx-auto flex w-full max-w-6xl flex-col gap-6">
-      <div className="grid gap-2">
-        <h1 className="text-3xl font-bold text-primary">Dossiers</h1>
-      </div>
-      <form className="flex flex-wrap gap-2" method="get">
-        {FILTERS.map((filter) => (
-          <Button key={filter.value} type="submit" name="status" value={filter.value} variant={filter.value === status ? "default" : "outline"}>{filter.label}</Button>
-        ))}
-      </form>
-      {!files ? <Alert variant="destructive"><AlertTitle>Les dossiers sont indisponibles. Actualisez la page.</AlertTitle></Alert> : files.items.length === 0 ? <p className="text-sm text-muted-foreground">{status === "identified" ? "Aucun constat retenu ne porte un numéro d'impôt." : "Aucun constat retenu n'est sans numéro d'impôt."}</p> : (
-        <>
-          <div className="grid gap-4">
-            {files.items.map((file) => <SellerFileCard key={file.taxId ?? file.reports[0]?.reportId} file={file} />)}
+    <Page className="max-w-6xl">
+      <PageHeader title="Dossiers" />
+      <div className="grid gap-5">
+        <ViewTabs label="Filtrer les dossiers" items={FILTERS.map((filter) => ({ href: `/dossiers?status=${filter.value}`, label: filter.label, active: filter.value === status }))} />
+        {!files ? <Alert variant="destructive"><AlertTitle>Les dossiers sont indisponibles. Actualisez la page.</AlertTitle></Alert> : files.items.length === 0 ? <LedgerEmpty className="border-t-0">{status === "identified" ? "Aucun constat retenu ne porte un numéro d'impôt." : "Aucun constat retenu n'est sans numéro d'impôt."}</LedgerEmpty> : (
+          <div className="grid gap-5">
+            <Ledger>
+              {files.items.map((file) => <SellerFileCard key={file.taxId ?? file.reports[0]?.reportId} file={file} />)}
+            </Ledger>
+            <TablePagination page={files.page} size={files.size} total={files.total} label="Pagination des dossiers" />
           </div>
-          <TablePagination page={files.page} size={files.size} total={files.total} label="Pagination des dossiers" />
-        </>
-      )}
-    </section>
+        )}
+      </div>
+    </Page>
   );
 }
 
 function SellerFileCard({ file }: { file: SellerFile }) {
-  const title = file.taxId ? `Numéro d'impôt ${file.taxId}` : "Sans numéro d'impôt";
   return (
-    <Card>
-      <CardHeader className="gap-2">
-        <CardTitle>{title}</CardTitle>
-        {file.namesDiffer ? <p className="text-sm text-muted-foreground">Plusieurs noms de contribuable à vérifier.</p> : file.sellerName ? <p className="text-sm font-bold">{file.sellerName}</p> : null}
-        <p className="text-xs text-muted-foreground">{file.reports.length === 1 ? "1 constat" : `${file.reports.length} constats`} · dernier le {reportedAtLabel(file.latestAt)}</p>
-      </CardHeader>
-      <CardContent className="grid gap-3">
+    <LedgerItem
+      title={file.taxId ? <span className="ref text-sm font-medium">{file.taxId}</span> : "Sans numéro d'impôt"}
+      status={file.namesDiffer ? <Badge variant="warning">Noms à vérifier</Badge> : undefined}
+      meta={<>{file.namesDiffer ? null : file.sellerName ? <span className="block font-medium text-foreground">{file.sellerName}</span> : null}{file.reports.length === 1 ? "1 constat" : `${file.reports.length} constats`} · dernier le {reportedAtLabel(file.latestAt)}</>}
+    >
+      <ul className="grid divide-y">
         {file.reports.map((report) => {
           const finding = findingLabel(report.finding);
           const proof = proofLabel(report.proof);
           return (
-            <article key={report.reportId} className="grid gap-1 rounded-lg border p-4 text-sm">
-              <p className="font-bold">{qualificationDecisionLabel(report.decision)}{finding ? ` · ${finding}` : ""}{proof ? ` · ${proof}` : ""}</p>
+            <li key={report.reportId} className="grid gap-0.5 py-2.5 first:pt-0 last:pb-0">
+              <p className="font-medium">{qualificationDecisionLabel(report.decision)}{finding ? ` · ${finding}` : ""}{proof ? <span className="font-normal text-muted-foreground"> · {proof}</span> : ""}</p>
               <p>{report.justification}</p>
-              {report.sellerName ? <p className="text-xs text-muted-foreground">Nom saisi : {report.sellerName}</p> : null}
-              <Link href={`/signalements/${report.reportId}`} className="w-fit text-primary underline-offset-4 hover:underline">Ouvrir le signalement {report.identifier}</Link>
-            </article>
+              {report.sellerName ? <p className="text-[13px] text-muted-foreground">Nom saisi : {report.sellerName}</p> : null}
+              <ReportLink id={report.reportId} reference={report.identifier} />
+            </li>
           );
         })}
-      </CardContent>
-    </Card>
+      </ul>
+    </LedgerItem>
   );
 }

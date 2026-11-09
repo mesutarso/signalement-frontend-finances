@@ -2,6 +2,7 @@
 
 import { useActionState, useState } from "react";
 import { Dialog } from "@base-ui/react/dialog";
+import { DialogSurface } from "@/components/action-dialog";
 import { Button } from "@/components/ui/button";
 import { Field, FieldGroup, FieldLabel, FieldError } from "@/components/ui/field";
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
@@ -52,19 +53,9 @@ export function EditAccountDialog({ account }: { account: Account }) {
   return (
     <Dialog.Root open={open} onOpenChange={(next) => { if (!pending) setOpen(next); }}>
       <Dialog.Trigger render={<Button variant="ghost" size="sm" />} aria-label={`Modifier le compte ${account.username}`}>Modifier</Dialog.Trigger>
-      <Dialog.Portal>
-        <Dialog.Backdrop className="fixed inset-0 z-50 bg-black/40" />
-        <Dialog.Popup className="fixed top-1/2 left-1/2 z-50 flex max-h-[calc(100svh-2rem)] w-[calc(100%-2rem)] max-w-lg -translate-x-1/2 -translate-y-1/2 flex-col gap-6 overflow-y-auto rounded-xl bg-card p-6 text-card-foreground shadow-xl sm:p-8">
-          <div className="flex items-start justify-between gap-4">
-            <div className="grid gap-1">
-              <Dialog.Title className="text-xl font-bold text-primary">Modifier le compte</Dialog.Title>
-              <Dialog.Description className="text-sm text-muted-foreground">{account.username}</Dialog.Description>
-            </div>
-            <Dialog.Close disabled={pending} render={<Button variant="ghost" size="sm" />}>Fermer</Dialog.Close>
-          </div>
-          <EditForm account={account} onSuccess={() => setOpen(false)} onPending={setPending} />
-        </Dialog.Popup>
-      </Dialog.Portal>
+      <DialogSurface title="Modifier le compte" description={account.username} closeDisabled={pending}>
+        <EditForm account={account} onSuccess={() => setOpen(false)} onPending={setPending} />
+      </DialogSurface>
     </Dialog.Root>
   );
 }

@@ -3,159 +3,146 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
+import { useState } from "react";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { DashboardSquare01Icon, File01Icon, Login01Icon, Logout01Icon, UserIcon, UsersIcon } from "@hugeicons/core-free-icons";
+import { ArrowDown01Icon, Logout01Icon } from "@hugeicons/core-free-icons";
 import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
-  SidebarHeader,
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
+  SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarMenuSub,
-  SidebarMenuSubItem,
-  SidebarMenuSubButton,
-  SidebarSeparator,
+  useSidebar,
 } from "@/components/ui/sidebar";
-import type { Account, AccountRole } from "@/modules/access/model/account";
+import type { Account } from "@/modules/access/model/account";
 import { roleLabel } from "@/modules/access/model/account";
+import { isNavActive, navigationFor } from "@/modules/access/model/navigation";
 import { signOut } from "@/modules/access/actions/sign-out";
-
-const ITEMS: {
-  href: string;
-  label: string;
-  icon: typeof File01Icon;
-  signedIn?: boolean;
-  roles?: AccountRole[];
-}[] = [
-  { href: "/", label: "Tableau de bord", icon: DashboardSquare01Icon, signedIn: true },
-  { href: "/signalements", label: "Signalements", icon: File01Icon, roles: ["AGENT", "SUPERVISOR", "AUDITOR", "ADMINISTRATOR"] },
-  { href: "/dossiers", label: "Dossiers", icon: File01Icon, roles: ["AGENT", "SUPERVISOR", "AUDITOR", "ADMINISTRATOR"] },
-  { href: "/points", label: "Points", icon: File01Icon, roles: ["AGENT", "SUPERVISOR", "AUDITOR", "ADMINISTRATOR"] },
-  { href: "/primes", label: "Primes", icon: File01Icon, roles: ["AGENT", "SUPERVISOR", "AUDITOR", "ADMINISTRATOR"] },
-  { href: "/etats", label: "États", icon: File01Icon, roles: ["SUPERVISOR", "AUDITOR", "ADMINISTRATOR", "CELLULE", "CABINET", "PAYMASTER"] },
-  { href: "/contribuables", label: "Contribuables", icon: UsersIcon, roles: ["AGENT", "SUPERVISOR", "AUDITOR", "ADMINISTRATOR"] },
-  { href: "/echantillons", label: "Échantillons", icon: File01Icon, roles: ["SUPERVISOR", "AUDITOR", "ADMINISTRATOR"] },
-  { href: "/tirages", label: "Tirages", icon: File01Icon, roles: ["AGENT", "SUPERVISOR", "AUDITOR", "ADMINISTRATOR"] },
-  { href: "/declarants", label: "Déclarants", icon: UsersIcon, roles: ["AGENT", "SUPERVISOR", "AUDITOR", "ADMINISTRATOR"] },
-  { href: "/indicateurs", label: "Indicateurs", icon: DashboardSquare01Icon, roles: ["AGENT", "SUPERVISOR", "AUDITOR", "ADMINISTRATOR"] },
-  { href: "/corrections", label: "Corrections", icon: File01Icon, roles: ["AGENT", "SUPERVISOR", "AUDITOR", "ADMINISTRATOR"] },
-  { href: "/reexamens", label: "Réexamens", icon: File01Icon, roles: ["AGENT", "SUPERVISOR", "AUDITOR", "ADMINISTRATOR"] },
-  { href: "/messages", label: "Messages", icon: File01Icon, roles: ["AGENT", "SUPERVISOR", "AUDITOR", "ADMINISTRATOR"] },
-  { href: "/regles", label: "Règles", icon: DashboardSquare01Icon, roles: ["SUPERVISOR", "AUDITOR", "ADMINISTRATOR"] },
-  { href: "/courriers", label: "Courriers", icon: File01Icon, roles: ["SUPERVISOR", "AUDITOR", "ADMINISTRATOR"] },
-  { href: "/supervision", label: "Contrôle", icon: DashboardSquare01Icon, roles: ["SUPERVISOR", "AUDITOR", "ADMINISTRATOR"] },
-  { href: "/indices", label: "Indices", icon: DashboardSquare01Icon, roles: ["SUPERVISOR", "AUDITOR", "ADMINISTRATOR"] },
-  { href: "/journal", label: "Journal", icon: File01Icon, roles: ["SUPERVISOR", "AUDITOR", "ADMINISTRATOR"] },
-  { href: "/compte", label: "Mon compte", icon: UserIcon, signedIn: true },
-  { href: "/comptes", label: "Comptes", icon: UsersIcon, roles: ["ADMINISTRATOR"] },
-];
 
 export function AppSidebar({ account }: { account: Account | null }) {
   const pathname = usePathname();
-  const items = ITEMS.filter((item) => {
-    if (!account && (item.signedIn || item.roles)) {
-      return false;
+  const { setOpenMobile } = useSidebar();
+  const sections = navigationFor(account);
+  const activeSection = sections.find((section) => section.items.some((item) => isNavActive(pathname, item.href)))?.id;
+  const primarySection = sections.find((section) => section.label)?.id;
+  const [overrides, setOverrides] = useState<Record<string, boolean>>({});
+  const [lastPath, setLastPath] = useState(pathname);
+
+  // Une navigation ramène toujours sur une rubrique ouverte, même si elle avait été repliée.
+  if (lastPath !== pathname) {
+    setLastPath(pathname);
+    if (activeSection && overrides[activeSection] === false) {
+      setOverrides({ ...overrides, [activeSection]: true });
     }
-    return !item.roles || (account != null && item.roles.includes(account.role));
-  });
+  }
+
+  function isOpen(id: string): boolean {
+    return overrides[id] ?? (id === activeSection || id === "accueil" || id === primarySection);
+  }
+
   const initials = account ? account.username.slice(0, 2).toUpperCase() : "";
+  const accountActive = pathname === "/compte";
 
   return (
     <Sidebar collapsible="icon" className="institution-sidebar">
-      <SidebarHeader className="px-4 py-6 group-data-[collapsible=icon]:px-3">
-        <Link href="/" aria-label="Plateforme de signalements — accueil" className="flex min-w-0 items-center gap-3">
-          <span className="relative block size-11 shrink-0 overflow-hidden group-data-[collapsible=icon]:size-10" aria-hidden="true">
-            <Image src="/logo-finances-light.webp" alt="" width={380} height={148} priority className="absolute top-0 left-0 h-11 w-auto max-w-none group-data-[collapsible=icon]:h-10" />
-          </span>
-          <span className="grid min-w-0 gap-1 group-data-[collapsible=icon]:hidden">
-            <span className="text-sm font-bold leading-snug">Plateforme de signalements</span>
-            <span className="text-xs text-sidebar-foreground/70">Ministère des Finances</span>
+      <SidebarHeader className="gap-2.5 px-4 pt-5 pb-5 group-data-[collapsible=icon]:px-3 group-data-[collapsible=icon]:pb-3">
+        <Link
+          href="/"
+          onClick={() => setOpenMobile(false)}
+          aria-label="Plateforme de signalements, Ministère des Finances : tableau de bord"
+          className="block w-fit rounded-sm focus-visible:outline-white"
+        >
+          <span className="relative block h-11 w-[114px] overflow-hidden group-data-[collapsible=icon]:h-10 group-data-[collapsible=icon]:w-10" aria-hidden="true">
+            <Image
+              src="/logo-finances-light.webp"
+              alt=""
+              width={384}
+              height={148}
+              priority
+              className="absolute top-0 left-0 h-11 w-auto max-w-none group-data-[collapsible=icon]:h-10"
+            />
           </span>
         </Link>
+        <p className="text-[13px] leading-tight text-white/75 group-data-[collapsible=icon]:hidden">Plateforme de signalements</p>
       </SidebarHeader>
-      <SidebarContent className="pt-3">
-        <SidebarGroup className="px-3">
-          <SidebarGroupLabel>Navigation</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {items.map((item) => item.href === "/signalements" ? (
-                <SidebarMenuItem key="signalements">
-                  <details open={pathname.startsWith("/signalements") || pathname.startsWith("/imports")} className="group/reports group-data-[collapsible=icon]:hidden">
-                    <summary className="flex h-12 cursor-pointer list-none items-center gap-2 rounded-md px-2 text-sm font-bold hover:bg-sidebar-accent [&::-webkit-details-marker]:hidden">
-                      <HugeiconsIcon icon={File01Icon} size={16} strokeWidth={2} />
-                      <span className="flex-1">Signalements</span>
-                      <span aria-hidden="true" className="transition-transform group-open/reports:rotate-180">⌄</span>
-                    </summary>
-                    <SidebarMenuSub>
-                      <SidebarMenuSubItem><SidebarMenuSubButton className="h-10" isActive={pathname.startsWith("/signalements")} aria-current={pathname.startsWith("/signalements") ? "page" : undefined} render={<Link href="/signalements" />}>Liste des signalements</SidebarMenuSubButton></SidebarMenuSubItem>
-                      {account && account.role !== "AUDITOR" ? <SidebarMenuSubItem><SidebarMenuSubButton className="h-10" isActive={pathname.startsWith("/imports")} aria-current={pathname.startsWith("/imports") ? "page" : undefined} render={<Link href="/imports" />}>Imports et suivi</SidebarMenuSubButton></SidebarMenuSubItem> : null}
-                    </SidebarMenuSub>
-                  </details>
-                  <div className="hidden flex-col gap-1 group-data-[collapsible=icon]:flex">
-                    <SidebarMenuButton aria-label="Liste des signalements" tooltip="Liste des signalements" isActive={pathname.startsWith("/signalements")} render={<Link href="/signalements" />}><HugeiconsIcon icon={File01Icon} strokeWidth={2} /></SidebarMenuButton>
-                    {account && account.role !== "AUDITOR" ? <SidebarMenuButton aria-label="Imports et suivi" tooltip="Imports et suivi" isActive={pathname.startsWith("/imports")} render={<Link href="/imports" />}><HugeiconsIcon icon={DashboardSquare01Icon} strokeWidth={2} /></SidebarMenuButton> : null}
-                  </div>
-                </SidebarMenuItem>
-              ) : (
-                <SidebarMenuItem key={item.href}>
-                  <SidebarMenuButton
-                    size="lg"
-                    aria-label={item.label}
-                    aria-current={pathname === item.href ? "page" : undefined}
-                    isActive={pathname === item.href || pathname.startsWith(`${item.href}/`)}
-                    tooltip={item.label}
-                    render={<Link href={item.href} />}
-                  >
-                    <HugeiconsIcon icon={item.icon} strokeWidth={2} />
-                    <span>{item.label}</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+
+      <SidebarContent className="gap-0 pb-3 group-data-[collapsible=icon]:overflow-y-auto">
+        {sections.map((section) => {
+          const open = isOpen(section.id);
+          return (
+            <SidebarGroup key={section.id} data-open={open} className="nav-section p-0 pl-3">
+              {section.label ? (
+                <SidebarGroupLabel
+                  render={<button type="button" aria-expanded={open} onClick={() => setOverrides({ ...overrides, [section.id]: !open })} />}
+                >
+                  <span>{section.label}</span>
+                  <HugeiconsIcon icon={ArrowDown01Icon} strokeWidth={2} className="size-3.5!" />
+                </SidebarGroupLabel>
+              ) : null}
+              <SidebarGroupContent>
+                <SidebarMenu className="gap-0.5">
+                  {section.items.map((item) => {
+                    const active = isNavActive(pathname, item.href);
+                    return (
+                      <SidebarMenuItem key={item.href}>
+                        <SidebarMenuButton
+                          aria-label={item.label}
+                          aria-current={active ? "page" : undefined}
+                          isActive={active}
+                          tooltip={item.label}
+                          onClick={() => setOpenMobile(false)}
+                          className="group-data-[collapsible=icon]:data-active:w-[52px]! group-data-[collapsible=icon]:data-active:justify-start group-data-[collapsible=icon]:data-active:pl-3!"
+                          render={<Link href={item.href} />}
+                        >
+                          <HugeiconsIcon icon={item.icon} strokeWidth={1.75} />
+                          <span>{item.label}</span>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    );
+                  })}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          );
+        })}
       </SidebarContent>
-      <SidebarSeparator />
-      <SidebarFooter className="gap-3 p-3">
-        {account ? (
-          <div className="flex items-center gap-2 px-2 py-1 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0">
-            <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-sidebar-accent text-xs font-bold text-sidebar-accent-foreground">
-              {initials}
-            </span>
-            <div className="grid min-w-0 group-data-[collapsible=icon]:hidden">
-              <span className="truncate text-sm font-bold">{account.username}</span>
-              <span className="truncate text-xs text-sidebar-foreground/75">{roleLabel(account.role)}</span>
-            </div>
-          </div>
-        ) : null}
-        <SidebarMenu>
-          <SidebarMenuItem>
-            {account ? (
-              <form action={signOut}>
-                <SidebarMenuButton type="submit" aria-label="Se déconnecter" tooltip="Se déconnecter">
-                  <HugeiconsIcon icon={Logout01Icon} strokeWidth={2} />
-                  <span>Se déconnecter</span>
-                </SidebarMenuButton>
-              </form>
-            ) : (
-              <SidebarMenuButton
-                aria-label="Connexion"
-                tooltip="Connexion"
-                isActive={pathname === "/connexion"}
-                render={<Link href="/connexion" />}
+
+      {account ? (
+        <SidebarFooter className="gap-1 border-t border-sidebar-border p-3 group-data-[collapsible=icon]:px-3">
+          <div className="flex items-center gap-1 group-data-[collapsible=icon]:flex-col">
+            <Link
+              href="/compte"
+              onClick={() => setOpenMobile(false)}
+              aria-current={accountActive ? "page" : undefined}
+              aria-label={`Mon compte : ${account.username}, ${roleLabel(account.role)}`}
+              className="flex min-w-0 flex-1 items-center gap-2.5 rounded-md p-1.5 transition-colors hover:bg-sidebar-accent focus-visible:outline-white aria-[current=page]:bg-sidebar-accent group-data-[collapsible=icon]:flex-none"
+            >
+              <span aria-hidden="true" className="flex size-8 shrink-0 items-center justify-center rounded-md bg-white text-xs font-bold text-primary">
+                {initials}
+              </span>
+              <span className="grid min-w-0 leading-tight group-data-[collapsible=icon]:hidden">
+                <span className="truncate text-[13px] font-medium">{account.username}</span>
+                <span className="truncate text-xs text-white/70">{roleLabel(account.role)}</span>
+              </span>
+            </Link>
+            <form action={signOut}>
+              <button
+                type="submit"
+                aria-label="Se déconnecter"
+                title="Se déconnecter"
+                className="flex size-9 items-center justify-center rounded-md text-white/80 transition-colors hover:bg-sidebar-accent hover:text-white focus-visible:outline-white"
               >
-                <HugeiconsIcon icon={Login01Icon} strokeWidth={2} />
-                <span>Connexion</span>
-              </SidebarMenuButton>
-            )}
-          </SidebarMenuItem>
-        </SidebarMenu>
-      </SidebarFooter>
+                <HugeiconsIcon icon={Logout01Icon} strokeWidth={1.75} className="size-4" />
+              </button>
+            </form>
+          </div>
+        </SidebarFooter>
+      ) : null}
     </Sidebar>
   );
 }

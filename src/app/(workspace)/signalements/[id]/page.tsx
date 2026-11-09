@@ -1,6 +1,6 @@
 import { notFound, redirect } from "next/navigation";
 import { Suspense } from "react";
-import { Skeleton } from "@/components/ui/skeleton";
+import { PageSkeleton } from "@/components/page";
 import { readCurrentAccount } from "@/modules/access/queries/read-current-account";
 import { readAssignees } from "@/modules/report/queries/read-assignees";
 import { readReport } from "@/modules/report/queries/read-report";
@@ -11,7 +11,7 @@ import { ReportScreen } from "@/modules/report/ui/report-screen";
 
 export default function Page({ params }: { params: Promise<{ id: string }> }) {
   return (
-    <Suspense fallback={<Skeleton className="h-96 w-full" />}>
+    <Suspense fallback={<PageSkeleton />}>
       <ReportContent params={params} />
     </Suspense>
   );
