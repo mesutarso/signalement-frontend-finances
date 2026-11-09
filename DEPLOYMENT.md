@@ -2,6 +2,8 @@
 
 Source : `https://github.com/mesutarso/signalement-frontend-finances.git`, branche `main`.
 
+L’application est reliée à la GitHub App existante dans Coolify, avec **Deploy on push (webhooks)** activé. Chaque push sur `main` déclenche la construction et le déploiement automatique du frontend. Vérifier le SHA du commit et l’état sain dans les journaux de déploiement.
+
 Créer une application Dockerfile à la racine, fichier `/Dockerfile`, port interne `3000`. Activer la connexion au réseau prédéfini `coolify`, sur le même serveur que le backend.
 
 Variable runtime : `BACKEND_URL=http://signalements-backend:8080`. Cette variable reste côté serveur et ne doit pas commencer par `NEXT_PUBLIC_`.
