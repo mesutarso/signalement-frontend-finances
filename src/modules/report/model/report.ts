@@ -40,9 +40,41 @@ export type PhotoReading = {
   amount: string | null;
   documentNumber: string | null;
   code: string | null;
+  currency: string | null;
+  netAmount: string | null;
+  vatAmount: string | null;
+  vatRate: string | null;
+  paidAmount: string | null;
+  defCode: string | null;
+  defNumber: string | null;
+  model: string | null;
+  schemaVersion: string | null;
   articles: PhotoArticle[];
   errorCode: string | null;
 };
+
+const READING_ERRORS: Record<string, string> = {
+  "not-configured": "Le service de lecture n’est pas configuré. Contactez l’administrateur.",
+  "rejected-token": "L’accès au service de lecture est refusé. Contactez l’administrateur.",
+  "rejected-document": "Le service n’a pas pu traiter cette pièce. Consultez l’image ou demandez une nouvelle photo.",
+  "too-large": "Cette pièce dépasse la limite de lecture de 5 Mio.",
+  "rejected-type": "La lecture accepte les images JPEG, PNG et WebP.",
+  quota: "Le quota du service de lecture est atteint. Réessayez plus tard.",
+  timeout: "Le service de lecture a mis trop de temps à répondre. Vous pouvez réessayer.",
+  "unexpected-response": "La réponse du service de lecture est inexploitable. Vous pouvez réessayer.",
+  "provider-error": "Le service de lecture a rencontré une erreur. Vous pouvez réessayer.",
+  unavailable: "Le service de lecture est momentanément inaccessible. Consultez la pièce jointe.",
+};
+
+export function readingErrorLabel(code: string | null): string {
+  return (code && READING_ERRORS[code]) || "La lecture a échoué. Vous pouvez réessayer.";
+}
+
+export function readingProviderLabel(model: string | null): string {
+  if (model === "herdys-mistral") return "Herdys · Mistral";
+  if (model === "herdys-openai") return "Herdys · OpenAI";
+  return "Service de lecture";
+}
 
 export type Assignment = {
   recordedAt: string;

@@ -45,7 +45,7 @@ export function ReportPhotos({
         </Dialog.Portal>
       </Dialog.Root>
       {photos.length > 1 ? <div aria-label="Choisir une pièce jointe" className="flex gap-2 overflow-x-auto pb-2">{photos.map((item, index) => <button key={item.id} type="button" aria-label={`Afficher la pièce ${index + 1}`} aria-pressed={selected === index} onClick={() => setSelected(index)} className="relative h-20 w-24 shrink-0 overflow-hidden rounded-md border bg-muted aria-pressed:ring-2 aria-pressed:ring-foreground"><Image src={`/signalements/${reportId}/photos/${item.id}`} alt="" fill unoptimized sizes="96px" className="object-contain p-1" /></button>)}</div> : null}
-      <PhotoReading reportId={reportId} photo={photo} canRequest={canRequest} />
+      <PhotoReading key={photo.id} reportId={reportId} photo={photo} canRequest={canRequest} />
       <PhotoRequestPanel reportId={reportId} photo={photo} requests={photoRequests} canRequest={canRequest} />
     </div>
   );
