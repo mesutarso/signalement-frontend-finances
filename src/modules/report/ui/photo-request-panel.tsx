@@ -44,7 +44,7 @@ export function PhotoRequestPanel({
             {request.actorName ? ` par ${request.actorName}` : ""}.
           </p>
           {request.notice === "waiting" ? (
-            <p className="text-xs text-muted-foreground">Déclarant à prévenir.</p>
+            <p className="text-xs text-muted-foreground">Le message est préparé. Il n&apos;est pas envoyé.</p>
           ) : null}
           {request.linkedIdentifier ? (
             <p>Signalement rattaché : {request.linkedIdentifier}</p>

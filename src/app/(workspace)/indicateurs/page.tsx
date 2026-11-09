@@ -43,6 +43,25 @@ function periodLabel(figures: Figures): string {
   return `Du ${calendarLabel(figures.from)} au ${calendarLabel(figures.to)}`;
 }
 
+function reportSentence(title: string, figures: Figures): string {
+  return `${title}, ${periodLabel(figures).toLowerCase()} : ${amount(figures.received)} signalements reçus, ${amount(figures.treated)} traités, ${amount(figures.findings)} constats, ${amount(figures.transmissions)} dossiers transmis, ${amount(figures.responses)} réponses, ${amount(figures.points)} points, ${amount(figures.primes)} primes, ${amount(figures.payments)} paiements pour ${amount(figures.paidAmount)} FC, ${amount(figures.draws)} tirages, ${amount(figures.alerts)} alertes.`;
+}
+
+const DEFINITIONS = [
+  ["Signalements reçus", "Signalements dont la date de dépôt est dans la période."],
+  ["Signalements traités", "Dernier constat confirmé ou non retenu."],
+  ["Constats", "Dernier constat confirmé."],
+  ["Dossiers transmis", "Courriers validés."],
+  ["Réponses des services", "Réponses enregistrées."],
+  ["Points", "Somme des mouvements de la période."],
+  ["Primes", "Primes enregistrées."],
+  ["Paiements", "Tentatives dont le résultat est payé."],
+  ["Montant payé", "Somme des lignes payées."],
+  ["Tirages", "Tirages effectués."],
+  ["Alertes", "Notes portées sur un indice."],
+  ["Province, ville, service, budget", "Ces données ne sont pas disponibles."],
+];
+
 function FiguresCard({ title, figures }: { title: string; figures: Figures }) {
   const rows = [
     ["Signalements reçus", amount(figures.received)],
@@ -114,6 +133,15 @@ async function Indicators({ searchParams }: Pick<PageProps<"/indicateurs">, "sea
             <FiguresCard title="Rapport de la semaine" figures={indicators.week} />
             <FiguresCard title="Note du mois" figures={indicators.month} />
           </div>
+          <Card>
+            <CardHeader className="gap-2"><CardTitle>Rapport produit à la lecture</CardTitle></CardHeader>
+            <CardContent className="grid gap-3 text-sm">
+              <p>{reportSentence("Rapport de la semaine", indicators.week)}</p>
+              <p>{reportSentence("Note du mois", indicators.month)}</p>
+              <p className="text-muted-foreground">Les définitions ci-dessous s&apos;appliquent à ces deux textes. La province, la ville, le service et le budget prévisionnel ne figurent pas dans le rapport.</p>
+              {DEFINITIONS.map(([label, text]) => <p key={label}><span className="font-bold">{label}. </span>{text}</p>)}
+            </CardContent>
+          </Card>
         </>
       )}
     </section>

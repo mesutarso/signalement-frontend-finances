@@ -62,6 +62,7 @@ const ACTIONS: Record<string, string> = {
   reexamination: "Réexamen",
   "reexamination-decision": "Décision de réexamen",
   "declarant-message": "Message préparé",
+  "message-model": "Modèle de message",
   "prime-suspension": "Droit aux primes",
   "prize-handover": "Remise du lot",
   "rule-version": "Version de règle",
