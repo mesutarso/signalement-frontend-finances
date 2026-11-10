@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { readMissingJson } from "@/lib/api";
 import { readCurrentAccount } from "@/modules/access/queries/read-current-account";
 import { calendarLabel, findingLabel, proofLabel, qualificationDecisionLabel, reportedAtLabel } from "@/modules/report/model/report";
+import { LetterDispatchForm } from "@/modules/report/ui/letter-routing-form";
 import { LetterDecisionForm } from "@/modules/report/ui/letter-decision-form";
 import { LetterResponseForm } from "@/modules/report/ui/letter-response-form";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -77,15 +78,17 @@ async function LetterDetail({ params }: { params: Promise<{ id: string }> }) {
   if (!detail) {
     notFound();
   }
+  const dispatch = await readMissingJson<{service: string; sentOn: string | null; reference: string | null}>(`/api/letters/${id}/dispatches`);
   const canWrite = account.role === "SUPERVISOR" || account.role === "ADMINISTRATOR";
   const canDecide = canWrite && detail.letter.status === "draft";
   const canRespond = canWrite && detail.letter.status === "validated";
   return (
     <Page className="max-w-6xl">
+
       <PageHeader
         back={{ href: "/courriers", label: "Courriers" }}
         title={<span className="tabular-nums">{detail.letter.reference}</span>}
-        description={`Semaine du ${calendarLabel(detail.letter.periodStart)} au ${calendarLabel(detail.letter.periodEnd)}. Préparé le ${reportedAtLabel(detail.letter.preparedAt)}. Envoi non enregistré.`}
+        description={`Semaine du ${calendarLabel(detail.letter.periodStart)} au ${calendarLabel(detail.letter.periodEnd)}. Préparé le ${reportedAtLabel(detail.letter.preparedAt)}.`}
         actions={
           <>
             <Button variant="outline" nativeButton={false} render={<a href={`/courriers/${detail.letter.id}/annexes/company`} />}><HugeiconsIcon icon={Download01Icon} strokeWidth={1.75} data-icon="inline-start" />Entreprises</Button>
@@ -100,6 +103,7 @@ async function LetterDetail({ params }: { params: Promise<{ id: string }> }) {
           </div>
         ) : null}
       </PageHeader>
+      <PageSection title="Transmission au service"><p className="text-sm">Service : {dispatch?.service || detail.letter.recipient || "À préciser"}</p>{dispatch?.sentOn ? <p>Envoyé le {calendarLabel(dispatch.sentOn)} · {dispatch.reference}</p> : detail.letter.status === "validated" && (account.role === "SUPERVISOR" || account.role === "ADMINISTRATOR") ? <LetterDispatchForm letterId={id} /> : <p>Envoi non enregistré.</p>}</PageSection>
       {ANNEXES.map((annex) => {
         const lines = detail.lines.filter((line) => line.annex === annex.value);
         return (

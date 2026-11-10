@@ -1,3 +1,5 @@
+import { CaptureReportForm } from "@/modules/report/ui/campaign-reporting-forms";
+import { ActionDialog } from "@/components/action-dialog";
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { readJson } from "@/lib/api";
@@ -37,7 +39,7 @@ const DEFINITIONS = [
   ["Signalements reçus", "Signalements dont la date de dépôt est dans la période."],
   ["Signalements traités", "Dernier constat confirmé ou non retenu."],
   ["Constats", "Dernier constat confirmé."],
-  ["Dossiers transmis", "Courriers validés."],
+  ["Dossiers transmis", "Courriers dont l’envoi a été enregistré."],
   ["Réponses des services", "Réponses enregistrées."],
   ["Points", "Somme des mouvements de la période."],
   ["Primes", "Primes enregistrées."],
@@ -45,7 +47,7 @@ const DEFINITIONS = [
   ["Montant payé", "Somme des lignes payées."],
   ["Tirages", "Tirages effectués."],
   ["Alertes", "Notes portées sur un indice."],
-  ["Province, ville, service, budget", "Ces données ne sont pas disponibles."],
+  ["Province, ville, service", "Ces données ne sont pas fournies par l’API actuelle."],
 ];
 
 async function Indicators({ searchParams }: Pick<PageProps<"/indicateurs">, "searchParams">) {
@@ -68,7 +70,11 @@ async function Indicators({ searchParams }: Pick<PageProps<"/indicateurs">, "sea
   if (finding) {
     query.set("finding", finding);
   }
-  const indicators = await readJson<IndicatorsData>(`/api/indicators?${query}`).catch(() => null);
+  const [indicators, budget, reports] = await Promise.all([
+    readJson<IndicatorsData>(`/api/indicators?${query}`).catch(() => null),
+    readJson<{amount: number | null; approvedAmount: number; paidAmount: number}>("/api/campaign-budget"),
+    readJson<{id: string; kind: string; from: string; to: string; figures: Figures; generatedAt: string}[]>("/api/campaign-reports"),
+  ]);
   const rows: [string, (figures: Figures) => string][] = [
     ["Signalements reçus", (figures) => amount(figures.received)],
     ["Signalements traités", (figures) => amount(figures.treated)],
@@ -91,8 +97,15 @@ async function Indicators({ searchParams }: Pick<PageProps<"/indicateurs">, "sea
     <Page className="max-w-6xl">
       <PageHeader
         title="Indicateurs"
-        description="Les chiffres sont calculés à la lecture. La province, la ville et le service ne sont pas disponibles. Le budget prévisionnel n'est pas fixé."
+        actions={account.role === "SUPERVISOR" || account.role === "ADMINISTRATOR" ? <ActionDialog label="Archiver un rapport" title="Rapport de la dernière période close"><CaptureReportForm /></ActionDialog> : undefined}
+        description="Les chiffres sont calculés à la lecture. La province, la ville et le service ne sont pas disponibles. Le budget et les rapports archivés se consultent ci-dessous."
       />
+      <PageSection title="Budget prévisionnel des primes">
+        {budget.amount === null ? <p className="text-sm">Le budget reste à renseigner par le superviseur dans Règles.</p> : <p className="text-sm">Budget : {amount(budget.amount)} FC · Primes approuvées : {amount(budget.approvedAmount)} FC · Montant payé : {amount(budget.paidAmount)} FC ({(100 * budget.paidAmount / budget.amount).toLocaleString("fr-FR", { maximumFractionDigits: 2 })} % du budget).</p>}
+      </PageSection>
+      <PageSection title="Rapports archivés">
+        {reports.length === 0 ? <p className="text-sm text-muted-foreground">Aucun rapport archivé. La préparation planifiée utilise le compte habilité configuré.</p> : reports.map(report => <p key={report.id} className="text-sm">{reportSentence(report.kind === "weekly" ? "Rapport hebdomadaire" : "Note mensuelle", report.figures)} Archivé le {reportedAtLabel(report.generatedAt)}.</p>)}
+      </PageSection>
       <form className="flex flex-wrap items-end gap-2" method="get">
         <label className="grid gap-2 text-[13px] font-medium">Du<input className="h-10 rounded-md border border-input bg-card px-3 text-[15px] font-normal" type="date" name="from" defaultValue={from} /></label>
         <label className="grid gap-2 text-[13px] font-medium">Au<input className="h-10 rounded-md border border-input bg-card px-3 text-[15px] font-normal" type="date" name="to" defaultValue={to} /></label>
@@ -144,7 +157,7 @@ async function Indicators({ searchParams }: Pick<PageProps<"/indicateurs">, "sea
               <CardContent className="grid gap-3 leading-6">
                 <p>{reportSentence("Rapport de la semaine", indicators.week)}</p>
                 <p>{reportSentence("Note du mois", indicators.month)}</p>
-                <p className="text-muted-foreground">Les définitions ci-contre s&apos;appliquent à ces deux textes. La province, la ville, le service et le budget prévisionnel ne figurent pas dans le rapport.</p>
+                <p className="text-muted-foreground">Les définitions ci-contre s&apos;appliquent à ces deux textes. La province, la ville et le service ne sont pas fournis par l’API actuelle. Les archives conservent le budget connu à leur génération.</p>
               </CardContent>
             </Card>
             <Card>

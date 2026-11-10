@@ -24,14 +24,14 @@ export function PreviewRuleForm() {
     <form action={submit} className="grid gap-3">
       <Fields prefix="preview" defaults={DEFAULTS} />
       <Field>
-        <FieldLabel htmlFor="preview-finding">Constat de l'exemple</FieldLabel>
+        <FieldLabel htmlFor="preview-finding">Constat de l’exemple</FieldLabel>
         <input id="preview-finding" name="finding" required defaultValue="non-normalized" className="h-11 rounded-md border border-input bg-card px-3" />
       </Field>
       <Field>
-        <FieldLabel htmlFor="preview-points">Points de l'exemple</FieldLabel>
+        <FieldLabel htmlFor="preview-points">Points de l’exemple</FieldLabel>
         <input id="preview-points" name="netPoints" required defaultValue="30" inputMode="numeric" className="h-11 rounded-md border border-input bg-card px-3" />
       </Field>
-      <label className="flex items-center gap-2 text-sm font-bold"><input type="checkbox" name="firstEstablishment" /> Premier signalement de l'établissement</label>
+      <label className="flex items-center gap-2 text-sm font-bold"><input type="checkbox" name="firstEstablishment" /> Premier signalement de l’établissement</label>
       <Button type="submit" disabled={pending}>Prévisualiser</Button>
       {message ? <p role="status" className="text-sm font-bold text-primary">{message}</p> : null}
     </form>

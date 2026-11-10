@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { ActionDialog } from "@/components/action-dialog";
 import { FigureRows } from "@/components/figures";
 import { Ledger, LedgerItem } from "@/components/ledger";
+import { BudgetForm } from "@/modules/report/ui/campaign-reporting-forms";
 
 type Tier = { threshold: number; amount: number };
 type Version = {
@@ -49,9 +50,10 @@ async function Rules() {
     <Page className="max-w-6xl">
       <PageHeader
         title="Règles"
-        description="Une nouvelle version vaut pour les nouveaux crédits. Les points déjà acquis restent sur leur version. Ils ne sont pas mêlés. La prévisualisation n'active rien."
+        description="Une nouvelle version vaut pour les signalements déposés après son activation. Les points historiques gardent leur version. La prévisualisation n'active rien."
         actions={canChange ? (
           <>
+            <ActionDialog label="Budget prévisionnel" title="Budget des primes"><BudgetForm /></ActionDialog>
             <ActionDialog label="Prévisualiser" title="Prévisualiser une règle"><PreviewRuleForm /></ActionDialog>
             <ActionDialog label="Nouvelle version" title="Nouvelle version" variant="default"><RecordRuleForm /></ActionDialog>
           </>

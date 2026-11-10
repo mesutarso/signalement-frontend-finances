@@ -10,6 +10,7 @@ export function ReexaminationDecisionForm({ id }: { id: string }) {
   return (
     <form action={action} className="grid gap-3">
       <input type="hidden" name="id" value={id} />
+      <p className="text-sm text-muted-foreground">Pour modifier la décision, ouvrez d’abord le signalement et enregistrez sa nouvelle qualification. Si des points sont déjà crédités, passez par Corrections pour annuler leurs effets avant la nouvelle qualification.</p>
       <Field>
         <FieldLabel htmlFor={`reexamination-result-${id}`}>Décision</FieldLabel>
         <select id={`reexamination-result-${id}`} name="result" required className="h-11 rounded-md border border-input bg-card px-3">

@@ -8,6 +8,7 @@ import { Page, PageHeader, PageSection, PageSkeleton } from "@/components/page";
 import { Badge } from "@/components/ui/badge";
 import { Figure, Figures } from "@/components/figures";
 import { Ledger } from "@/components/ledger";
+import { BeneficiaryForm } from "@/modules/report/ui/beneficiary-form";
 
 type Report = { id: string; reference: string; status: string; points: number };
 type Situation = {
@@ -47,11 +48,15 @@ async function Declarants({ searchParams }: Pick<PageProps<"/declarants">, "sear
   }
   const reference = String((await searchParams).reference ?? "").trim();
   const situation = reference ? await readOutcome<Situation>(`/api/declarants?reference=${encodeURIComponent(reference)}`) : null;
+  const canVerify = account.role === "SUPERVISOR" || account.role === "ADMINISTRATOR";
+  const beneficiary = reference && account.role !== "AGENT"
+    ? await readOutcome<{ verified: boolean; accounts: number; reservedAmount: number; remainder: number }>(`/api/beneficiaries?reference=${encodeURIComponent(reference)}`)
+    : null;
   return (
     <Page className="max-w-6xl">
       <PageHeader
         title="Situation du déclarant"
-        description="La situation part de la référence d'un signalement. Elle ne reprend aucune information fiscale du vendeur. Les points et les primes affichés suivent la version active. Une autre version reste à part."
+        description="La situation part de la référence d'un signalement. Elle ne reprend aucune information fiscale du vendeur. Les points et les primes affichés suivent la version du signalement consulté. Une autre version reste à part."
       />
       <form className="flex max-w-2xl flex-wrap items-end gap-2" method="get">
         <label className="grid min-w-64 flex-1 gap-2 text-[13px] font-medium">Référence du signalement
@@ -81,6 +86,12 @@ async function Declarants({ searchParams }: Pick<PageProps<"/declarants">, "sear
               ))}
             </Ledger>
           </PageSection>
+          {beneficiary?.ok ? (
+            <PageSection title="Identité et plafond du bénéficiaire">
+              {beneficiary.body.verified ? <p className="text-sm">Identité vérifiée · {beneficiary.body.accounts} compte(s) rattaché(s) · {beneficiary.body.reservedAmount.toLocaleString("fr-FR")} FC approuvés ou payés, toutes versions confondues · {beneficiary.body.remainder.toLocaleString("fr-FR")} FC disponibles.</p>
+                : <><p className="text-sm">Une vérification de l’identité est requise avant toute approbation de prime.</p>{canVerify ? <BeneficiaryForm reference={reference} /> : null}</>}
+            </PageSection>
+          ) : null}
         </>
       )}
     </Page>

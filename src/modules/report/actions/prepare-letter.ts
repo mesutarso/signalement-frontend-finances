@@ -3,15 +3,11 @@
 import { revalidatePath } from "next/cache";
 import { writeJson } from "@/lib/api";
 
-type Prepared = { id: string; created: boolean };
-
-export async function prepareLetter(_current: string | null, _formData: FormData): Promise<string | null> {
-  const response = await writeJson<Prepared>("/api/letters", "POST");
+export async function prepareLetter(): Promise<string | null> {
+  const response = await writeJson<string[]>("/api/letters/weekly", "POST");
   if (!response.ok) {
     return response.message;
   }
   revalidatePath("/courriers");
-  return response.body?.created
-    ? "Courrier préparé. Il n'est pas envoyé."
-    : "Le courrier de cette semaine est déjà préparé. Il n'est pas envoyé.";
+  return `${response.body?.length ?? 0} courrier(s) de la semaine préparé(s) par service, sans nouvel envoi.`;
 }

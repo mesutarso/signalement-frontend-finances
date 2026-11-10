@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import type { AvailabilityView } from "@/modules/availability/model/availability";
@@ -15,7 +16,7 @@ export function AvailabilityScreen({ view }: { view: AvailabilityView }) {
             <p>{view.message}</p>
           </div>
         </div>
-        <Button nativeButton={false} render={<a href="/" />}>
+        <Button nativeButton={false} render={<Link href="/" />}>
           Actualiser
         </Button>
       </div>

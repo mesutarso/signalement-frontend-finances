@@ -4,6 +4,8 @@ import { redirect } from "next/navigation";
 import { readJson } from "@/lib/api";
 import { readCurrentAccount } from "@/modules/access/queries/read-current-account";
 import { calendarLabel, reportedAtLabel } from "@/modules/report/model/report";
+import { LetterRoutingForm } from "@/modules/report/ui/letter-routing-form";
+import { ActionDialog } from "@/components/action-dialog";
 import { PrepareLetterForm } from "@/modules/report/ui/prepare-letter-form";
 import { Alert, AlertTitle } from "@/components/ui/alert";
 import { TablePagination } from "@/components/table-pagination";
@@ -54,9 +56,10 @@ async function Letters({ searchParams }: Pick<PageProps<"/courriers">, "searchPa
   const page = Number.isSafeInteger(number) && number >= 0 ? number : 0;
   const letters = await readJson<Page>(`/api/letters?status=${status}&page=${page}`).catch(() => null);
   const canPrepare = account.role === "SUPERVISOR" || account.role === "ADMINISTRATOR";
+  const routes = canPrepare ? await readJson<{taxId: string; service: string}[]>("/api/letter-routes") : [];
   return (
     <Page className="max-w-6xl">
-      <PageHeader title="Courriers" actions={canPrepare ? <PrepareLetterForm /> : undefined} />
+      <PageHeader title="Courriers" actions={canPrepare ? <><ActionDialog label="Services destinataires" title="Affecter les entreprises aux services"><LetterRoutingForm />{routes.map(route => <p key={route.taxId} className="mt-3 text-sm">{route.taxId} · {route.service}</p>)}</ActionDialog><PrepareLetterForm /></> : undefined} />
       <div className="grid gap-5">
         <ViewTabs label="Filtrer les courriers" items={FILTERS.map((filter) => ({ href: `/courriers?status=${filter.value}`, label: filter.label, active: filter.value === status }))} />
         {!letters ? <Alert variant="destructive"><AlertTitle>Les courriers sont indisponibles. Actualisez la page.</AlertTitle></Alert> : letters.items.length === 0 ? <LedgerEmpty className="border-t-0">{status === "waiting" ? "Aucun courrier validé n'attend de réponse." : "Aucun courrier."}</LedgerEmpty> : (
@@ -69,7 +72,7 @@ async function Letters({ searchParams }: Pick<PageProps<"/courriers">, "searchPa
                   status={<Badge variant={letter.status === "validated" ? "success" : letter.status === "returned" ? "warning" : "outline"}>{STATUS[letter.status] ?? letter.status}</Badge>}
                 >
                   <p>Semaine du {calendarLabel(letter.periodStart)} au {calendarLabel(letter.periodEnd)}</p>
-                  <p className="text-muted-foreground">Préparé le {reportedAtLabel(letter.preparedAt)}. Envoi non enregistré.</p>
+                  <p className="text-muted-foreground">Préparé le {reportedAtLabel(letter.preparedAt)}.</p>
                   {letter.reason ? <p>Motif : {letter.reason}</p> : null}
                 </LedgerItem>
               ))}

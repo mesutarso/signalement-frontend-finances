@@ -39,7 +39,7 @@ export function QualificationPanel({
     <section aria-labelledby="report-qualification" className="grid gap-5">
       <h3 id="report-qualification" className="sr-only">Qualification</h3>
       {current?.decision === "wait" ? <p className="rounded-md bg-warning-soft px-3 py-2.5 text-sm text-warning">En attente de confirmation de la DGI.</p> : null}
-      {canDecide ? <QualificationForm reportId={reportId} waiting={current?.decision === "wait"} latestId={current?.id ?? null} /> : null}
+      {canDecide ? <QualificationForm reportId={reportId} waiting={current?.decision === "wait"} latestId={current?.id ?? null} current={current} /> : null}
       {current ? (
         <div className="grid gap-1">
           <h4 className="text-[13px] text-muted-foreground">Décisions enregistrées</h4>
@@ -80,7 +80,7 @@ function QualificationCard({ entry, current }: { entry: Qualification; current: 
   );
 }
 
-function QualificationForm({ reportId, waiting, latestId }: { reportId: string; waiting: boolean; latestId: string | null }) {
+function QualificationForm({ reportId, waiting, latestId, current }: { reportId: string; waiting: boolean; latestId: string | null; current: Qualification | null }) {
   const [message, action, pending] = useActionState(recordQualification, null);
   const formRef = useRef<HTMLFormElement>(null);
 
@@ -162,42 +162,42 @@ function QualificationForm({ reportId, waiting, latestId }: { reportId: string; 
                 </Field>
               )}
             </div>
-            {answer ? null : (
+          </>
+        ) : null}
+        {decision !== "reject" ? (
               <details className="group/details border-y">
                 <summary className="flex cursor-pointer list-none items-center justify-between gap-3 py-3 text-sm font-medium [&::-webkit-details-marker]:hidden">
-                  <span>Corriger les données lues <span className="font-normal text-muted-foreground">(facultatif)</span></span>
+                  <span>Renseigner les données du vendeur et de l’achat <span className="font-normal text-muted-foreground">(facultatif)</span></span>
                   <HugeiconsIcon icon={ArrowDown01Icon} strokeWidth={2} className="size-4 text-muted-foreground transition-transform group-open/details:rotate-180" />
                 </summary>
                 <fieldset className="grid gap-4 pb-4 sm:grid-cols-2">
-                  <legend className="sr-only">Corriger les données lues</legend>
+                  <legend className="sr-only">Renseigner les données du vendeur et de l’achat</legend>
                   <Field>
                     <FieldLabel htmlFor="qualification-seller">Vendeur</FieldLabel>
-                    <input id="qualification-seller" name="sellerName" maxLength={160} className={FIELD} />
+                    <input id="qualification-seller" name="sellerName" defaultValue={current?.sellerName ?? ""} maxLength={160} className={FIELD} />
                   </Field>
                   <Field>
                     <FieldLabel htmlFor="qualification-tax">NIF</FieldLabel>
-                    <input id="qualification-tax" name="sellerTaxId" maxLength={40} className={FIELD} />
+                    <input id="qualification-tax" name="sellerTaxId" defaultValue={current?.sellerTaxId ?? ""} maxLength={40} className={FIELD} />
                   </Field>
                   <Field>
                     <FieldLabel htmlFor="qualification-date">Date</FieldLabel>
-                    <input id="qualification-date" name="issuedOn" type="date" className={FIELD} />
+                    <input id="qualification-date" name="issuedOn" defaultValue={current?.issuedOn ?? ""} type="date" className={FIELD} />
                   </Field>
                   <Field>
                     <FieldLabel htmlFor="qualification-amount">Montant</FieldLabel>
-                    <input id="qualification-amount" name="amount" maxLength={40} className={FIELD} />
+                    <input id="qualification-amount" name="amount" defaultValue={current?.amount ?? ""} maxLength={40} className={FIELD} />
                   </Field>
                   <Field>
                     <FieldLabel htmlFor="qualification-number">Numéro</FieldLabel>
-                    <input id="qualification-number" name="documentNumber" maxLength={80} className={FIELD} />
+                    <input id="qualification-number" name="documentNumber" defaultValue={current?.documentNumber ?? ""} maxLength={80} className={FIELD} />
                   </Field>
                   <Field>
                     <FieldLabel htmlFor="qualification-code">Code</FieldLabel>
-                    <input id="qualification-code" name="code" maxLength={80} className={FIELD} />
+                    <input id="qualification-code" name="code" defaultValue={current?.code ?? ""} maxLength={80} className={FIELD} />
                   </Field>
                 </fieldset>
               </details>
-            )}
-          </>
         ) : null}
         <Field>
           <FieldLabel htmlFor="qualification-justification">Motif</FieldLabel>

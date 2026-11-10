@@ -11,7 +11,7 @@ export function ReversePointsForm({ reportId }: { reportId: string }) {
     <form action={action} className="grid gap-3">
       <input type="hidden" name="reportId" value={reportId} />
       <Field>
-        <FieldLabel htmlFor={`points-reason-${reportId}`}>Motif de l'annulation</FieldLabel>
+        <FieldLabel htmlFor={`points-reason-${reportId}`}>Motif de l’annulation</FieldLabel>
         <textarea id={`points-reason-${reportId}`} name="reason" required maxLength={500} rows={3} className="w-full rounded-md border border-input bg-card px-3 py-2" />
       </Field>
       <Button type="submit" variant="outline" disabled={pending}>Annuler les points</Button>
