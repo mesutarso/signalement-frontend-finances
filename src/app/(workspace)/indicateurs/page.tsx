@@ -47,7 +47,7 @@ const DEFINITIONS = [
   ["Montant payé", "Somme des lignes payées."],
   ["Tirages", "Tirages effectués."],
   ["Alertes", "Notes portées sur un indice."],
-  ["Province, ville, service", "Ces données ne sont pas fournies par l’API actuelle."],
+  ["Province, ville, service", "Ventilation indisponible."],
 ];
 
 async function Indicators({ searchParams }: Pick<PageProps<"/indicateurs">, "searchParams">) {
@@ -98,13 +98,12 @@ async function Indicators({ searchParams }: Pick<PageProps<"/indicateurs">, "sea
       <PageHeader
         title="Indicateurs"
         actions={account.role === "SUPERVISOR" || account.role === "ADMINISTRATOR" ? <ActionDialog label="Archiver un rapport" title="Rapport de la dernière période close"><CaptureReportForm /></ActionDialog> : undefined}
-        description="Les chiffres sont calculés à la lecture. La province, la ville et le service ne sont pas disponibles. Le budget et les rapports archivés se consultent ci-dessous."
       />
       <PageSection title="Budget prévisionnel des primes">
         {budget.amount === null ? <p className="text-sm">Le budget reste à renseigner par le superviseur dans Règles.</p> : <p className="text-sm">Budget : {amount(budget.amount)} FC · Primes approuvées : {amount(budget.approvedAmount)} FC · Montant payé : {amount(budget.paidAmount)} FC ({(100 * budget.paidAmount / budget.amount).toLocaleString("fr-FR", { maximumFractionDigits: 2 })} % du budget).</p>}
       </PageSection>
       <PageSection title="Rapports archivés">
-        {reports.length === 0 ? <p className="text-sm text-muted-foreground">Aucun rapport archivé. La préparation planifiée utilise le compte habilité configuré.</p> : reports.map(report => <p key={report.id} className="text-sm">{reportSentence(report.kind === "weekly" ? "Rapport hebdomadaire" : "Note mensuelle", report.figures)} Archivé le {reportedAtLabel(report.generatedAt)}.</p>)}
+        {reports.length === 0 ? <p className="text-sm text-muted-foreground">Aucun rapport archivé.</p> : reports.map(report => <p key={report.id} className="text-sm">{reportSentence(report.kind === "weekly" ? "Rapport hebdomadaire" : "Note mensuelle", report.figures)} Archivé le {reportedAtLabel(report.generatedAt)}.</p>)}
       </PageSection>
       <form className="flex flex-wrap items-end gap-2" method="get">
         <label className="grid gap-2 text-[13px] font-medium">Du<input className="h-10 rounded-md border border-input bg-card px-3 text-[15px] font-normal" type="date" name="from" defaultValue={from} /></label>
@@ -157,7 +156,6 @@ async function Indicators({ searchParams }: Pick<PageProps<"/indicateurs">, "sea
               <CardContent className="grid gap-3 leading-6">
                 <p>{reportSentence("Rapport de la semaine", indicators.week)}</p>
                 <p>{reportSentence("Note du mois", indicators.month)}</p>
-                <p className="text-muted-foreground">Les définitions ci-contre s&apos;appliquent à ces deux textes. La province, la ville et le service ne sont pas fournis par l’API actuelle. Les archives conservent le budget connu à leur génération.</p>
               </CardContent>
             </Card>
             <Card>

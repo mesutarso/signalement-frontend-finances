@@ -35,7 +35,7 @@ async function Reexaminations() {
     <Page className="max-w-6xl">
       <PageHeader
         title="Réexamens"
-        description="La demande est enregistrée et peut être maintenue ou modifiée. Le délai est de 30 jours calendaires à partir du dernier constat. Une demande hors délai reste enregistrée. Le traitement ne change pas les points."
+        description="Délai de dépôt : 30 jours calendaires après le dernier constat."
         actions={canRecord ? <ActionDialog label="Enregistrer une demande" title="Enregistrer une demande de réexamen" variant="default"><ReexaminationForm /></ActionDialog> : undefined}
       />
       {!requests ? <Alert variant="destructive"><AlertTitle>Les réexamens sont indisponibles. Actualisez la page.</AlertTitle></Alert> : requests.items.length === 0 ? <LedgerEmpty>Aucune demande.</LedgerEmpty> : (

@@ -33,7 +33,6 @@ async function Taxpayers() {
     <Page className="max-w-6xl">
       <PageHeader
         title="Contribuables"
-        description="Chaque numéro d'impôt retenu est gardé une seule fois. Il reste non vérifié tant que la vérification ne l'a pas confirmé."
         actions={canKeep ? <KeepTaxpayersForm /> : undefined}
       />
       {!taxpayers ? <Alert variant="destructive"><AlertTitle>Les contribuables sont indisponibles. Actualisez la page.</AlertTitle></Alert> : taxpayers.items.length === 0 ? <LedgerEmpty>Aucun contribuable.</LedgerEmpty> : (

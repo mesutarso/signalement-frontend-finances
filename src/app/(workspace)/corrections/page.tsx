@@ -32,7 +32,7 @@ async function Corrections() {
     <Page className="max-w-6xl">
       <PageHeader
         title="Corrections"
-        description="Une confirmation tombée garde le crédit d'origine et ajoute un mouvement inverse. Une prime déjà payée n'est pas reprise. Le ticket qui n'a pas encore de lot sort du tirage."
+        description="Les primes déjà payées ne sont pas reprises."
         actions={canRecord ? <ActionDialog label="Enregistrer une correction" title="Enregistrer une correction" variant="default"><CorrectionForm /></ActionDialog> : undefined}
       />
       {!corrections ? <Alert variant="destructive"><AlertTitle>Les corrections sont indisponibles. Actualisez la page.</AlertTitle></Alert> : corrections.items.length === 0 ? <LedgerEmpty>Aucune correction.</LedgerEmpty> : (

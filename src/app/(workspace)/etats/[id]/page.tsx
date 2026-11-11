@@ -49,7 +49,7 @@ async function Statement({ params }: Pick<PageProps<"/etats/[id]">, "params">) {
           <PageHeader
             back={{ href: "/etats", label: "États de paiement" }}
             title={<span className="tabular-nums">{francs(statement.total)}</span>}
-            description={<>Référence <span className="ref text-foreground">{statement.reference}</span>. Simulation : Airtel Money, M-Pesa, Orange Money, Afrimoney. Aucun argent n&apos;est envoyé.</>}
+            description={<>Référence <span className="ref text-foreground">{statement.reference}</span> · Paiements simulés : aucun argent n&apos;est envoyé.</>}
             actions={<Badge variant={paymentStatusVariant(statement.status)}>{paymentStatusLabel(statement.status)}</Badge>}
           />
           <ol aria-label="Étapes de validation" className="grid grid-cols-2 gap-x-6 gap-y-5 md:grid-cols-4">

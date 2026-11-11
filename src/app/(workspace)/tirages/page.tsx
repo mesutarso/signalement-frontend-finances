@@ -41,7 +41,6 @@ async function Draws() {
     <Page className="max-w-6xl">
       <PageHeader
         title="Tirages"
-        description="Un signalement confirmé donne un ticket pour le mois et un ticket pour le tirage final d'avril 2027. Une personne ne gagne qu'un lot. La publication ne montre pas l'identité. La remise du lot est suivie à part."
         actions={canOrganize ? (
           <>
             <ActionDialog label="Retenir les tickets" title="Retenir les tickets du mois"><PrepareTicketsForm /></ActionDialog>

@@ -42,7 +42,7 @@ async function Messages() {
     <Page className="max-w-6xl">
       <PageHeader
         title="Messages"
-        description="Le message préparé est le canal vers le déclarant. Il n'est pas envoyé par SMS ni par courriel. Un nouveau modèle vaut pour les messages suivants."
+        description="Les messages préparés ne sont pas envoyés."
         actions={canPrepare ? (
           <>
             <ActionDialog label="Nouveau modèle" title="Enregistrer un modèle"><ModelForm /></ActionDialog>

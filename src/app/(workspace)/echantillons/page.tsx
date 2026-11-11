@@ -33,7 +33,6 @@ async function Samples() {
     <Page className="max-w-6xl">
       <PageHeader
         title="Échantillon des primes payées"
-        description="L'échantillon retient 5 % des primes payées sur la période, arrondi au nombre supérieur. Le paiement n'est pas modifié."
         actions={canPrepare ? <ActionDialog label="Constituer un échantillon" title="Constituer un échantillon" variant="default"><PrepareSampleForm /></ActionDialog> : undefined}
       />
       {!samples ? <Alert variant="destructive"><AlertTitle>Les échantillons sont indisponibles. Actualisez la page.</AlertTitle></Alert> : samples.items.length === 0 ? <LedgerEmpty>Aucun échantillon.</LedgerEmpty> : (

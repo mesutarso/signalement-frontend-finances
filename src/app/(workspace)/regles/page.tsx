@@ -50,7 +50,6 @@ async function Rules() {
     <Page className="max-w-6xl">
       <PageHeader
         title="Règles"
-        description="Une nouvelle version vaut pour les signalements déposés après son activation. Les points historiques gardent leur version. La prévisualisation n'active rien."
         actions={canChange ? (
           <>
             <ActionDialog label="Budget prévisionnel" title="Budget des primes"><BudgetForm /></ActionDialog>

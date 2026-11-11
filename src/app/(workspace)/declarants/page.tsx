@@ -56,7 +56,6 @@ async function Declarants({ searchParams }: Pick<PageProps<"/declarants">, "sear
     <Page className="max-w-6xl">
       <PageHeader
         title="Situation du déclarant"
-        description="La situation part de la référence d'un signalement. Elle ne reprend aucune information fiscale du vendeur. Les points et les primes affichés suivent la version du signalement consulté. Une autre version reste à part."
       />
       <form className="flex max-w-2xl flex-wrap items-end gap-2" method="get">
         <label className="grid min-w-64 flex-1 gap-2 text-[13px] font-medium">Référence du signalement

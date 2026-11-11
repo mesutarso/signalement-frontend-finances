@@ -53,7 +53,7 @@ async function Sample({ params }: Pick<PageProps<"/echantillons/[id]">, "params"
           <PageHeader
             back={{ href: "/echantillons", label: "Échantillons" }}
             title={<span className="tabular-nums">{sample.reference}</span>}
-            description={`Du ${calendarLabel(sample.periodStart)} au ${calendarLabel(sample.periodEnd)}. Le contrôle ne modifie pas le paiement.`}
+            description={`Du ${calendarLabel(sample.periodStart)} au ${calendarLabel(sample.periodEnd)}`}
           />
           <Ledger>
             {sample.lines.map((line) => (

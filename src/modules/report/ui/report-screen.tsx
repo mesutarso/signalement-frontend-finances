@@ -75,7 +75,7 @@ export function ReportScreen({
                 <p className="text-[13px] text-muted-foreground">{reportedAtLabel(review.recordedAt)}</p>
               </div>
               <p>{review.reason}</p>
-              <p className="text-[13px] text-muted-foreground">Par {review.actorName ?? "Compte introuvable"}. La décision déjà enregistrée reste en place.</p>
+              <p className="text-[13px] text-muted-foreground">Par {review.actorName ?? "Compte introuvable"}</p>
             </li>
           ))}
         </ul>

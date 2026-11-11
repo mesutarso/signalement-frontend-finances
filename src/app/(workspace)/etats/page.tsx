@@ -38,7 +38,7 @@ async function Statements({ searchParams }: Pick<PageProps<"/etats">, "searchPar
     <Page className="max-w-6xl">
       <PageHeader
         title="États de paiement"
-        description="L'état rassemble les primes approuvées. Le superviseur contrôle, la Cellule fiscale vise, le Cabinet autorise. Le gestionnaire de paiement simule ensuite Airtel Money, M-Pesa, Orange Money ou Afrimoney. La référence est produite ici. Aucun argent n'est envoyé."
+        description="Paiements simulés : aucun argent n’est envoyé."
         actions={canPrepare ? <PreparePaymentForm /> : undefined}
       />
       {!statements ? <Alert variant="destructive"><AlertTitle>Les états sont indisponibles. Actualisez la page.</AlertTitle></Alert> : statements.items.length === 0 ? <LedgerEmpty>Aucun état de paiement.</LedgerEmpty> : (

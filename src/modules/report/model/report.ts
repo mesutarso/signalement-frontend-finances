@@ -70,12 +70,6 @@ export function readingErrorLabel(code: string | null): string {
   return (code && READING_ERRORS[code]) || "La lecture a échoué. Vous pouvez réessayer.";
 }
 
-export function readingProviderLabel(model: string | null): string {
-  if (model === "herdys-mistral") return "Herdys · Mistral";
-  if (model === "herdys-openai") return "Herdys · OpenAI";
-  return "Service de lecture";
-}
-
 export type Assignment = {
   recordedAt: string;
   actorName: string | null;

@@ -58,7 +58,7 @@ async function Indices({ searchParams }: Pick<PageProps<"/indices">, "searchPara
     <Page className="max-w-6xl">
       <PageHeader
         title="Indices"
-        description="Un indice n'est pas une preuve de fraude. La suspension du droit aux primes est une décision séparée. Une prime déjà payée n'est pas reprise."
+        description="Un indice ne constitue pas une preuve de fraude."
       >
         {indices ? <p className="text-[13px] leading-5 text-muted-foreground">{indices.retouch} {indices.score}</p> : null}
       </PageHeader>

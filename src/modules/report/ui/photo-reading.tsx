@@ -9,7 +9,6 @@ import {
   qualityLabel,
   readValue,
   readingErrorLabel,
-  readingProviderLabel,
   type ReportPhoto,
 } from "@/modules/report/model/report";
 
@@ -46,7 +45,6 @@ export function PhotoReading({
       {!reading ? <p role="status" className="text-sm text-muted-foreground">Cette pièce n’a pas encore été lue.</p> : null}
       {reading?.status === "FAILED" ? <p role="status" className="text-sm text-muted-foreground">{readingErrorLabel(reading.errorCode)}</p> : null}
       {reading?.status === "READ" ? <ReadingFields reading={reading} /> : null}
-      {reading?.status === "READ" && canRequest ? <p className="text-[13px] leading-5 text-muted-foreground">Une relance effectue une nouvelle analyse. La lecture précédente reste conservée.</p> : null}
     </section>
   );
 }
@@ -92,7 +90,6 @@ function ReadingFields({ reading }: { reading: NonNullable<ReportPhoto["reading"
           </ul>
         )}
       </div>
-      <p className="text-[13px] leading-5 text-muted-foreground">{readingProviderLabel(reading.model)} · Informations extraites à vérifier sur la pièce.</p>
     </div>
   );
 }
