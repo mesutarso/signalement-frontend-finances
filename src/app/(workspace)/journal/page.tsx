@@ -39,6 +39,9 @@ const ACTIONS: Record<string, string> = {
   "reward-approval": "Approbation de la récompense",
   "reward-return": "Renvoi de la récompense",
   "payout-record": "Numéro de paiement",
+  "payment-sandbox-test": "Essai de versement Araka",
+  "payment-transfer": "Versement Araka",
+  "payment-transfer-check": "Vérification du versement",
   "payment-statement": "État de paiement",
   "payment-control": "Contrôle de l'état",
   "payment-visa": "Visa de l'état",
@@ -78,6 +81,7 @@ function journalHref(objectType: string, objectId: string | null): string | null
   if (objectType === "report") {
     return `/signalements/${objectId}`;
   }
+  if (objectType === "transfer") return "/etats";
   if (objectType === "payment") {
     return `/etats/${objectId}`;
   }

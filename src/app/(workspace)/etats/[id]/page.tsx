@@ -5,7 +5,10 @@ import { readCurrentAccount } from "@/modules/access/queries/read-current-accoun
 import { francs } from "@/modules/report/model/reward";
 import { paymentAttemptLabel, paymentOperatorLabel, paymentStatusLabel, paymentStatusVariant, type PaymentStatement } from "@/modules/report/model/payment";
 import { calendarLabel, reportedAtLabel } from "@/modules/report/model/report";
-import { PaymentAttemptForm } from "@/modules/report/ui/payment-attempt-form";
+import { randomUUID } from "node:crypto";
+import { isSandboxWallet, type PaymentService } from "@/modules/report/model/transfer";
+import { TransferForm } from "@/modules/report/ui/transfer-forms";
+import { TransferDetails } from "@/modules/report/ui/transfer-panel";
 import { PaymentDecisionForm } from "@/modules/report/ui/payment-decision-form";
 import { Alert, AlertTitle } from "@/components/ui/alert";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -29,7 +32,7 @@ async function Statement({ params }: Pick<PageProps<"/etats/[id]">, "params">) {
     redirect("/signalements");
   }
   const { id } = await params;
-  const statement = await readJson<PaymentStatement>(`/api/payment-statements/${id}`).catch(() => null);
+  const [statement, service] = await Promise.all([readJson<PaymentStatement>(`/api/payment-statements/${id}`).catch(() => null), readJson<PaymentService>(`/api/payment-transfers?statementId=${id}`).catch(() => null)]);
   const step = statement?.status === "draft" && (account.role === "SUPERVISOR" || account.role === "ADMINISTRATOR")
     ? "control"
     : statement?.status === "controlled" && account.role === "CELLULE"
@@ -49,8 +52,8 @@ async function Statement({ params }: Pick<PageProps<"/etats/[id]">, "params">) {
           <PageHeader
             back={{ href: "/etats", label: "États de paiement" }}
             title={<span className="tabular-nums">{francs(statement.total)}</span>}
-            description={<>Référence <span className="ref text-foreground">{statement.reference}</span> · Simulation</>}
-            actions={<Badge variant={paymentStatusVariant(statement.status)}>{paymentStatusLabel(statement.status)}</Badge>}
+            description={<>Référence <span className="ref text-foreground">{statement.reference}</span></>}
+            actions={<div className="flex gap-2">{service?.environment === "sandbox" ? <Badge variant="outline">Sandbox</Badge> : null}<Badge variant={paymentStatusVariant(statement.status)}>{paymentStatusLabel(statement.status)}</Badge></div>}
           />
           <ol aria-label="Étapes de validation" className="grid grid-cols-2 gap-x-6 gap-y-5 md:grid-cols-4">
             {([["Préparé", statement.preparedAt], ["Contrôlé", statement.controlledAt], ["Visé", statement.visaedAt], ["Autorisé", statement.authorizedAt]] as const).map(([label, at]) => (
@@ -73,13 +76,15 @@ async function Statement({ params }: Pick<PageProps<"/etats/[id]">, "params">) {
                   key={line.id}
                   title={<span className="tabular-nums">{francs(line.amount)}</span>}
                   meta="Récompense par signalement"
-                  action={statement.status === "authorized" && account.role === "PAYMASTER" && !line.attempts.some((attempt) => attempt.result === "paid") ? (
-                    <ActionDialog label="Enregistrer le paiement" title="Enregistrer le paiement" description={`${francs(line.amount)} · ${line.phone}`} variant="default" size="sm">
-                      <PaymentAttemptForm statementId={statement.id} lineId={line.id} settle={line.attempts.at(-1)?.result === "unknown"} />
+                  action={statement.status === "authorized" && account.role === "PAYMASTER" && service?.configured && (service.environment !== "sandbox" || isSandboxWallet(line.phone)) && !line.attempts.some((attempt) => attempt.result === "paid") && !service.transfers.some(t => t.lineId === line.id && t.state !== "failed") ? (
+                    <ActionDialog label={service.environment === "sandbox" ? "Tester le versement" : "Effectuer le paiement"} title={service.environment === "sandbox" ? "Versement sandbox" : "Versement Mobile Money"} description={`${francs(line.amount)} · ${line.phone}`} variant="default" size="sm">
+                      <TransferForm requestId={randomUUID()} statementId={statement.id} lineId={line.id} sandbox={service.environment === "sandbox"} />
                     </ActionDialog>
                   ) : undefined}
                 >
+                  {service?.environment === "sandbox" && !isSandboxWallet(line.phone) ? <Badge variant="outline">Paiement réel désactivé</Badge> : null}
                   <p>Numéro de paiement : <span className="tabular-nums">{line.phone}</span></p>
+                  {service?.transfers.find(t => t.lineId === line.id) ? <TransferDetails transfer={service.transfers.find(t => t.lineId === line.id)!} canCheck={["PAYMASTER", "ADMINISTRATOR"].includes(account.role)} statementId={id} /> : null}
                   {line.attempts.map((attempt) => (
                     <p key={attempt.id} className="text-muted-foreground">{paymentOperatorLabel(attempt.operator)} · {paymentAttemptLabel(attempt.result)} le {reportedAtLabel(attempt.recordedAt)}.{attempt.reference ? ` Référence ${attempt.reference}.` : ""}{attempt.reason ? ` ${attempt.reason}` : ""}</p>
                   ))}

@@ -1,3 +1,5 @@
+import { TransferPanel } from "@/modules/report/ui/transfer-panel";
+import type { PaymentService } from "@/modules/report/model/transfer";
 import Link from "next/link";
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
@@ -32,12 +34,12 @@ async function Statements({ searchParams }: Pick<PageProps<"/etats">, "searchPar
   const params = await searchParams;
   const number = Number(params.page ?? 0);
   const page = Number.isSafeInteger(number) && number >= 0 ? number : 0;
-  const statements = await readJson<Page>(`/api/payment-statements?page=${page}`).catch(() => null);
+  const [statements, service] = await Promise.all([readJson<Page>(`/api/payment-statements?page=${page}`).catch(() => null), readJson<PaymentService>("/api/payment-transfers").catch(() => null)]);
   const canPrepare = account.role === "SUPERVISOR" || account.role === "ADMINISTRATOR";
   return (
     <Page className="max-w-6xl">
       <PageHeader
-        title="États de paiement · Simulation"
+        title="États de paiement"
         actions={canPrepare ? <PreparePaymentForm /> : undefined}
       />
       {!statements ? <Alert variant="destructive"><AlertTitle>Les états sont indisponibles. Actualisez la page.</AlertTitle></Alert> : statements.items.length === 0 ? <LedgerEmpty>Aucun état de paiement.</LedgerEmpty> : (
@@ -57,6 +59,7 @@ async function Statements({ searchParams }: Pick<PageProps<"/etats">, "searchPar
           <TablePagination page={statements.page} size={statements.size} total={statements.total} label="Pagination des états" />
         </div>
       )}
+      {service ? <TransferPanel service={service} canTest={account.role === "ADMINISTRATOR"} canCheck={["ADMINISTRATOR", "PAYMASTER"].includes(account.role)} /> : <Alert variant="destructive"><AlertTitle>Le service de paiement est indisponible.</AlertTitle></Alert>}
     </Page>
   );
 }

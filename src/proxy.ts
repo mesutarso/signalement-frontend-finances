@@ -34,7 +34,7 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(new URL("/connexion", request.url));
   }
   if (pathname === "/connexion" && signedIn) {
-    return NextResponse.redirect(new URL("/signalements", request.url));
+    return NextResponse.redirect(new URL(["CELLULE", "CABINET", "PAYMASTER"].includes(role ?? "") ? "/etats" : "/signalements", request.url));
   }
   if (role === "AGENT" && protectedPath(pathname) && pathname !== "/compte" && !pathname.startsWith("/signalements")) {
     return NextResponse.redirect(new URL("/signalements", request.url));
