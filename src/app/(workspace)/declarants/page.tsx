@@ -10,18 +10,17 @@ import { Figure, Figures } from "@/components/figures";
 import { Ledger } from "@/components/ledger";
 import { BeneficiaryForm } from "@/modules/report/ui/beneficiary-form";
 
-type Report = { id: string; reference: string; status: string; points: number };
+type Report = { id: string; reference: string; status: string };
 type Situation = {
   reference: string;
-  points: number;
-  primeAmount: number;
+  rewardAmount: number;
   paidAmount: number;
   ceiling: number;
   remainder: number;
   tickets: number;
   lots: number;
-  primeApproved: boolean;
-  primePaid: boolean;
+  rewardApproved: boolean;
+  rewardPaid: boolean;
   reports: Report[];
 };
 
@@ -31,7 +30,6 @@ const STATUS: Record<string, string> = {
   review: "En vérification",
   rejected: "Non retenu",
   confirmed: "Confirmé",
-  points: "Points crédités",
 };
 
 export default function DeclarantsPage({ searchParams }: PageProps<"/declarants">) {
@@ -68,27 +66,26 @@ async function Declarants({ searchParams }: Pick<PageProps<"/declarants">, "sear
           <div className="grid gap-4">
             <p className="ref text-sm font-medium">{situation.body.reference}</p>
             <Figures>
-              <Figure label="Points" value={situation.body.points.toLocaleString("fr-FR")} />
-              <Figure label="Primes (FC)" value={situation.body.primeAmount.toLocaleString("fr-FR")} />
+              <Figure label="Récompenses (FC)" value={situation.body.rewardAmount.toLocaleString("fr-FR")} />
               <Figure label="Payé (FC)" value={situation.body.paidAmount.toLocaleString("fr-FR")} />
               <Figure label="Solde (FC)" value={situation.body.remainder.toLocaleString("fr-FR")} note={`Plafond de ${situation.body.ceiling.toLocaleString("fr-FR")} FC`} />
             </Figures>
-            <p className="text-sm leading-6 text-muted-foreground">{situation.body.tickets} ticket{situation.body.tickets > 1 ? "s" : ""} · {situation.body.lots} lot{situation.body.lots > 1 ? "s" : ""} · {situation.body.primeApproved ? "Prime approuvée" : "Aucune prime approuvée"} · {situation.body.primePaid ? "Prime payée" : "Aucune prime payée"}</p>
+            <p className="text-sm leading-6 text-muted-foreground">{situation.body.tickets} ticket{situation.body.tickets > 1 ? "s" : ""} · {situation.body.lots} lot{situation.body.lots > 1 ? "s" : ""} · {situation.body.rewardApproved ? "Récompense approuvée" : "Aucune récompense approuvée"} · {situation.body.rewardPaid ? "Récompense payée" : "Aucune récompense payée"}</p>
           </div>
           <PageSection title="Signalements">
             <Ledger>
               {situation.body.reports.map((report) => (
                 <li key={report.id} className="flex flex-wrap items-center justify-between gap-3 border-b py-3 text-sm">
                   <span className="ref">{report.reference}</span>
-                  <span className="flex items-center gap-4"><Badge variant="secondary">{STATUS[report.status] ?? report.status}</Badge><span className="w-20 text-right tabular-nums">{report.points.toLocaleString("fr-FR")} points</span></span>
+                  <span className="flex items-center gap-4"><Badge variant="secondary">{STATUS[report.status] ?? report.status}</Badge></span>
                 </li>
               ))}
             </Ledger>
           </PageSection>
           {beneficiary?.ok ? (
             <PageSection title="Identité et plafond du bénéficiaire">
-              {beneficiary.body.verified ? <p className="text-sm">Identité vérifiée · {beneficiary.body.accounts} compte(s) rattaché(s) · {beneficiary.body.reservedAmount.toLocaleString("fr-FR")} FC approuvés ou payés, toutes versions confondues · {beneficiary.body.remainder.toLocaleString("fr-FR")} FC disponibles.</p>
-                : <><p className="text-sm">Une vérification de l’identité est requise avant toute approbation de prime.</p>{canVerify ? <BeneficiaryForm reference={reference} /> : null}</>}
+              {beneficiary.body.verified ? <p className="text-sm">Identité vérifiée · {beneficiary.body.accounts} compte(s) rattaché(s) · {beneficiary.body.reservedAmount.toLocaleString("fr-FR")} FC approuvés ou payés · {beneficiary.body.remainder.toLocaleString("fr-FR")} FC disponibles.</p>
+                : <><p className="text-sm">Une vérification de l’identité est requise avant toute approbation de récompense.</p>{canVerify ? <BeneficiaryForm reference={reference} /> : null}</>}
             </PageSection>
           ) : null}
         </>

@@ -7,7 +7,7 @@ export async function recordBudget(_current: string | null, data: FormData): Pro
   if (!response.ok) return response.message;
   revalidatePath("/regles");
   revalidatePath("/indicateurs");
-  return "Budget prévisionnel enregistré et historisé.";
+  return "Budget prévisionnel enregistré.";
 }
 
 export async function captureReport(_current: string | null, data: FormData): Promise<string | null> {

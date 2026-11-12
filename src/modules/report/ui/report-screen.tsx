@@ -1,64 +1,44 @@
 import { ActionDialog } from "@/components/action-dialog";
 import { Page, PageHeader } from "@/components/page";
-import { priorityLabel, reportedAtLabel, reportedAtParts, supervisionResultLabel, type Assignee, type ReportDetail } from "@/modules/report/model/report";
+import { reportedAtLabel, reportedAtParts, supervisionResultLabel, type Assignee, type ReportDetail } from "@/modules/report/model/report";
 import { AssignmentForm } from "@/modules/report/ui/assignment-form";
 import { DuplicateAlerts } from "@/modules/report/ui/duplicate-alerts";
-import { QualificationPanel } from "@/modules/report/ui/qualification-panel";
-import { PointsPanel, type PointMovement } from "@/modules/report/ui/points-panel";
-import { PrimePanel } from "@/modules/report/ui/prime-panel";
-import type { PrimeAccount } from "@/modules/report/model/prime";
-import { PriorityMark, StateTag } from "@/modules/report/ui/report-marks";
+import { PriorityMark } from "@/modules/report/ui/report-marks";
 import { ReportInstruction, type InstructionTab } from "@/modules/report/ui/report-instruction";
 import { ReportPhotos } from "@/modules/report/ui/report-photos";
-
-function Unavailable({ children }: { children: React.ReactNode }) {
-  return <p className="text-sm text-muted-foreground">{children}</p>;
-}
+import { AssessmentPanel } from "@/modules/report/ui/assessment-panel";
+import type { AssessmentView } from "@/modules/report/model/assessment";
+import { ValidationTag } from "@/modules/report/ui/report-marks";
 
 export function ReportScreen({
   report,
   canAssign,
   canRequest,
   assignees,
-  points,
-  prime,
+  assessment,
 }: {
   report: ReportDetail;
   canAssign: boolean;
   canRequest: boolean;
   assignees: Assignee[];
-  points: { items: PointMovement[]; net: number } | null;
-  prime: PrimeAccount | null;
+  assessment: AssessmentView | null;
 }) {
   const hasReporter = report.reporterName || report.reporterEmail || report.reporterPhone;
   const received = reportedAtParts(report.reportedAt);
   const openDuplicates = report.duplicates.filter((alert) => alert.status === "open").length;
 
   const tabs: InstructionTab[] = [
-    {
-      value: "qualification",
-      label: "Qualification",
-      count: report.qualifications.length,
-      content: <QualificationPanel reportId={report.id} qualifications={report.qualifications} canDecide={canRequest} />,
-    },
+    ...(assessment ? [{
+      value: "verification",
+      label: "Vérification",
+      content: <AssessmentPanel view={assessment} photos={report.photos} canReview={canRequest} canAnalyze={canAssign} />,
+    }] : []),
     {
       value: "doublons",
       label: "Doublons",
       count: report.duplicates.length,
       attention: openDuplicates > 0,
       content: <DuplicateAlerts reportId={report.id} alerts={report.duplicates} canDecide={canRequest} />,
-    },
-    {
-      value: "points",
-      label: "Points",
-      count: points?.items.length,
-      content: points ? <PointsPanel reportId={report.id} movements={points.items} net={points.net} canCredit={canAssign} /> : <Unavailable>Les points sont indisponibles. Actualisez la page.</Unavailable>,
-    },
-    {
-      value: "prime",
-      label: "Prime",
-      count: prime?.tiers.length,
-      content: prime ? <PrimePanel account={prime} reportId={report.id} canReview={canAssign} /> : <Unavailable>Les primes sont indisponibles. Actualisez la page.</Unavailable>,
     },
   ];
   if (report.reviews.length > 0) {
@@ -84,7 +64,7 @@ export function ReportScreen({
   }
 
   const facts: [string, React.ReactNode][] = [
-    ["État", <StateTag key="state" state={report.state} />],
+    ["État", <ValidationTag key="state" state={report.validationState} assignmentState={report.state} />],
     ["Priorité", <PriorityMark key="priority" priority={report.priority} />],
     ["Agent responsable", report.assigneeName ?? <span key="none" className="text-muted-foreground">Aucun agent affecté</span>],
     ["Reçu le", <span key="date" className="tabular-nums">{received.date} <span className="text-muted-foreground">à {received.time}</span></span>],
@@ -99,21 +79,6 @@ export function ReportScreen({
         title={report.title || "Signalement sans titre"}
         actions={
           <>
-            <ActionDialog label={`Historique (${report.assignments.length})`} title="Historique des affectations" variant="ghost">
-              {report.assignments.length === 0 ? <p className="text-sm text-muted-foreground">Aucune affectation enregistrée.</p> : (
-                <ol className="flex flex-col divide-y">
-                  {report.assignments.map((entry, index) => (
-                    <li key={`${entry.recordedAt}-${index}`} className="grid gap-1 py-3.5 first:pt-0 last:pb-0">
-                      <div className="flex flex-wrap items-baseline justify-between gap-2">
-                        <p className="text-sm font-bold">{entry.assigneeName ? `Affecté à ${entry.assigneeName}` : "Affectation retirée"}</p>
-                        <span className="text-[13px] text-muted-foreground">{reportedAtLabel(entry.recordedAt)}</span>
-                      </div>
-                      <p className="text-[13px] text-muted-foreground">Par {entry.actorName ?? "Compte introuvable"} · Priorité {priorityLabel(entry.priority).toLowerCase()}</p>
-                    </li>
-                  ))}
-                </ol>
-              )}
-            </ActionDialog>
             {canAssign ? (
               <ActionDialog label="Modifier l’affectation" title="Affectation et priorité" variant="default">
                 <AssignmentForm reportId={report.id} version={report.version} priority={report.priority} assigneeId={report.assigneeId} assignees={assignees} />

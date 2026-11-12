@@ -15,7 +15,6 @@ import {
   RepeatIcon,
   SearchList01Icon,
   SecurityCheckIcon,
-  StarIcon,
   Target02Icon,
   Ticket01Icon,
   UserAccountIcon,
@@ -74,10 +73,9 @@ const SECTIONS: NavSection[] = [
     id: "recompenses",
     label: "Récompenses",
     items: [
-      { href: "/points", label: "Points", icon: StarIcon, roles: READERS, keywords: "crédit annulation" },
-      { href: "/primes", label: "Primes", icon: Award01Icon, roles: READERS, keywords: "paliers numéros de paiement" },
+      { href: "/recompenses", label: "Récompenses", icon: Award01Icon, roles: OVERSIGHT, keywords: "montants numéros de paiement" },
       { href: "/etats", label: "États de paiement", icon: Invoice01Icon, roles: ["SUPERVISOR", "AUDITOR", "ADMINISTRATOR", "CELLULE", "CABINET", "PAYMASTER"], keywords: "visa autorisation mobile money" },
-      { href: "/echantillons", label: "Échantillons", icon: Target02Icon, roles: OVERSIGHT, keywords: "contrôle primes payées" },
+      { href: "/echantillons", label: "Échantillons", icon: Target02Icon, roles: OVERSIGHT, keywords: "contrôle récompenses payées" },
       { href: "/tirages", label: "Tirages", icon: Ticket01Icon, roles: READERS, keywords: "tickets lots tombola" },
     ],
   },
@@ -88,8 +86,8 @@ const SECTIONS: NavSection[] = [
       { href: "/indicateurs", label: "Indicateurs", icon: ChartLineData01Icon, roles: READERS, keywords: "statistiques rapport semaine mois" },
       { href: "/supervision", label: "Contrôle", icon: SecurityCheckIcon, roles: OVERSIGHT, keywords: "supervision revoir décisions" },
       { href: "/indices", label: "Indices", icon: SearchList01Icon, roles: OVERSIGHT, keywords: "abus fraude suspension" },
-      { href: "/regles", label: "Règles", icon: LegalDocument01Icon, roles: OVERSIGHT, keywords: "barème version paliers" },
-      { href: "/journal", label: "Journal", icon: BookOpen01Icon, roles: OVERSIGHT, keywords: "audit actions historique" },
+      { href: "/regles", label: "Règles", icon: LegalDocument01Icon, roles: OVERSIGHT, keywords: "critères montant récompense" },
+      { href: "/journal", label: "Journal", icon: BookOpen01Icon, roles: OVERSIGHT, keywords: "audit actions" },
     ],
   },
   {
@@ -114,7 +112,8 @@ export function navigationFor(account: Account | null): NavSection[] {
   }
   return SECTIONS.map((section) => ({
     ...section,
-    items: section.items.filter((item) => !item.roles || item.roles.includes(account.role)),
+    items: section.items.filter((item) => account.role === "AGENT" ? item.href === "/signalements" : !item.roles || item.roles.includes(account.role))
+      .map(item => account.role === "AGENT" && item.href === "/signalements" ? { ...item, label: "À vérifier" } : item),
   })).filter((section) => section.items.length > 0);
 }
 

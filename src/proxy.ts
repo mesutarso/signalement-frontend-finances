@@ -1,36 +1,42 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-const PROTECTED = ["/compte", "/comptes", "/signalements", "/imports", "/indices", "/journal", "/supervision", "/dossiers", "/courriers", "/points", "/primes", "/etats", "/contribuables", "/echantillons", "/tirages", "/declarants", "/indicateurs", "/corrections", "/reexamens", "/messages", "/regles"];
+const PROTECTED = ["/compte", "/comptes", "/signalements", "/imports", "/indices", "/journal", "/supervision", "/dossiers", "/courriers", "/recompenses", "/etats", "/contribuables", "/echantillons", "/tirages", "/declarants", "/indicateurs", "/corrections", "/reexamens", "/messages", "/regles"];
 
 function protectedPath(pathname: string): boolean {
   return PROTECTED.some((path) => pathname === path || pathname.startsWith(`${path}/`));
 }
 
-async function authenticated(request: NextRequest): Promise<boolean> {
+async function accountRole(request: NextRequest): Promise<string | null> {
   const cookie = request.headers.get("cookie") ?? "";
   if (!cookie.includes("SESSION=")) {
-    return false;
+    return null;
   }
   try {
     const response = await fetch(new URL("/api/auth", process.env.BACKEND_URL ?? "http://localhost:8080"), {
       headers: { cookie },
       cache: "no-store",
     });
-    return response.ok;
+    if (!response.ok) return null;
+    const account = await response.json();
+    return typeof account.role === "string" ? account.role : null;
   } catch {
-    return false;
+    return null;
   }
 }
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  const signedIn = await authenticated(request);
+  const role = await accountRole(request);
+  const signedIn = role !== null;
 
   if (protectedPath(pathname) && !signedIn) {
     return NextResponse.redirect(new URL("/connexion", request.url));
   }
   if (pathname === "/connexion" && signedIn) {
+    return NextResponse.redirect(new URL("/signalements", request.url));
+  }
+  if (role === "AGENT" && protectedPath(pathname) && pathname !== "/compte" && !pathname.startsWith("/signalements")) {
     return NextResponse.redirect(new URL("/signalements", request.url));
   }
   return NextResponse.next();
@@ -56,10 +62,8 @@ export const config = {
     "/dossiers/:path*",
     "/courriers",
     "/courriers/:path*",
-    "/points",
-    "/points/:path*",
-    "/primes",
-    "/primes/:path*",
+    "/recompenses",
+    "/recompenses/:path*",
     "/etats",
     "/etats/:path*",
     "/contribuables",

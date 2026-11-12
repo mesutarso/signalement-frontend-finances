@@ -7,9 +7,9 @@ import { cn } from "cn";
 import { TablePagination } from "@/components/table-pagination";
 import { createColumnHelper, createSortedRowModel, rowSortingFeature, sortFns, tableFeatures, useTable } from "@tanstack/react-table";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Empty, EmptyHeader, EmptyTitle, EmptyDescription } from "@/components/ui/empty";
+import { Empty, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
 import { reportedAtParts, type ReportSummary, type ReportPage } from "@/modules/report/model/report";
-import { PriorityMark, StateTag } from "@/modules/report/ui/report-marks";
+import { PriorityMark, ValidationTag } from "@/modules/report/ui/report-marks";
 
 const features = tableFeatures({ rowSortingFeature, sortedRowModel: createSortedRowModel(), sortFns });
 const helper = createColumnHelper<typeof features, ReportSummary>();
@@ -26,14 +26,14 @@ const columns = helper.columns([
         </Link>
         <span className="ref mt-0.5 block text-muted-foreground">{row.original.identifier}</span>
         <span className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 sm:hidden">
-          <StateTag state={row.original.state} />
+          <ValidationTag state={row.original.validationState} assignmentState={row.original.state} />
           <PriorityMark priority={row.original.priority} />
           <span className="text-[13px] text-muted-foreground">{date}</span>
         </span>
       </span>
     );
   } }),
-  helper.accessor("state", { header: "État", cell: ({ getValue }) => <StateTag state={getValue()} /> }),
+  helper.accessor("validationState", { header: "État", cell: ({ row, getValue }) => <ValidationTag state={getValue()} assignmentState={row.original.state} /> }),
   helper.accessor("priority", { header: "Priorité", cell: ({ getValue }) => <PriorityMark priority={getValue()} /> }),
   helper.accessor("assigneeName", { header: "Affectation", cell: ({ getValue }) => getValue() || <span className="text-muted-foreground">Non affecté</span> }),
   helper.accessor("reporterName", { header: "Déclarant", cell: ({ row, getValue }) => (
@@ -55,7 +55,7 @@ const columns = helper.columns([
 ]);
 
 const VISIBILITY: Record<string, string> = {
-  state: "hidden sm:table-cell",
+  validationState: "hidden sm:table-cell",
   priority: "hidden md:table-cell",
   assigneeName: "hidden lg:table-cell",
   reporterName: "hidden xl:table-cell",
@@ -70,7 +70,6 @@ export function ReportsTable({ page }: { page: ReportPage }) {
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <p className="text-sm font-bold">{page.total.toLocaleString("fr-FR")} signalement{page.total > 1 ? "s" : ""}</p>
-        <p className="text-[13px] text-muted-foreground">Le tri s’applique à la page affichée</p>
       </div>
       <Table aria-label="Liste des signalements">
         <TableHeader>
@@ -81,7 +80,7 @@ export function ReportsTable({ page }: { page: ReportPage }) {
                 return (
                   <TableHead key={header.id} className={VISIBILITY[header.column.id]} aria-sort={sorted === "asc" ? "ascending" : sorted === "desc" ? "descending" : "none"}>
                     {header.column.getCanSort() ? (
-                      <button type="button" onClick={header.column.getToggleSortingHandler()} className={cn("group/sort -ml-1 inline-flex items-center gap-1 rounded-sm px-1 py-1 transition-colors hover:text-foreground", sorted && "text-foreground")}>
+                      <button type="button" title="Trier la page" onClick={header.column.getToggleSortingHandler()} className={cn("group/sort -ml-1 inline-flex items-center gap-1 rounded-sm px-1 py-1 transition-colors hover:text-foreground", sorted && "text-foreground")}>
                         <table.FlexRender header={header} />
                         <HugeiconsIcon icon={sorted === "asc" ? ArrowUp01Icon : sorted === "desc" ? ArrowDown01Icon : UnfoldMoreIcon} strokeWidth={2} aria-hidden="true" className={cn("size-3.5", !sorted && "opacity-0 transition-opacity group-hover/sort:opacity-100 group-focus-visible/sort:opacity-100")} />
                       </button>
@@ -98,7 +97,7 @@ export function ReportsTable({ page }: { page: ReportPage }) {
               {row.getAllCells().map((cell) => <TableCell key={cell.id} className={VISIBILITY[cell.column.id]}><table.FlexRender cell={cell} /></TableCell>)}
             </TableRow>
           ))}
-          {page.reports.length === 0 ? <TableRow><TableCell colSpan={7}><Empty><EmptyHeader><EmptyTitle>Aucun signalement</EmptyTitle><EmptyDescription>Aucun signalement ne correspond à cette liste.</EmptyDescription></EmptyHeader></Empty></TableCell></TableRow> : null}
+          {page.reports.length === 0 ? <TableRow><TableCell colSpan={7}><Empty><EmptyHeader><EmptyTitle>Aucun signalement</EmptyTitle></EmptyHeader></Empty></TableCell></TableRow> : null}
         </TableBody>
       </Table>
       <TablePagination page={page.page} size={page.size} total={page.total} label="Pagination des signalements" />

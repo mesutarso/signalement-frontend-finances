@@ -26,13 +26,15 @@ async function ReportsContent({ searchParams }: Pick<PageProps<"/signalements">,
   const requestedPage = Number(params.page ?? 0);
   const q = first(params.q).trim();
   const state = first(params.state);
+  const validation = account.role === "AGENT" ? "doubt" : first(params.validation);
   const priority = first(params.priority);
   const requestedScope = first(params.scope);
-  const scope = requestedScope || (account.role === "AGENT" ? "mine" : "all");
+  const scope = requestedScope || "all";
   const page = await readReports({
     page: Number.isSafeInteger(requestedPage) && requestedPage >= 0 ? requestedPage : 0,
     q,
     state,
+    validation,
     priority,
     assigneeId: scope === "mine" ? account.id : undefined,
     unassigned: scope === "unassigned",
@@ -40,7 +42,10 @@ async function ReportsContent({ searchParams }: Pick<PageProps<"/signalements">,
   return (
     <ReportList
       page={page}
-      canImport={account.role !== "AUDITOR"}
+      canImport={account.role === "SUPERVISOR" || account.role === "ADMINISTRATOR"}
+      onlyDoubts={account.role === "AGENT"}
+      validation={validation}
+      result={first(params.result)}
       q={q}
       state={state}
       priority={priority}

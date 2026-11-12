@@ -47,9 +47,9 @@ async function Imports({ searchParams }: Pick<PageProps<"/imports">, "searchPara
             <CardHeader><CardTitle>Importer une période</CardTitle></CardHeader>
             <CardContent className="max-w-2xl"><ImportControls today={today} busy={history.active} /></CardContent>
           </Card>
-          <PageSection title="Historique des imports">
+          <PageSection title="Traitements">
             <div className="grid gap-4">
-              <Table aria-label="Historique des imports">
+              <Table aria-label="Traitements d’import">
                 <TableHeader>
                   <TableRow>
                     {[["Lancement"], ["Période"], ["Origine"], ["État"], ["Ajoutés", "text-right"], ["Déjà présents", "text-right"], ["Photos", "text-right"], ["Fin"], ["", "w-20"]].map(([title, className]) => <TableHead key={title || "actions"} className={className}>{title || <span className="sr-only">Actions</span>}</TableHead>)}

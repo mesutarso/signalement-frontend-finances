@@ -10,7 +10,7 @@ export async function recordSuspension(_current: string | null, formData: FormDa
   if (!reference || !reason) {
     return "Indiquez la référence et le motif.";
   }
-  const result = await writeJson("/api/prime-suspensions", "POST", { reference, action, reason });
+  const result = await writeJson("/api/reward-suspensions", "POST", { reference, action, reason });
   if (!result.ok) {
     return result.message;
   }

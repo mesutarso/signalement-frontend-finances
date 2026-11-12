@@ -17,10 +17,10 @@ import { readAvailability } from "@/modules/availability/queries/read-availabili
 import type { AvailabilityView } from "@/modules/availability/model/availability";
 import type { Indicators } from "@/modules/report/model/indicators";
 import { paymentStatusLabel, paymentStatusVariant, type PaymentItem } from "@/modules/report/model/payment";
-import { francs } from "@/modules/report/model/prime";
+import { francs } from "@/modules/report/model/reward";
 import { calendarLabel, reportedAtParts } from "@/modules/report/model/report";
 import { readReports } from "@/modules/report/queries/read-reports";
-import { PriorityMark, StateTag } from "@/modules/report/ui/report-marks";
+import { PriorityMark, ValidationTag } from "@/modules/report/ui/report-marks";
 
 export default function DashboardPage() {
   return <Suspense fallback={<PageSkeleton />}><Dashboard /></Suspense>;
@@ -50,13 +50,14 @@ function headerDescription(account: Account): string {
 async function Dashboard() {
   const account = await readCurrentAccount();
   if (!account) redirect("/connexion");
+  if (account.role === "AGENT") redirect("/signalements");
   if (!canReadReports(account)) return <PaymentDashboard account={account} />;
 
   const admin = account.role === "ADMINISTRATOR";
   const auditor = account.role === "AUDITOR";
   const [recent, pending, urgent, unassigned, mine, accounts, availability, indicators] = await Promise.all([
     readReports().catch(() => null),
-    readReports({ state: "pending" }).catch(() => null),
+    readReports({ validation: "doubt" }).catch(() => null),
     readReports({ priority: "urgent" }).catch(() => null),
     readReports({ unassigned: true }).catch(() => null),
     auditor ? Promise.resolve(null) : readReports({ assigneeId: account.id }).catch(() => null),
@@ -73,7 +74,7 @@ async function Dashboard() {
       {unavailable ? <Alert variant="destructive"><AlertTitle>Certaines données ne sont pas disponibles. Actualisez la page.</AlertTitle></Alert> : null}
 
       <Figures>
-        <Figure label="À traiter" value={count(pending?.total)} href="/signalements?scope=all&state=pending" />
+        <Figure label="À vérifier" value={count(pending?.total)} href="/signalements?scope=all&validation=doubt" />
         <Figure label="Urgents" value={count(urgent?.total)} href="/signalements?scope=all&priority=urgent" signal={Boolean(urgent?.total)} />
         <Figure label="Non affectés" value={count(unassigned?.total)} href="/signalements?scope=unassigned" />
         {auditor
@@ -100,7 +101,7 @@ async function Dashboard() {
                       </span>
                       <span className="flex items-center gap-4">
                         <PriorityMark priority={report.priority} />
-                        <StateTag state={report.state} />
+                        <ValidationTag state={report.validationState} assignmentState={report.state} />
                         <span className="w-[6.75rem] text-right text-[13px] text-muted-foreground tabular-nums max-sm:hidden">{date}</span>
                       </span>
                     </Link>
@@ -125,7 +126,6 @@ async function Dashboard() {
                     ["Traités", count(week.treated)],
                     ["Constats", count(week.findings)],
                     ["Dossiers transmis", count(week.transmissions)],
-                    ["Points", count(week.points)],
                     ["Montant payé", `${count(week.paidAmount)} FC`],
                   ]}
                 />

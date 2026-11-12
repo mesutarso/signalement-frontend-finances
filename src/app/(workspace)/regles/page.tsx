@@ -2,35 +2,14 @@ import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { readJson } from "@/lib/api";
 import { readCurrentAccount } from "@/modules/access/queries/read-current-account";
-import { reportedAtLabel } from "@/modules/report/model/report";
-import { ActivateRuleForm, PreviewRuleForm, RecordRuleForm } from "@/modules/report/ui/rule-forms";
-import { Alert, AlertTitle } from "@/components/ui/alert";
-import { Page, PageHeader, PageSkeleton } from "@/components/page";
-import { Badge } from "@/components/ui/badge";
-import { ActionDialog } from "@/components/action-dialog";
-import { FigureRows } from "@/components/figures";
-import { Ledger, LedgerItem } from "@/components/ledger";
+import { francs } from "@/modules/report/model/reward";
+import type { RewardSetting } from "@/modules/report/model/assessment";
+import { RewardSettingForm } from "@/modules/report/ui/reward-setting-form";
 import { BudgetForm } from "@/modules/report/ui/campaign-reporting-forms";
+import { Alert, AlertTitle } from "@/components/ui/alert";
+import { Page, PageHeader, PageSection, PageSkeleton } from "@/components/page";
+import { ActionDialog } from "@/components/action-dialog";
 
-type Tier = { threshold: number; amount: number };
-type Version = {
-  id: string;
-  code: string;
-  fakeInvoice: number;
-  missingTransmission: number;
-  understated: number;
-  nonNormalized: number;
-  refusal: number;
-  bonus: number;
-  ceiling: number;
-  dailyCap: number;
-  spacingDays: number;
-  tiers: Tier[];
-  active: boolean;
-  recordedAt: string;
-};
-
-const READERS = ["SUPERVISOR", "AUDITOR", "ADMINISTRATOR"];
 
 export default function RulesPage() {
   return <Suspense fallback={<PageSkeleton />}><Rules /></Suspense>;
@@ -38,55 +17,26 @@ export default function RulesPage() {
 
 async function Rules() {
   const account = await readCurrentAccount();
-  if (!account) {
-    redirect("/connexion");
-  }
-  if (!READERS.includes(account.role)) {
-    redirect("/signalements");
-  }
-  const rules = await readJson<{ versions: Version[] }>("/api/rules").catch(() => null);
+  if (!account) redirect("/connexion");
+  if (!["SUPERVISOR", "AUDITOR", "ADMINISTRATOR"].includes(account.role)) redirect("/signalements");
+  const current = await readJson<RewardSetting>("/api/reward-settings").catch(() => null);
   const canChange = account.role === "SUPERVISOR" || account.role === "ADMINISTRATOR";
-  return (
-    <Page className="max-w-6xl">
-      <PageHeader
-        title="Règles"
-        actions={canChange ? (
-          <>
-            <ActionDialog label="Budget prévisionnel" title="Budget des primes"><BudgetForm /></ActionDialog>
-            <ActionDialog label="Prévisualiser" title="Prévisualiser une règle"><PreviewRuleForm /></ActionDialog>
-            <ActionDialog label="Nouvelle version" title="Nouvelle version" variant="default"><RecordRuleForm /></ActionDialog>
-          </>
-        ) : undefined}
-      />
-      {!rules ? <Alert variant="destructive"><AlertTitle>Les règles sont indisponibles. Actualisez la page.</AlertTitle></Alert> : (
-        <Ledger>
-          {rules.versions.map((version) => (
-            <LedgerItem
-              key={version.id}
-              title={<span className="ref text-sm font-medium">{version.code}</span>}
-              status={<Badge variant={version.active ? "success" : "outline"}>{version.active ? "Active" : "En attente"}</Badge>}
-              meta={`Enregistrée le ${reportedAtLabel(version.recordedAt)}`}
-              action={canChange && !version.active ? <ActivateRuleForm id={version.id} /> : undefined}
-            >
-              <FigureRows
-                className="gap-x-8 sm:grid-cols-2"
-                rows={[
-                  ["Fausse facture", version.fakeInvoice],
-                  ["Transmission", version.missingTransmission],
-                  ["Minorée", version.understated],
-                  ["Non normalisée", version.nonNormalized],
-                  ["Refus", version.refusal],
-                  ["Bonus", version.bonus],
-                  ["Plafond", `${version.ceiling.toLocaleString("fr-FR")} FC`],
-                  ["Par jour", `${version.dailyCap} signalements`],
-                  ["Écart", `${version.spacingDays} jours`],
-                  ["Paliers", version.tiers.length],
-                ]}
-              />
-            </LedgerItem>
-          ))}
-        </Ledger>
-      )}
-    </Page>
-  );
+  return <Page className="max-w-6xl">
+    <PageHeader title="Règles" actions={canChange ? <ActionDialog label="Budget prévisionnel" title="Budget des récompenses"><BudgetForm /></ActionDialog> : undefined} />
+    <PageSection title="Récompense par signalement validé">
+      {!current ? <Alert variant="destructive"><AlertTitle>Le montant est indisponible. Actualisez la page.</AlertTitle></Alert>
+        : canChange ? <RewardSettingForm key={current.id} setting={current} /> : <p className="text-2xl font-medium tabular-nums">{francs(current.amount)}</p>}
+    </PageSection>
+    <PageSection title="Critères de validation">
+      <ol className="flex list-decimal flex-col gap-2 pl-5 text-sm leading-6">
+        <li>Assujettissement de l’établissement à la TVA.</li>
+        <li>Facture non normalisée.</li>
+        <li>Facture non conforme à l’achat réel.</li>
+        <li>Facture non encore signalée.</li>
+        <li>TVA facturée par une entreprise non assujettie.</li>
+      </ol>
+      <p className="max-w-[68ch] text-sm leading-6">Une facture inédite est retenue si un établissement assujetti remet une facture non normalisée ou non conforme, ou si une entreprise non assujettie facture de la TVA.</p>
+    </PageSection>
+
+  </Page>;
 }

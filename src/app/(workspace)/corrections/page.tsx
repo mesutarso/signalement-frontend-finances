@@ -32,7 +32,7 @@ async function Corrections() {
     <Page className="max-w-6xl">
       <PageHeader
         title="Corrections"
-        description="Les primes déjà payées ne sont pas reprises."
+        description="Les récompenses déjà payées ne sont pas reprises."
         actions={canRecord ? <ActionDialog label="Enregistrer une correction" title="Enregistrer une correction" variant="default"><CorrectionForm /></ActionDialog> : undefined}
       />
       {!corrections ? <Alert variant="destructive"><AlertTitle>Les corrections sont indisponibles. Actualisez la page.</AlertTitle></Alert> : corrections.items.length === 0 ? <LedgerEmpty>Aucune correction.</LedgerEmpty> : (

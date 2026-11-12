@@ -27,7 +27,6 @@ export function PaymentAttemptForm({ statementId, lineId, settle }: { statementI
   const pending = paying || failing || waiting;
   return (
     <div className="grid gap-4">
-      <p className="text-sm text-muted-foreground">{settle ? "Confirmez le résultat simulé avant une nouvelle tentative. Aucun argent n'est envoyé." : "La simulation produit la référence. Aucun argent n'est envoyé."}</p>
       <form action={recordPaid} className="grid gap-3">
         <input type="hidden" name="id" value={statementId} />
         <input type="hidden" name="lineId" value={lineId} />

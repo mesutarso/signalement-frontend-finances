@@ -52,7 +52,7 @@ async function Indices({ searchParams }: Pick<PageProps<"/indices">, "searchPara
   const number = Number(params.page ?? 0);
   const page = Number.isSafeInteger(number) && number >= 0 ? number : 0;
   const indices = await readJson<Page>(`/api/abuse-indices?page=${page}`).catch(() => null);
-  const suspensions = await readJson<{ items: Suspension[] }>("/api/prime-suspensions").catch(() => null);
+  const suspensions = await readJson<{ items: Suspension[] }>("/api/reward-suspensions").catch(() => null);
   const canNote = account.role === "SUPERVISOR" || account.role === "ADMINISTRATOR";
   return (
     <Page className="max-w-6xl">
@@ -119,15 +119,15 @@ async function Indices({ searchParams }: Pick<PageProps<"/indices">, "searchPara
         </>
       )}
       <PageSection
-        title="Droit aux primes"
+        title="Droit aux récompenses"
         actions={canNote ? (
           <>
-            <ActionDialog label="Rétablir" title="Rétablir le droit aux primes"><SuspensionForm action="restored" label="Rétablir le droit aux primes" /></ActionDialog>
-            <ActionDialog label="Suspendre" title="Suspendre le droit aux primes"><SuspensionForm action="suspended" label="Suspendre le droit aux primes" /></ActionDialog>
+            <ActionDialog label="Rétablir" title="Rétablir le droit aux récompenses"><SuspensionForm action="restored" label="Rétablir le droit aux récompenses" /></ActionDialog>
+            <ActionDialog label="Suspendre" title="Suspendre le droit aux récompenses"><SuspensionForm action="suspended" label="Suspendre le droit aux récompenses" /></ActionDialog>
           </>
         ) : undefined}
       >
-        {!suspensions ? <p className="text-sm text-muted-foreground">Le droit aux primes est indisponible.</p> : suspensions.items.length === 0 ? <LedgerEmpty>Aucun droit suspendu.</LedgerEmpty> : (
+        {!suspensions ? <p className="text-sm text-muted-foreground">Le droit aux récompenses est indisponible.</p> : suspensions.items.length === 0 ? <LedgerEmpty>Aucun droit suspendu.</LedgerEmpty> : (
           <Ledger>
             {suspensions.items.map((item) => (
               <LedgerItem key={`${item.reference}-${item.recordedAt}`} className="py-3.5" title={<span className="ref text-sm font-medium">{item.reference}</span>} status={<Badge variant={item.action === "suspended" ? "destructive" : "success"}>{item.action === "suspended" ? "Suspendu" : "Rétabli"}</Badge>}>

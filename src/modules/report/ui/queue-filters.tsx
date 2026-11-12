@@ -6,27 +6,36 @@ import { Search01Icon } from "@hugeicons/core-free-icons";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
+import { VALIDATION_STATES } from "@/modules/report/model/assessment";
 
 export function QueueFilters({
   q,
   state,
   priority,
   scope,
+  validation,
+  onlyDoubts,
 }: {
   q: string;
   state: string;
   priority: string;
   scope: string;
+  validation: string;
+  onlyDoubts: boolean;
 }) {
-  const filtered = Boolean(q || state || priority);
+  const filtered = Boolean(q || state || priority || (!onlyDoubts && validation));
   return (
     <form
-      key={`${q}|${state}|${priority}|${scope}`}
+      key={`${q}|${state}|${priority}|${scope}|${validation}`}
       className="flex flex-wrap items-center gap-2"
       action="/signalements"
       method="get"
     >
       <input type="hidden" name="scope" value={scope} />
+      {onlyDoubts ? <input type="hidden" name="validation" value="doubt" /> : <NativeSelect name="validation" defaultValue={validation} aria-label="Validation" onChange={event => event.currentTarget.form?.requestSubmit()}>
+        <NativeSelectOption value="">Toutes les validations</NativeSelectOption>
+        {Object.entries(VALIDATION_STATES).map(([value, label]) => <NativeSelectOption key={value} value={value}>{label}</NativeSelectOption>)}
+      </NativeSelect>}
       <div className="relative min-w-64 flex-1">
         <HugeiconsIcon icon={Search01Icon} strokeWidth={1.75} className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
         <Input name="q" defaultValue={q} placeholder="Référence, titre ou description" aria-label="Recherche" className="h-10 pl-9" />

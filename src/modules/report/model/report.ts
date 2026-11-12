@@ -4,6 +4,7 @@ export type ReportSummary = {
   reportedAt: string;
   title: string | null;
   state: string;
+  validationState: string;
   priority: string | null;
   assigneeName: string | null;
   version: number;
@@ -70,15 +71,6 @@ export function readingErrorLabel(code: string | null): string {
   return (code && READING_ERRORS[code]) || "La lecture a échoué. Vous pouvez réessayer.";
 }
 
-export type Assignment = {
-  recordedAt: string;
-  actorName: string | null;
-  assigneeName: string | null;
-  previousAssigneeName: string | null;
-  priority: string | null;
-  state: string;
-};
-
 export type PhotoRequest = {
   id: string;
   photoId: string;
@@ -101,10 +93,8 @@ export type ReportDetail = ReportSummary & {
   reporterPhone: string | null;
   reporterUserId: string | null;
   photos: ReportPhoto[];
-  assignments: Assignment[];
   photoRequests: PhotoRequest[];
   duplicates: DuplicateAlert[];
-  qualifications: Qualification[];
   reviews: SupervisionReview[];
 };
 
@@ -113,24 +103,6 @@ export type SupervisionReview = {
   qualificationId: string;
   result: string;
   reason: string;
-  actorName: string | null;
-  recordedAt: string;
-};
-
-export type Qualification = {
-  id: string;
-  decision: string;
-  finding: string | null;
-  proof: string | null;
-  justification: string;
-  sellerName: string | null;
-  sellerTaxId: string | null;
-  issuedOn: string | null;
-  amount: string | null;
-  documentNumber: string | null;
-  code: string | null;
-  missingElements: string | null;
-  dgiReference: string | null;
   actorName: string | null;
   recordedAt: string;
 };
@@ -313,12 +285,15 @@ export function qualificationDecisionLabel(decision: string): string {
     return "Constat retenu";
   }
   if (decision === "wait") {
-    return "En attente de la DGI";
+    return "En attente de vérification";
   }
   return "Signalement écarté";
 }
 
 export function findingLabel(finding: string | null): string | null {
+  if (finding === "nonconform") return "Facture non conforme à l’achat réel";
+  if (finding === "vat-unregistered") return "TVA facturée par une entreprise non assujettie";
+  if (finding === "verification") return "Vérification requise";
   if (!finding) {
     return null;
   }

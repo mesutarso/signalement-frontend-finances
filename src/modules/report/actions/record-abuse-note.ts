@@ -14,5 +14,5 @@ export async function recordAbuseNote(_current: string | null, formData: FormDat
   revalidatePath("/indices");
   return decision === "noted"
     ? "Indice noté. Ce n'est pas une preuve de fraude."
-    : "Indice écarté. Le droit aux primes n'est pas modifié.";
+    : "Indice écarté. Le droit aux récompenses n'est pas modifié.";
 }

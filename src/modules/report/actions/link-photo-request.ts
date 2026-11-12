@@ -12,5 +12,5 @@ export async function linkPhotoRequest(_current: string | null, formData: FormDa
     return result.message;
   }
   revalidatePath(`/signalements/${reportId}`);
-  return "La nouvelle pièce est rattachée. L'historique est conservé.";
+  return "Nouvelle pièce rattachée.";
 }

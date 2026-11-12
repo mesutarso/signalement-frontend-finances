@@ -5,6 +5,7 @@ export type ReportFilters = {
   page?: number;
   q?: string;
   state?: string;
+  validation?: string;
   priority?: string;
   assigneeId?: string;
   unassigned?: boolean;
@@ -16,6 +17,7 @@ export async function readReports(filters: ReportFilters = {}): Promise<ReportPa
   params.set("size", "20");
   if (filters.q) params.set("q", filters.q);
   if (filters.state) params.set("state", filters.state);
+  if (filters.validation) params.set("validation", filters.validation);
   if (filters.priority) params.set("priority", filters.priority);
   if (filters.unassigned) params.set("unassigned", "true");
   else if (filters.assigneeId) params.set("assigneeId", filters.assigneeId);

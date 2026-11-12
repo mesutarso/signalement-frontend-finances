@@ -5,9 +5,8 @@ import { readCurrentAccount } from "@/modules/access/queries/read-current-accoun
 import { readAssignees } from "@/modules/report/queries/read-assignees";
 import { readReport } from "@/modules/report/queries/read-report";
 import { readJson } from "@/lib/api";
-import type { PointMovement } from "@/modules/report/ui/points-panel";
-import type { PrimeAccount } from "@/modules/report/model/prime";
 import { ReportScreen } from "@/modules/report/ui/report-screen";
+import type { AssessmentView } from "@/modules/report/model/assessment";
 
 export default function Page({ params }: { params: Promise<{ id: string }> }) {
   return (
@@ -29,8 +28,10 @@ async function ReportContent({ params }: { params: Promise<{ id: string }> }) {
   }
   const canAssign = account.role === "SUPERVISOR" || account.role === "ADMINISTRATOR";
   const canRequest = account.role !== "AUDITOR";
-  const assignees = canAssign ? await readAssignees() : [];
-  const points = await readJson<{ items: PointMovement[]; net: number }>(`/api/reports/${id}/points`).catch(() => null);
-  const prime = await readJson<PrimeAccount>(`/api/reports/${id}/prime`).catch(() => null);
-  return <ReportScreen report={report} canAssign={canAssign} canRequest={canRequest} assignees={assignees} points={points} prime={prime} />;
+  const legacy = report.validationState === "legacy";
+  const [assignees, assessment] = await Promise.all([
+    canAssign ? readAssignees() : Promise.resolve([]),
+    legacy ? Promise.resolve(null) : readJson<AssessmentView>(`/api/reports/${id}/assessment`),
+  ]);
+  return <ReportScreen report={report} canAssign={canAssign} canRequest={canRequest} assignees={assignees} assessment={assessment} />;
 }

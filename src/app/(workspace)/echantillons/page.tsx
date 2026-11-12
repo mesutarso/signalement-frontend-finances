@@ -32,14 +32,14 @@ async function Samples() {
   return (
     <Page className="max-w-6xl">
       <PageHeader
-        title="Échantillon des primes payées"
+        title="Échantillon des récompenses payées"
         actions={canPrepare ? <ActionDialog label="Constituer un échantillon" title="Constituer un échantillon" variant="default"><PrepareSampleForm /></ActionDialog> : undefined}
       />
       {!samples ? <Alert variant="destructive"><AlertTitle>Les échantillons sont indisponibles. Actualisez la page.</AlertTitle></Alert> : samples.items.length === 0 ? <LedgerEmpty>Aucun échantillon.</LedgerEmpty> : (
         <Ledger>
           {samples.items.map((sample) => (
             <LedgerItem key={sample.id} title={<Link className="ref text-sm font-medium underline-offset-4 hover:text-primary hover:underline" href={`/echantillons/${sample.id}`}>{sample.reference}</Link>}>
-              <p>{sample.lines} prime{sample.lines > 1 ? "s" : ""}</p>
+              <p>{sample.lines} récompense{sample.lines > 1 ? "s" : ""}</p>
               <p className="text-muted-foreground">Du {calendarLabel(sample.periodStart)} au {calendarLabel(sample.periodEnd)}.</p>
             </LedgerItem>
           ))}

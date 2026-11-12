@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { readJson } from "@/lib/api";
 import { readCurrentAccount } from "@/modules/access/queries/read-current-account";
-import { francs } from "@/modules/report/model/prime";
+import { francs } from "@/modules/report/model/reward";
 import { paymentAttemptLabel, paymentOperatorLabel, paymentStatusLabel, paymentStatusVariant, type PaymentStatement } from "@/modules/report/model/payment";
 import { calendarLabel, reportedAtLabel } from "@/modules/report/model/report";
 import { PaymentAttemptForm } from "@/modules/report/ui/payment-attempt-form";
@@ -49,7 +49,7 @@ async function Statement({ params }: Pick<PageProps<"/etats/[id]">, "params">) {
           <PageHeader
             back={{ href: "/etats", label: "États de paiement" }}
             title={<span className="tabular-nums">{francs(statement.total)}</span>}
-            description={<>Référence <span className="ref text-foreground">{statement.reference}</span> · Paiements simulés : aucun argent n&apos;est envoyé.</>}
+            description={<>Référence <span className="ref text-foreground">{statement.reference}</span> · Simulation</>}
             actions={<Badge variant={paymentStatusVariant(statement.status)}>{paymentStatusLabel(statement.status)}</Badge>}
           />
           <ol aria-label="Étapes de validation" className="grid grid-cols-2 gap-x-6 gap-y-5 md:grid-cols-4">
@@ -72,7 +72,7 @@ async function Statement({ params }: Pick<PageProps<"/etats/[id]">, "params">) {
                 <LedgerItem
                   key={line.id}
                   title={<span className="tabular-nums">{francs(line.amount)}</span>}
-                  meta={`${line.threshold} points`}
+                  meta="Récompense par signalement"
                   action={statement.status === "authorized" && account.role === "PAYMASTER" && !line.attempts.some((attempt) => attempt.result === "paid") ? (
                     <ActionDialog label="Enregistrer le paiement" title="Enregistrer le paiement" description={`${francs(line.amount)} · ${line.phone}`} variant="default" size="sm">
                       <PaymentAttemptForm statementId={statement.id} lineId={line.id} settle={line.attempts.at(-1)?.result === "unknown"} />
@@ -88,7 +88,7 @@ async function Statement({ params }: Pick<PageProps<"/etats/[id]">, "params">) {
             </Ledger>
           </PageSection>
           {statement.exclusions.length > 0 ? (
-            <PageSection title="Primes écartées">
+            <PageSection title="Récompenses écartées">
               <Ledger>
                 {statement.exclusions.map((exclusion) => <li key={exclusion.primeId} className="border-b py-3.5 text-sm leading-6">{exclusion.reason}</li>)}
               </Ledger>

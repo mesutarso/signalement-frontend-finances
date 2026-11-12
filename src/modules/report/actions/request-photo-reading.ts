@@ -2,6 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import { writeJson } from "@/lib/api";
+import { redirect } from "next/navigation";
+import { readCurrentAccount } from "@/modules/access/queries/read-current-account";
 
 export async function requestPhotoReading(_current: string | null, formData: FormData): Promise<string | null> {
   const reportId = String(formData.get("reportId") ?? "");
@@ -12,5 +14,8 @@ export async function requestPhotoReading(_current: string | null, formData: For
     return result.message;
   }
   revalidatePath(`/signalements/${reportId}`);
+  revalidatePath("/signalements");
+  const account = await readCurrentAccount();
+  if (account?.role === "AGENT") redirect("/signalements?result=analyzing");
   return null;
 }

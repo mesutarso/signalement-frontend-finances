@@ -1,4 +1,4 @@
-export type PrimeReview = {
+export type RewardReview = {
   id: string;
   result: string;
   reason: string | null;
@@ -6,24 +6,15 @@ export type PrimeReview = {
   recordedAt: string;
 };
 
-export type PrimeTier = {
+export type Reward = {
   id: string;
-  threshold: number;
+  reportId: string;
+  reportReference: string;
   amount: number;
   status: string;
   phone: string | null;
   recordedAt: string;
-  reviews: PrimeReview[];
-};
-
-export type PrimeAccount = {
-  netPoints: number;
-  surplus: number;
-  grantedAmount: number;
-  ceiling: number;
-  phoneState: string;
-  phone: string | null;
-  tiers: PrimeTier[];
+  reviews: RewardReview[];
 };
 
 export function francs(amount: number): string {
@@ -45,7 +36,7 @@ export function payoutStateLabel(state: string): string {
   return "Aucun numéro";
 }
 
-export function primeStatusLabel(status: string): string {
+export function rewardStatusLabel(status: string): string {
   if (status === "proposed") {
     return "Proposée";
   }
@@ -61,7 +52,7 @@ export function primeStatusLabel(status: string): string {
   return status;
 }
 
-export function primeStatusVariant(status: string): "warning" | "success" | "destructive" | "outline" {
+export function rewardStatusVariant(status: string): "warning" | "success" | "destructive" | "outline" {
   if (status === "proposed") {
     return "warning";
   }

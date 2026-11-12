@@ -7,14 +7,13 @@ import { readCurrentAccount } from "@/modules/access/queries/read-current-accoun
 import { calendarLabel, findingLabel, reportedAtLabel } from "@/modules/report/model/report";
 import { Alert, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Figure, Figures as FigureGrid } from "@/components/figures";
 import { Page, PageHeader, PageSection, PageSkeleton } from "@/components/page";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import type { Figures, Indicators as IndicatorsData } from "@/modules/report/model/indicators";
 
 const READERS = ["AGENT", "SUPERVISOR", "AUDITOR", "ADMINISTRATOR"];
-const FINDINGS = ["fake-invoice", "missing-transmission", "understated", "non-normalized", "refusal", "unknown-seller"];
+const FINDINGS = ["fake-invoice", "missing-transmission", "understated", "non-normalized", "refusal", "unknown-seller", "nonconform", "vat-unregistered"];
 
 export default function IndicatorsPage({ searchParams }: PageProps<"/indicateurs">) {
   return <Suspense fallback={<PageSkeleton />}><Indicators searchParams={searchParams} /></Suspense>;
@@ -32,23 +31,8 @@ function periodLabel(figures: Figures): string {
 }
 
 function reportSentence(title: string, figures: Figures): string {
-  return `${title}, ${periodLabel(figures).toLowerCase()} : ${amount(figures.received)} signalements reçus, ${amount(figures.treated)} traités, ${amount(figures.findings)} constats, ${amount(figures.transmissions)} dossiers transmis, ${amount(figures.responses)} réponses, ${amount(figures.points)} points, ${amount(figures.primes)} primes, ${amount(figures.payments)} paiements pour ${amount(figures.paidAmount)} FC, ${amount(figures.draws)} tirages, ${amount(figures.alerts)} alertes.`;
+  return `${title}, ${periodLabel(figures).toLowerCase()} : ${amount(figures.received)} signalements reçus, ${amount(figures.treated)} traités, ${amount(figures.findings)} constats, ${amount(figures.transmissions)} dossiers transmis, ${amount(figures.responses)} réponses, ${amount(figures.rewards)} récompenses, ${amount(figures.payments)} paiements pour ${amount(figures.paidAmount)} FC, ${amount(figures.draws)} tirages, ${amount(figures.alerts)} alertes.`;
 }
-
-const DEFINITIONS = [
-  ["Signalements reçus", "Signalements dont la date de dépôt est dans la période."],
-  ["Signalements traités", "Dernier constat confirmé ou non retenu."],
-  ["Constats", "Dernier constat confirmé."],
-  ["Dossiers transmis", "Courriers dont l’envoi a été enregistré."],
-  ["Réponses des services", "Réponses enregistrées."],
-  ["Points", "Somme des mouvements de la période."],
-  ["Primes", "Primes enregistrées."],
-  ["Paiements", "Tentatives dont le résultat est payé."],
-  ["Montant payé", "Somme des lignes payées."],
-  ["Tirages", "Tirages effectués."],
-  ["Alertes", "Notes portées sur un indice."],
-  ["Province, ville, service", "Ventilation indisponible."],
-];
 
 async function Indicators({ searchParams }: Pick<PageProps<"/indicateurs">, "searchParams">) {
   const account = await readCurrentAccount();
@@ -81,8 +65,7 @@ async function Indicators({ searchParams }: Pick<PageProps<"/indicateurs">, "sea
     ["Constats", (figures) => amount(figures.findings)],
     ["Dossiers transmis", (figures) => amount(figures.transmissions)],
     ["Réponses des services", (figures) => amount(figures.responses)],
-    ["Points", (figures) => amount(figures.points)],
-    ["Primes", (figures) => amount(figures.primes)],
+    ["Récompenses", (figures) => amount(figures.rewards)],
     ["Paiements", (figures) => amount(figures.payments)],
     ["Montant payé", (figures) => `${amount(figures.paidAmount)} FC`],
     ["Tirages", (figures) => amount(figures.draws)],
@@ -99,8 +82,8 @@ async function Indicators({ searchParams }: Pick<PageProps<"/indicateurs">, "sea
         title="Indicateurs"
         actions={account.role === "SUPERVISOR" || account.role === "ADMINISTRATOR" ? <ActionDialog label="Archiver un rapport" title="Rapport de la dernière période close"><CaptureReportForm /></ActionDialog> : undefined}
       />
-      <PageSection title="Budget prévisionnel des primes">
-        {budget.amount === null ? <p className="text-sm">Le budget reste à renseigner par le superviseur dans Règles.</p> : <p className="text-sm">Budget : {amount(budget.amount)} FC · Primes approuvées : {amount(budget.approvedAmount)} FC · Montant payé : {amount(budget.paidAmount)} FC ({(100 * budget.paidAmount / budget.amount).toLocaleString("fr-FR", { maximumFractionDigits: 2 })} % du budget).</p>}
+      <PageSection title="Budget prévisionnel des récompenses">
+        {budget.amount === null ? <p className="text-sm">Budget non renseigné.</p> : <p className="text-sm">Budget : {amount(budget.amount)} FC · Récompenses approuvées : {amount(budget.approvedAmount)} FC · Montant payé : {amount(budget.paidAmount)} FC ({(100 * budget.paidAmount / budget.amount).toLocaleString("fr-FR", { maximumFractionDigits: 2 })} % du budget).</p>}
       </PageSection>
       <PageSection title="Rapports archivés">
         {reports.length === 0 ? <p className="text-sm text-muted-foreground">Aucun rapport archivé.</p> : reports.map(report => <p key={report.id} className="text-sm">{reportSentence(report.kind === "weekly" ? "Rapport hebdomadaire" : "Note mensuelle", report.figures)} Archivé le {reportedAtLabel(report.generatedAt)}.</p>)}
@@ -150,28 +133,7 @@ async function Indicators({ searchParams }: Pick<PageProps<"/indicateurs">, "sea
               </TableBody>
             </Table>
           </PageSection>
-          <div className="grid items-start gap-x-16 gap-y-10 lg:grid-cols-2">
-            <Card>
-              <CardHeader><CardTitle>Rapport produit à la lecture</CardTitle></CardHeader>
-              <CardContent className="grid gap-3 leading-6">
-                <p>{reportSentence("Rapport de la semaine", indicators.week)}</p>
-                <p>{reportSentence("Note du mois", indicators.month)}</p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader><CardTitle>Définitions</CardTitle></CardHeader>
-              <CardContent>
-                <dl className="grid">
-                  {DEFINITIONS.map(([label, text]) => (
-                    <div key={label} className="grid gap-0.5 border-b py-2 first:pt-0">
-                      <dt className="font-medium">{label}</dt>
-                      <dd className="text-[13px] leading-5 text-muted-foreground">{text}</dd>
-                    </div>
-                  ))}
-                </dl>
-              </CardContent>
-            </Card>
-          </div>
+
         </>
       )}
     </Page>

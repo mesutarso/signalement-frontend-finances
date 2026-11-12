@@ -11,6 +11,6 @@ export async function verifyBeneficiary(_current: string | null, data: FormData)
   });
   if (!result.ok) return result.message;
   revalidatePath("/declarants");
-  revalidatePath("/primes");
+  revalidatePath("/recompenses");
   return "Identité vérifiée. Le plafond est partagé entre les comptes rattachés au même dossier.";
 }

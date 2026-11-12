@@ -12,7 +12,6 @@ export function BeneficiaryForm({ reference }: { reference: string }) {
     <form action={action}>
       <input type="hidden" name="reference" value={reference} />
       <FieldGroup>
-        <p className="text-sm text-muted-foreground">Après contrôle des justificatifs, utilisez la même référence de dossier pour tous les comptes de cette personne. Le téléphone seul ne prouve pas son identité. Ce rattachement est définitif.</p>
         <Field>
           <FieldLabel htmlFor="beneficiary-reference">Dossier du bénéficiaire vérifié</FieldLabel>
           <Input id="beneficiary-reference" name="beneficiaryReference" minLength={3} maxLength={80} required />
@@ -21,7 +20,7 @@ export function BeneficiaryForm({ reference }: { reference: string }) {
           <FieldLabel htmlFor="beneficiary-evidence">Référence du justificatif contrôlé</FieldLabel>
           <Input id="beneficiary-evidence" name="evidence" maxLength={160} required />
         </Field>
-        <Button type="submit" disabled={pending}>Vérifier et rattacher le compte</Button>
+        <Button type="submit" disabled={pending}>Rattacher définitivement le compte</Button>
         {message ? <p role="status" className="text-sm">{message}</p> : null}
       </FieldGroup>
     </form>

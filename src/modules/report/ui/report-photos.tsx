@@ -27,6 +27,7 @@ export function ReportPhotos({
   if (!photos.length) return <Empty className="bg-muted"><EmptyHeader><EmptyTitle>Aucune pièce jointe</EmptyTitle></EmptyHeader></Empty>;
   const photo = photos[selected] ?? photos[0];
   const src = `/signalements/${reportId}/photos/${photo.id}`;
+  const isImage = photo.contentType.startsWith("image/");
 
   function move(event: React.KeyboardEvent) {
     if (event.key === "ArrowLeft") setSelected((value) => Math.max(0, value - 1));
@@ -37,13 +38,13 @@ export function ReportPhotos({
     <div className="flex flex-col gap-3">
       <Dialog.Root>
         <div className="relative flex h-80 items-center justify-center overflow-hidden rounded-md bg-muted sm:h-[480px]">
-          {failed === photo.id
+          {!isImage ? <a href={src} target="_blank" rel="noreferrer" className="text-sm font-medium text-primary underline underline-offset-4">Ouvrir la pièce jointe</a> : failed === photo.id
             ? <p role="status" className="px-6 text-sm text-muted-foreground">Cette pièce ne peut pas être affichée.</p>
             : <Image key={photo.id} src={src} alt={`Pièce jointe ${selected + 1}`} fill unoptimized sizes="(max-width: 1024px) 100vw, 50vw" onError={() => setFailed(photo.id)} className="object-contain p-4" />}
-          <Dialog.Trigger render={<Button variant="outline" size="sm" className="absolute top-3 right-3 bg-card" />}>
+          {isImage ? <Dialog.Trigger render={<Button variant="outline" size="sm" className="absolute top-3 right-3 bg-card" />}>
             <HugeiconsIcon icon={MaximizeScreenIcon} strokeWidth={1.75} data-icon="inline-start" />
             Agrandir
-          </Dialog.Trigger>
+          </Dialog.Trigger> : null}
           {photos.length > 1 ? <p className="absolute bottom-3 left-3 rounded-sm bg-card px-1.5 py-0.5 text-xs tabular-nums" aria-live="polite">Pièce {selected + 1} sur {photos.length}</p> : null}
         </div>
         <Dialog.Portal>
@@ -53,7 +54,7 @@ export function ReportPhotos({
               <Dialog.Title className="text-sm tabular-nums">Pièce {selected + 1} sur {photos.length}</Dialog.Title>
               <Dialog.Close aria-label="Fermer" render={<Button variant="ghost" size="icon" className="text-white hover:bg-white/10" />}><HugeiconsIcon icon={Cancel01Icon} strokeWidth={2} /></Dialog.Close>
             </div>
-            <div className="relative min-h-0 flex-1"><Image src={src} alt={`Pièce jointe ${selected + 1} agrandie`} fill unoptimized sizes="100vw" className="object-contain" /></div>
+            <div className="relative min-h-0 flex-1">{isImage ? <Image src={src} alt={`Pièce jointe ${selected + 1} agrandie`} fill unoptimized sizes="100vw" className="object-contain" /> : <a href={src} target="_blank" rel="noreferrer" className="underline">Ouvrir la pièce jointe</a>}</div>
             {photos.length > 1 ? (
               <div className="flex justify-center gap-2">
                 <Button variant="ghost" className="text-white hover:bg-white/10" disabled={selected === 0} onClick={() => setSelected((value) => value - 1)}><HugeiconsIcon icon={ArrowLeft01Icon} strokeWidth={2} data-icon="inline-start" />Précédente</Button>
@@ -67,7 +68,7 @@ export function ReportPhotos({
         <div role="group" aria-label="Choisir une pièce jointe" className="flex gap-2 overflow-x-auto p-0.5">
           {photos.map((item, index) => (
             <button key={item.id} type="button" aria-label={`Afficher la pièce ${index + 1}`} aria-pressed={selected === index} onClick={() => setSelected(index)} className="relative h-16 w-14 shrink-0 overflow-hidden rounded-sm bg-muted outline-offset-1 transition-opacity not-aria-pressed:opacity-70 hover:opacity-100 aria-pressed:outline-2 aria-pressed:outline-primary">
-              <Image src={`/signalements/${reportId}/photos/${item.id}`} alt="" fill unoptimized sizes="56px" className="object-contain p-0.5" />
+              {item.contentType.startsWith("image/") ? <Image src={`/signalements/${reportId}/photos/${item.id}`} alt="" fill unoptimized sizes="56px" className="object-contain p-0.5" /> : <span className="text-xs">Pièce {index + 1}</span>}
             </button>
           ))}
         </div>

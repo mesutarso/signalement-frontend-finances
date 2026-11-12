@@ -1,6 +1,12 @@
 import { cn } from "cn";
 import { Badge } from "@/components/ui/badge";
 import { priorityLabel, stateLabel } from "@/modules/report/model/report";
+import { validationLabel, VALIDATION_STATES } from "@/modules/report/model/assessment";
+
+export function ValidationTag({ state, assignmentState }: { state: string; assignmentState?: string }) {
+  if (!VALIDATION_STATES[state]) return assignmentState ? <StateTag state={assignmentState} /> : null;
+  return <Badge variant={state === "validated" ? "success" : state === "doubt" ? "warning" : state === "rejected" ? "destructive" : "outline"}>{validationLabel(state)}</Badge>;
+}
 
 export function StateTag({ state }: { state: string }) {
   return <Badge variant={state === "pending" ? "warning" : "secondary"}>{stateLabel(state)}</Badge>;

@@ -6,8 +6,7 @@ export type Figures = {
   findings: number;
   transmissions: number;
   responses: number;
-  points: number;
-  primes: number;
+  rewards: number;
   paidAmount: number;
   payments: number;
   draws: number;

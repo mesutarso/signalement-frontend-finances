@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { readJson } from "@/lib/api";
 import { readCurrentAccount } from "@/modules/access/queries/read-current-account";
-import { francs } from "@/modules/report/model/prime";
+import { francs } from "@/modules/report/model/reward";
 import { paymentStatusLabel, paymentStatusVariant, type PaymentItem } from "@/modules/report/model/payment";
 import { calendarLabel, reportedAtLabel } from "@/modules/report/model/report";
 import { PreparePaymentForm } from "@/modules/report/ui/prepare-payment-form";
@@ -37,8 +37,7 @@ async function Statements({ searchParams }: Pick<PageProps<"/etats">, "searchPar
   return (
     <Page className="max-w-6xl">
       <PageHeader
-        title="États de paiement"
-        description="Paiements simulés : aucun argent n’est envoyé."
+        title="États de paiement · Simulation"
         actions={canPrepare ? <PreparePaymentForm /> : undefined}
       />
       {!statements ? <Alert variant="destructive"><AlertTitle>Les états sont indisponibles. Actualisez la page.</AlertTitle></Alert> : statements.items.length === 0 ? <LedgerEmpty>Aucun état de paiement.</LedgerEmpty> : (
@@ -51,7 +50,7 @@ async function Statements({ searchParams }: Pick<PageProps<"/etats">, "searchPar
                 status={<Badge variant={paymentStatusVariant(statement.status)}>{paymentStatusLabel(statement.status)}</Badge>}
               >
                 <p className="text-[15px] font-medium tabular-nums">{francs(statement.total)}</p>
-                <p className="text-muted-foreground">Préparé le {reportedAtLabel(statement.preparedAt)}.{statement.dueOn ? ` Paiement groupé dû le ${calendarLabel(statement.dueOn)}. Aucun paiement n'est lancé.` : ""}</p>
+                <p className="text-muted-foreground">Préparé le {reportedAtLabel(statement.preparedAt)}.{statement.dueOn ? ` Paiement groupé dû le ${calendarLabel(statement.dueOn)}.` : ""}</p>
               </LedgerItem>
             ))}
           </Ledger>

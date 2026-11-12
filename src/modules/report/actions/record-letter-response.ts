@@ -11,5 +11,5 @@ export async function recordLetterResponse(_current: string | null, formData: Fo
   }
   revalidatePath("/courriers");
   revalidatePath(`/courriers/${letterId}`);
-  return "Réponse enregistrée. Le courrier et les points restent inchangés.";
+  return "Réponse enregistrée.";
 }

@@ -36,12 +36,8 @@ const ACTIONS: Record<string, string> = {
   letter: "Courrier",
   "letter-decision": "Validation du courrier",
   "letter-response": "Réponse reçue",
-  "points-credit": "Points",
-  "points-reversal": "Annulation des points",
-  "prime-proposal": "Prime",
-  "prime-withdrawal": "Retrait de la prime",
-  "prime-approval": "Approbation de la prime",
-  "prime-return": "Renvoi de la prime",
+  "reward-approval": "Approbation de la récompense",
+  "reward-return": "Renvoi de la récompense",
   "payout-record": "Numéro de paiement",
   "payment-statement": "État de paiement",
   "payment-control": "Contrôle de l'état",
@@ -63,11 +59,13 @@ const ACTIONS: Record<string, string> = {
   reexamination: "Réexamen",
   "reexamination-decision": "Décision de réexamen",
   "declarant-message": "Message préparé",
+  "sms-accepted": "SMS transmis",
+  "sms-rejected": "SMS refusé",
+  "sms-unavailable": "SMS indisponible",
+  "sms-unknown": "SMS à confirmer",
   "message-model": "Modèle de message",
-  "prime-suspension": "Droit aux primes",
+  "reward-suspension": "Droit aux récompenses",
   "prize-handover": "Remise du lot",
-  "rule-version": "Version de règle",
-  "rule-activation": "Activation de règle",
   import: "Import",
 };
 function journalHref(objectType: string, objectId: string | null): string | null {
@@ -83,8 +81,8 @@ function journalHref(objectType: string, objectId: string | null): string | null
   if (objectType === "payment") {
     return `/etats/${objectId}`;
   }
-  if (objectType === "prime" || objectType === "payout") {
-    return "/primes";
+  if (objectType === "reward" || objectType === "payout") {
+    return "/recompenses";
   }
   if (objectType === "taxpayer") {
     return "/contribuables";
@@ -122,7 +120,7 @@ const OBJECTS: Record<string, string> = {
   account: "Compte",
   index: "Indice",
   letter: "Courrier",
-  prime: "Prime",
+  reward: "Récompense",
   payout: "Numéro de paiement",
   payment: "État de paiement",
   taxpayer: "Contribuable",
@@ -131,7 +129,7 @@ const OBJECTS: Record<string, string> = {
   correction: "Correction",
   reexamination: "Réexamen",
   message: "Message",
-  suspension: "Droit aux primes",
+  suspension: "Droit aux récompenses",
   prize: "Lot",
   rule: "Règle",
   import: "Import",
