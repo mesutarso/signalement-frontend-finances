@@ -6,7 +6,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { linkPhotoRequest } from "@/modules/report/actions/link-photo-request";
-import { requestAnotherPhoto } from "@/modules/report/actions/request-another-photo";
 import {
   photoRequestBasisLabel,
   photoRequestStatusLabel,
@@ -28,11 +27,11 @@ export function PhotoRequestPanel({
 }) {
   const mine = requests.filter((request) => request.photoId === photo.id);
   const open = mine.find((request) => request.status === "open");
+  if (mine.length === 0) return null;
   return (
     <section aria-labelledby={`request-${photo.id}`} className="grid gap-3">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h3 id={`request-${photo.id}`} className="text-[15px] font-bold">Nouvelle photo</h3>
-        {canRequest && !open ? <ActionDialog label="Demander une nouvelle photo" title="Demander une nouvelle photo" size="sm"><RequestForm reportId={reportId} photoId={photo.id} /></ActionDialog> : null}
+        <h3 id={`request-${photo.id}`} className="text-[15px] font-bold">Anciennes demandes de pièces</h3>
         {canRequest && open ? <ActionDialog label="Rattacher la nouvelle pièce" title="Rattacher la nouvelle pièce" size="sm"><LinkForm reportId={reportId} requestId={open.id} /></ActionDialog> : null}
       </div>
       {mine.length === 0 ? <p className="text-sm text-muted-foreground">Aucune demande pour cette pièce.</p> : (
@@ -55,34 +54,6 @@ export function PhotoRequestPanel({
         </ul>
       )}
     </section>
-  );
-}
-
-function RequestForm({ reportId, photoId }: { reportId: string; photoId: string }) {
-  const [message, action, pending] = useActionState(requestAnotherPhoto, null);
-  return (
-    <form action={action} className="grid gap-3">
-      <input type="hidden" name="reportId" value={reportId} />
-      <input type="hidden" name="photoId" value={photoId} />
-      <FieldGroup>
-        <Field>
-          <FieldLabel htmlFor={`reason-${photoId}`}>Motif</FieldLabel>
-          <textarea
-            id={`reason-${photoId}`}
-            name="reason"
-            required
-            maxLength={500}
-            rows={3}
-            className="w-full rounded-md border border-input bg-card px-3 py-2 text-base text-foreground"
-            placeholder="Décrivez pourquoi la pièce est illisible"
-          />
-        </Field>
-        <Button type="submit" disabled={pending}>
-          {pending ? "Enregistrement…" : "Demander une nouvelle photo"}
-        </Button>
-        {message ? <p role="status" className="text-sm font-bold text-primary">{message}</p> : null}
-      </FieldGroup>
-    </form>
   );
 }
 

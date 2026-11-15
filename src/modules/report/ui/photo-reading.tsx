@@ -1,9 +1,4 @@
-"use client";
-
-import { useActionState } from "react";
 import { cn } from "cn";
-import { Button } from "@/components/ui/button";
-import { requestPhotoReading } from "@/modules/report/actions/request-photo-reading";
 import {
   confidenceLabel,
   qualityLabel,
@@ -12,37 +7,17 @@ import {
   type ReportPhoto,
 } from "@/modules/report/model/report";
 
-export function PhotoReading({
-  reportId,
-  photo,
-  canRequest,
-}: {
-  reportId: string;
-  photo: ReportPhoto;
-  canRequest: boolean;
-}) {
-  const [message, action, pending] = useActionState(requestPhotoReading, null);
+export function PhotoReading({ photo }: { photo: ReportPhoto }) {
   const reading = photo.reading;
   return (
     <section aria-labelledby={`reading-${photo.id}`} className="grid gap-3">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="grid gap-0.5">
-          <h3 id={`reading-${photo.id}`} className="text-[15px] font-bold">Lecture de la pièce</h3>
+          <h3 id={`reading-${photo.id}`} className="text-[15px] font-bold">Lecture automatique de la pièce</h3>
           {reading?.status === "READ" ? <p className="text-[13px] text-muted-foreground">Qualité {qualityLabel(reading.quality).toLowerCase()} · confiance {confidenceLabel(reading.confidence)}</p> : null}
         </div>
-        {canRequest ? (
-          <form action={action}>
-            <input type="hidden" name="reportId" value={reportId} />
-            <input type="hidden" name="photoId" value={photo.id} />
-            <input type="hidden" name="refresh" value={reading ? "true" : "false"} />
-            <Button type="submit" variant="outline" size="sm" disabled={pending}>
-              {pending ? "Lecture en cours…" : reading ? "Relancer la lecture" : "Lire la pièce"}
-            </Button>
-          </form>
-        ) : null}
       </div>
-      {message ? <p role="alert" className="text-sm text-destructive">{message}</p> : null}
-      {!reading ? <p role="status" className="text-sm text-muted-foreground">Cette pièce n’a pas encore été lue.</p> : null}
+      {!reading ? <p role="status" className="text-sm text-muted-foreground">La lecture automatique de cette pièce est en attente.</p> : null}
       {reading?.status === "FAILED" ? <p role="status" className="text-sm text-muted-foreground">{readingErrorLabel(reading.errorCode)}</p> : null}
       {reading?.status === "READ" ? <ReadingFields reading={reading} /> : null}
     </section>

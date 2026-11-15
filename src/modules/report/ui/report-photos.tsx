@@ -74,7 +74,7 @@ export function ReportPhotos({
         </div>
       ) : null}
       <div className="mt-3 grid gap-7">
-        <PhotoReading key={photo.id} reportId={reportId} photo={photo} canRequest={canRequest} />
+        <PhotoReading key={photo.id} photo={photo} />
         <PhotoRequestPanel reportId={reportId} photo={photo} requests={photoRequests} canRequest={canRequest} />
       </div>
     </div>

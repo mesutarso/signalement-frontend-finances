@@ -1,4 +1,4 @@
-const KINDS = ["photo", "payout", "reexamination", "situation"];
+const KINDS = ["payout", "reexamination", "situation"];
 
 export function modelBody(formData: FormData): { kind: string; body: string } | string {
   const kind = String(formData.get("kind") ?? "").trim();

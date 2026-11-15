@@ -57,7 +57,7 @@ export type PhotoReading = {
 const READING_ERRORS: Record<string, string> = {
   "not-configured": "Le service de lecture n’est pas configuré. Contactez l’administrateur.",
   "rejected-token": "L’accès au service de lecture est refusé. Contactez l’administrateur.",
-  "rejected-document": "Le service n’a pas pu traiter cette pièce. Consultez l’image ou demandez une nouvelle photo.",
+  "rejected-document": "Le service n’a pas pu traiter cette pièce. Consultez l’image pour vérifier sa lisibilité.",
   "too-large": "Cette pièce dépasse la limite de lecture de 5 Mio.",
   "rejected-type": "La lecture accepte les images JPEG, PNG et WebP.",
   quota: "Le quota du service de lecture est atteint. Réessayez plus tard.",

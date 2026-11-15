@@ -49,7 +49,6 @@ export function MessageForm() {
       <Field>
         <FieldLabel htmlFor="message-kind">Message</FieldLabel>
         <select id="message-kind" name="kind" required className="h-11 rounded-md border border-input bg-card px-3">
-          <option value="photo">Nouvelle photo</option>
           <option value="payout">Numéro de paiement</option>
           <option value="reexamination">Réexamen traité</option>
           <option value="situation">Situation mise à jour</option>

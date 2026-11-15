@@ -6,6 +6,32 @@ import { writeJson } from "@/lib/api";
 import { readCurrentAccount } from "@/modules/access/queries/read-current-account";
 import type { AssessmentView } from "@/modules/report/model/assessment";
 
+export async function reviewFiscalStatus(_current: string | null, data: FormData): Promise<string | null> {
+  const account = await readCurrentAccount();
+  if (!account || !["AGENT", "SUPERVISOR", "ADMINISTRATOR"].includes(account.role)) return "Cette action n’est pas autorisée.";
+  const id = String(data.get("reportId") ?? "");
+  if (!/^[a-f\d-]{36}$/i.test(id)) return "Le signalement est introuvable.";
+  const revision = Number(data.get("revision"));
+  if (!Number.isSafeInteger(revision) || revision < 0) return "Actualisez le dossier avant d’enregistrer.";
+  const vatStatus = String(data.get("vatStatus") ?? "");
+  const vatEvidence = String(data.get("vatEvidence") ?? "").trim();
+  if (!["registered", "unregistered"].includes(vatStatus)) return "Indiquez si l’établissement est assujetti à la TVA.";
+  if (!vatEvidence || vatEvidence.length > 500) return "Renseignez la source du contrôle fiscal (500 caractères maximum).";
+  const result = await writeJson<AssessmentView>(`/api/reports/${id}/assessment/fiscal-status`, "POST", { revision, vatStatus, vatEvidence });
+  if (!result.ok) return result.message;
+  refreshAssessment(id);
+  const state = result.body?.assessment.state;
+  if (account.role === "AGENT" && state && state !== "doubt") redirect(`/signalements?result=${state}`);
+  return result.body?.assessment.reason ?? "Statut fiscal enregistré et décision recalculée.";
+}
+
+function refreshAssessment(id: string): void {
+  revalidatePath("/signalements");
+  revalidatePath(`/signalements/${id}`);
+  revalidatePath("/recompenses");
+  revalidatePath("/indicateurs");
+}
+
 export async function reviewAssessment(_current: string | null, data: FormData): Promise<string | null> {
   const account = await readCurrentAccount();
   if (!account || !["AGENT", "SUPERVISOR", "ADMINISTRATOR"].includes(account.role)) return "Cette action n’est pas autorisée.";
@@ -19,10 +45,7 @@ export async function reviewAssessment(_current: string | null, data: FormData):
   for (const name of names) body[name] = String(data.get(name) ?? "").trim() || null;
   const result = await writeJson<AssessmentView>(`/api/reports/${id}/assessment`, "POST", body);
   if (!result.ok) return result.message;
-  revalidatePath("/signalements");
-  revalidatePath(`/signalements/${id}`);
-  revalidatePath("/recompenses");
-  revalidatePath("/indicateurs");
+  refreshAssessment(id);
   const state = result.body?.assessment.state;
   if (account.role === "AGENT" && state && state !== "doubt") redirect(`/signalements?result=${state}`);
   return result.body?.assessment.reason ?? "Vérifications enregistrées.";

@@ -20,7 +20,7 @@ type Models = { models: Model[] };
 const READERS = ["AGENT", "SUPERVISOR", "AUDITOR", "ADMINISTRATOR"];
 const STATUS: Record<string, string> = { prepared: "À envoyer", sending: "En cours", accepted: "Transmis", failed: "Échec", unknown: "À confirmer" };
 const KINDS: Record<string, string> = {
-  photo: "Nouvelle photo",
+  photo: "Ancienne demande de photo",
   payout: "Numéro de paiement",
   reexamination: "Réexamen traité",
   situation: "Situation mise à jour",
@@ -61,7 +61,7 @@ async function Messages() {
               <p className="ref text-muted-foreground">{item.reportReference}</p>
               <p>{item.body}</p>
               {item.sentAt ? <p className="text-sm text-muted-foreground">Transmis le {reportedAtLabel(item.sentAt)}</p> : null}
-              {canPrepare && ["prepared", "failed"].includes(item.status) ? <SendMessageForm messageId={item.id} /> : null}
+              {canPrepare && item.kind !== "photo" && ["prepared", "failed"].includes(item.status) ? <SendMessageForm messageId={item.id} /> : null}
             </LedgerItem>
           ))}
         </Ledger>

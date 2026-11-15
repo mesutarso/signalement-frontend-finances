@@ -6,7 +6,6 @@ import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { recordModel } from "@/modules/report/actions/record-model";
 
 const KINDS = [
-  ["photo", "Nouvelle photo"],
   ["payout", "Numéro de paiement"],
   ["reexamination", "Réexamen traité"],
   ["situation", "Situation mise à jour"],
@@ -19,13 +18,13 @@ export function ModelForm() {
       <FieldGroup>
         <Field>
           <FieldLabel htmlFor="model-kind">Modèle</FieldLabel>
-          <select id="model-kind" name="kind" required className="h-11 rounded-md border border-input bg-card px-3" defaultValue="photo">
+          <select id="model-kind" name="kind" required className="h-11 rounded-md border border-input bg-card px-3" defaultValue="situation">
             {KINDS.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
           </select>
         </Field>
         <Field>
           <FieldLabel htmlFor="model-body">Texte</FieldLabel>
-          <textarea id="model-body" name="body" required maxLength={500} rows={3} className="w-full rounded-md border border-input bg-card px-3 py-2" placeholder="Le signalement %s attend une nouvelle photo." />
+          <textarea id="model-body" name="body" required maxLength={500} rows={3} className="w-full rounded-md border border-input bg-card px-3 py-2" placeholder="La situation du signalement %s a été mise à jour." />
         </Field>
         <Button type="submit" disabled={pending} className="w-fit">{pending ? "Enregistrement…" : "Enregistrer le modèle"}</Button>
       </FieldGroup>

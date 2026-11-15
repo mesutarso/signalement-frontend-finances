@@ -23,7 +23,7 @@ export type Assessment = {
   uniqueness: string;
   uniquenessEvidence: string | null;
   extracted: Record<string, string>;
-  readings: { photoId: string; readingId: string; status: string; model: string | null; errorCode: string | null; fields: Record<string, string> }[];
+  readings: { photoId: string; readingId: string; status: string; quality: string | null; model: string | null; errorCode: string | null; fields: Record<string, string> }[];
   updatedAt: string;
 };
 
@@ -31,6 +31,19 @@ export type AssessmentView = {
   assessment: Assessment;
   reward: { id: string; amount: number; status: string; recordedAt: string } | null;
   fiscalApiAvailable: boolean;
+  precalculation: AssessmentPrecalculation;
+};
+
+export type AssessmentDecision = { state: string; finding: string | null; reason: string };
+
+export type AssessmentPrecalculation = {
+  ruleVersion: string;
+  analysisComplete: boolean;
+  fiscalStatusMissing: boolean;
+  onlyFiscalStatusMissing: boolean;
+  criteria: { key: string; label: string; value: string; source: string; detail: string | null }[];
+  ifRegistered: AssessmentDecision;
+  ifUnregistered: AssessmentDecision;
 };
 
 export type RewardSetting = { id: string; amount: number; active: boolean; actorName: string | null; recordedAt: string };
