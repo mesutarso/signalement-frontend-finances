@@ -10,7 +10,7 @@ import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import { RefreshButton } from "@/components/refresh-button";
 import { ImportRefresh } from "@/modules/report/ui/import-refresh";
 import { reviewAssessment, reviewFiscalStatus } from "@/modules/report/actions/review-assessment";
-import { type Assessment, type AssessmentPrecalculation, type AssessmentView, validationLabel } from "@/modules/report/model/assessment";
+import { type Assessment, type AssessmentPrecalculation, type AssessmentView } from "@/modules/report/model/assessment";
 import { francs, rewardStatusLabel } from "@/modules/report/model/reward";
 import { reportedAtLabel, type ReportPhoto } from "@/modules/report/model/report";
 
@@ -23,7 +23,7 @@ export function AssessmentPanel({ view, canReview }: {
     <Alert><AlertTitle>{current.reason}</AlertTitle></Alert>
     {busy ? <><ImportRefresh /><RefreshButton /></> : null}
     {view.reward ? <p className="flex flex-wrap items-baseline gap-2 text-sm"><span className="font-bold">Récompense : {francs(view.reward.amount)}</span><Badge variant="outline">{rewardStatusLabel(view.reward.status)}</Badge></p> : null}
-    {canReview && !busy && view.precalculation ? <FiscalStatusForm key={`fiscal-${current.revision}`} assessment={current} calculation={view.precalculation} /> : null}
+    {canReview && !busy && view.precalculation ? <FiscalStatusForm key={`fiscal-${current.revision}`} assessment={current} /> : null}
     {!canReview ? <EvidenceDetails evidence={current} /> : null}
   </section>;
 }
@@ -41,10 +41,9 @@ export function AssessmentCriteria({ calculation: c }: { calculation: Assessment
     </div>)}</dl>;
 }
 
-function FiscalStatusForm({ assessment: a, calculation: c }: { assessment: Assessment; calculation: AssessmentPrecalculation }) {
+function FiscalStatusForm({ assessment: a }: { assessment: Assessment }) {
   const [message, action, pending] = useActionState(reviewFiscalStatus, null);
   const [status, setStatus] = useState(a.vatStatus);
-  const forecast = status === "registered" ? c.ifRegistered : status === "unregistered" ? c.ifUnregistered : null;
   return <form action={action} aria-label="Renseigner l’assujettissement à la TVA">
     <input type="hidden" name="reportId" value={a.reportId} /><input type="hidden" name="revision" value={a.revision} />
     <FieldGroup>
@@ -55,7 +54,6 @@ function FiscalStatusForm({ assessment: a, calculation: c }: { assessment: Asses
           <NativeSelectOption value="unregistered">Non assujetti à la TVA</NativeSelectOption>
         </NativeSelect>
       </Field>
-      {forecast ? <p role="status" className="text-sm">Décision : <strong>{validationLabel(forecast.state)}</strong></p> : null}
       {message ? <p role="status" className="text-sm">{message}</p> : null}
       <Button type="submit" disabled={pending || status === "unknown"}>{pending ? "Recalcul en cours…" : "Enregistrer"}</Button>
     </FieldGroup>
