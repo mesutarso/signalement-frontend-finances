@@ -48,13 +48,3 @@ export async function reviewAssessment(_current: string | null, data: FormData):
   if (account.role === "AGENT" && state && state !== "doubt") redirect(`/signalements?result=${state}`);
   return result.body?.assessment.reason ?? "Vérifications enregistrées.";
 }
-
-export async function requestAnalysis(_current: string | null, data: FormData): Promise<string | null> {
-  const id = String(data.get("reportId") ?? "");
-  if (!/^[a-f\d-]{36}$/i.test(id)) return "Le signalement est introuvable.";
-  const result = await writeJson(`/api/reports/${id}/analysis`, "POST");
-  if (!result.ok) return result.message;
-  revalidatePath(`/signalements/${id}`);
-  revalidatePath("/signalements");
-  return "Analyse demandée.";
-}

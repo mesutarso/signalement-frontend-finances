@@ -6,7 +6,7 @@ import { DuplicateAlerts } from "@/modules/report/ui/duplicate-alerts";
 import { PriorityMark } from "@/modules/report/ui/report-marks";
 import { ReportInstruction, type InstructionTab } from "@/modules/report/ui/report-instruction";
 import { ReportPhotos } from "@/modules/report/ui/report-photos";
-import { AssessmentPanel } from "@/modules/report/ui/assessment-panel";
+import { AssessmentPanel, AssessmentCriteria, AssessmentCompletion } from "@/modules/report/ui/assessment-panel";
 import type { AssessmentView } from "@/modules/report/model/assessment";
 import { ValidationTag } from "@/modules/report/ui/report-marks";
 
@@ -31,7 +31,17 @@ export function ReportScreen({
     ...(assessment ? [{
       value: "verification",
       label: "Vérification",
-      content: <AssessmentPanel view={assessment} photos={report.photos} canReview={canRequest} canAnalyze={canAssign} />,
+      content: <AssessmentPanel view={assessment} canReview={canRequest} />,
+    }] : []),
+    ...(assessment?.precalculation ? [{
+      value: "criteres",
+      label: "Critères",
+      content: <AssessmentCriteria calculation={assessment.precalculation} />,
+    }] : []),
+    ...(assessment && canRequest && assessment.assessment.jobState === "done" ? [{
+      value: "completer",
+      label: "Compléter",
+      content: <AssessmentCompletion key={assessment.assessment.revision} assessment={assessment.assessment} photos={report.photos} />,
     }] : []),
     {
       value: "doublons",

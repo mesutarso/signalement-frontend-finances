@@ -17,10 +17,11 @@ export type InstructionTab = {
 /* Les étapes du dossier, une à la fois. Les panneaux restent montés : changer d'onglet ne perd aucune saisie. */
 export function ReportInstruction({ tabs, notice }: { tabs: InstructionTab[]; notice?: { tab: string; text: string } }) {
   const [value, setValue] = useState(tabs[0].value);
+  const activeValue = tabs.some(tab => tab.value === value) ? value : tabs[0].value;
 
   return (
     <div className="grid min-w-0 content-start gap-4">
-      {notice && value !== notice.tab ? (
+      {notice && activeValue !== notice.tab ? (
         <button
           type="button"
           onClick={() => setValue(notice.tab)}
@@ -31,7 +32,7 @@ export function ReportInstruction({ tabs, notice }: { tabs: InstructionTab[]; no
           <HugeiconsIcon icon={ArrowRight01Icon} strokeWidth={2} className="size-4 shrink-0" />
         </button>
       ) : null}
-      <Tabs.Root value={value} onValueChange={(next) => setValue(String(next))} className="min-w-0">
+      <Tabs.Root value={activeValue} onValueChange={(next) => setValue(String(next))} className="min-w-0">
         <Tabs.List aria-label="Instruction du dossier" className="relative flex gap-5 overflow-x-auto border-y border-b-border border-t-foreground">
           {tabs.map((tab) => (
             <Tabs.Tab

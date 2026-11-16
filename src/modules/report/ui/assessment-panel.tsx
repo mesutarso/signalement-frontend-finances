@@ -9,13 +9,13 @@ import { Input } from "@/components/ui/input";
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
 import { RefreshButton } from "@/components/refresh-button";
 import { ImportRefresh } from "@/modules/report/ui/import-refresh";
-import { requestAnalysis, reviewAssessment, reviewFiscalStatus } from "@/modules/report/actions/review-assessment";
+import { reviewAssessment, reviewFiscalStatus } from "@/modules/report/actions/review-assessment";
 import { type Assessment, type AssessmentPrecalculation, type AssessmentView, validationLabel } from "@/modules/report/model/assessment";
 import { francs, rewardStatusLabel } from "@/modules/report/model/reward";
 import { reportedAtLabel, type ReportPhoto } from "@/modules/report/model/report";
 
-export function AssessmentPanel({ view, photos, canReview, canAnalyze }: {
-  view: AssessmentView; photos: ReportPhoto[]; canReview: boolean; canAnalyze: boolean;
+export function AssessmentPanel({ view, canReview }: {
+  view: AssessmentView; canReview: boolean;
 }) {
   const current = view.assessment;
   const busy = current.jobState !== "done";
@@ -24,11 +24,6 @@ export function AssessmentPanel({ view, photos, canReview, canAnalyze }: {
     {busy ? <><ImportRefresh /><RefreshButton /></> : null}
     {view.reward ? <p className="flex flex-wrap items-baseline gap-2 text-sm"><span className="font-bold">Récompense : {francs(view.reward.amount)}</span><Badge variant="outline">{rewardStatusLabel(view.reward.status)}</Badge></p> : null}
     {canReview && !busy && view.precalculation ? <FiscalStatusForm key={`fiscal-${current.revision}`} assessment={current} calculation={view.precalculation} /> : null}
-    {view.precalculation ? <Precalculation calculation={view.precalculation} /> : null}
-    {canReview && !busy ? <details><summary className="cursor-pointer text-sm text-primary">Compléter ou corriger les éléments du dossier</summary>
-      <div className="pt-4"><AssessmentForm key={current.revision} assessment={current} photos={photos} /></div>
-    </details> : null}
-    {canAnalyze && !busy ? <AnalysisButton reportId={current.reportId} /> : null}
     {!canReview ? <EvidenceDetails evidence={current} /> : null}
   </section>;
 }
@@ -40,13 +35,10 @@ const CRITERION_VALUES: Record<string, string> = {
   READABLE: "Lisible", PARTIAL: "Lecture partielle", UNREADABLE: "Illisible — rejet", UNKNOWN: "À déterminer",
 };
 
-function Precalculation({ calculation: c }: { calculation: AssessmentPrecalculation }) {
-  return <details>
-    <summary className="cursor-pointer text-sm text-primary">Critères</summary>
-    <dl className="mt-3 grid gap-2">{c.criteria.map(criterion => <div key={criterion.key} className="flex flex-wrap items-baseline justify-between gap-2 text-sm">
+export function AssessmentCriteria({ calculation: c }: { calculation: AssessmentPrecalculation }) {
+  return <dl className="grid gap-2" aria-label="Critères du signalement">{c.criteria.map(criterion => <div key={criterion.key} className="flex flex-wrap items-baseline justify-between gap-2 text-sm">
       <dt>{criterion.label}</dt><dd><Badge variant="outline">{CRITERION_VALUES[criterion.value] ?? criterion.value}</Badge></dd>
-    </div>)}</dl>
-  </details>;
+    </div>)}</dl>;
 }
 
 function FiscalStatusForm({ assessment: a, calculation: c }: { assessment: Assessment; calculation: AssessmentPrecalculation }) {
@@ -70,7 +62,7 @@ function FiscalStatusForm({ assessment: a, calculation: c }: { assessment: Asses
   </form>;
 }
 
-function AssessmentForm({ assessment: a, photos }: { assessment: Assessment; photos: ReportPhoto[] }) {
+export function AssessmentCompletion({ assessment: a, photos }: { assessment: Assessment; photos: ReportPhoto[] }) {
   const [message, action, pending] = useActionState(reviewAssessment, null);
   return <form action={action} className="grid gap-4">
     <input type="hidden" name="reportId" value={a.reportId} /><input type="hidden" name="revision" value={a.revision} />
@@ -124,9 +116,4 @@ function CheckField({ name, label, value, options, proofName, proof, proofLabel 
     </Field>
     {selected !== "unknown" && name !== "vatStatus" ? <Field><FieldLabel htmlFor={proofName}>{proofLabel}</FieldLabel><Input id={proofName} name={proofName} maxLength={500} required defaultValue={proof ?? ""} /></Field> : null}
   </div>;
-}
-
-function AnalysisButton({ reportId }: { reportId: string }) {
-  const [message, action, pending] = useActionState(requestAnalysis, null);
-  return <form action={action} className="grid justify-items-start gap-2"><input type="hidden" name="reportId" value={reportId} /><Button variant="outline" size="sm" disabled={pending}>{pending ? "Demande en cours…" : "Relancer l’analyse"}</Button>{message ? <p role="status" className="text-sm">{message}</p> : null}</form>;
 }
