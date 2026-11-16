@@ -14,10 +14,8 @@ export async function reviewFiscalStatus(_current: string | null, data: FormData
   const revision = Number(data.get("revision"));
   if (!Number.isSafeInteger(revision) || revision < 0) return "Actualisez le dossier avant d’enregistrer.";
   const vatStatus = String(data.get("vatStatus") ?? "");
-  const vatEvidence = String(data.get("vatEvidence") ?? "").trim();
   if (!["registered", "unregistered"].includes(vatStatus)) return "Indiquez si l’établissement est assujetti à la TVA.";
-  if (!vatEvidence || vatEvidence.length > 500) return "Renseignez la source du contrôle fiscal (500 caractères maximum).";
-  const result = await writeJson<AssessmentView>(`/api/reports/${id}/assessment/fiscal-status`, "POST", { revision, vatStatus, vatEvidence });
+  const result = await writeJson<AssessmentView>(`/api/reports/${id}/assessment/fiscal-status`, "POST", { revision, vatStatus });
   if (!result.ok) return result.message;
   refreshAssessment(id);
   const state = result.body?.assessment.state;

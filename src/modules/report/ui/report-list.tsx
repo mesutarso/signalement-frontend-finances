@@ -44,7 +44,7 @@ export function ReportList({
 
   return (
     <Page className="gap-8 md:gap-8">
-      <PageHeader title={onlyDoubts ? "Signalements à vérifier" : "Signalements"} actions={canImport ? <ImportButton /> : null} />
+      <PageHeader title={onlyDoubts && validation === "doubt" ? "Signalements à vérifier" : "Signalements"} actions={canImport ? <ImportButton /> : null} />
       {result === "validated" || result === "rejected" ? <Alert><AlertTitle>{result === "validated" ? "Signalement validé. Récompense attribuée." : "Signalement écarté."}</AlertTitle></Alert> : null}
       {result === "analyzing" ? <Alert><AlertTitle>Analyse de la pièce demandée.</AlertTitle></Alert> : null}
       <div className="grid gap-5">

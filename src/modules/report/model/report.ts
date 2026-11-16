@@ -5,6 +5,7 @@ export type ReportSummary = {
   title: string | null;
   state: string;
   validationState: string;
+  screeningReason: string | null;
   priority: string | null;
   assigneeName: string | null;
   version: number;

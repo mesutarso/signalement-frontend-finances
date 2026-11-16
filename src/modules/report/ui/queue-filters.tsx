@@ -23,7 +23,7 @@ export function QueueFilters({
   validation: string;
   onlyDoubts: boolean;
 }) {
-  const filtered = Boolean(q || state || priority || (!onlyDoubts && validation));
+  const filtered = Boolean(q || state || priority || (validation && validation !== (onlyDoubts ? "doubt" : "all")));
   return (
     <form
       key={`${q}|${state}|${priority}|${scope}|${validation}`}
@@ -32,16 +32,19 @@ export function QueueFilters({
       method="get"
     >
       <input type="hidden" name="scope" value={scope} />
-      {onlyDoubts ? <input type="hidden" name="validation" value="doubt" /> : <NativeSelect name="validation" defaultValue={validation} aria-label="Validation" onChange={event => event.currentTarget.form?.requestSubmit()}>
-        <NativeSelectOption value="">Toutes les validations</NativeSelectOption>
+      <NativeSelect name="validation" defaultValue={validation || "all"} aria-label="Statut" onChange={event => event.currentTarget.form?.requestSubmit()}>
+        <NativeSelectOption value="all">Tous les statuts</NativeSelectOption>
         {Object.entries(VALIDATION_STATES).map(([value, label]) => <NativeSelectOption key={value} value={value}>{label}</NativeSelectOption>)}
-      </NativeSelect>}
+        <NativeSelectOption value="rejected-unreadable">Rejeté · Photo illisible</NativeSelectOption>
+        <NativeSelectOption value="rejected-identity-missing">Rejeté · Nom et NIF absents</NativeSelectOption>
+        <NativeSelectOption value="rejected-duplicate">Rejeté · Doublon</NativeSelectOption>
+      </NativeSelect>
       <div className="relative min-w-64 flex-1">
         <HugeiconsIcon icon={Search01Icon} strokeWidth={1.75} className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
         <Input name="q" defaultValue={q} placeholder="Référence, titre ou description" aria-label="Recherche" className="h-10 pl-9" />
       </div>
-      <NativeSelect name="state" size="sm" defaultValue={state} aria-label="État" className="w-[calc(50%-0.25rem)] sm:w-40" onChange={(event) => event.currentTarget.form?.requestSubmit()}>
-        <NativeSelectOption value="">Tous les états</NativeSelectOption>
+      <NativeSelect name="state" size="sm" defaultValue={state} aria-label="Affectation" className="w-[calc(50%-0.25rem)] sm:w-40" onChange={(event) => event.currentTarget.form?.requestSubmit()}>
+        <NativeSelectOption value="">Toutes les affectations</NativeSelectOption>
         <NativeSelectOption value="pending">À traiter</NativeSelectOption>
         <NativeSelectOption value="assigned">Affecté</NativeSelectOption>
       </NativeSelect>

@@ -27,7 +27,7 @@ async function ReportContent({ params }: { params: Promise<{ id: string }> }) {
     notFound();
   }
   const canAssign = account.role === "SUPERVISOR" || account.role === "ADMINISTRATOR";
-  const canRequest = account.role !== "AUDITOR";
+  const canRequest = account.role !== "AUDITOR" && (account.role !== "AGENT" || report.validationState === "doubt");
   const legacy = report.validationState === "legacy";
   const [assignees, assessment] = await Promise.all([
     canAssign ? readAssignees() : Promise.resolve([]),

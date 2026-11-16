@@ -26,14 +26,14 @@ const columns = helper.columns([
         </Link>
         <span className="ref mt-0.5 block text-muted-foreground">{row.original.identifier}</span>
         <span className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 sm:hidden">
-          <ValidationTag state={row.original.validationState} assignmentState={row.original.state} />
+          <ValidationTag state={row.original.validationState} assignmentState={row.original.state} screeningReason={row.original.screeningReason} />
           <PriorityMark priority={row.original.priority} />
           <span className="text-[13px] text-muted-foreground">{date}</span>
         </span>
       </span>
     );
   } }),
-  helper.accessor("validationState", { header: "État", cell: ({ row, getValue }) => <ValidationTag state={getValue()} assignmentState={row.original.state} /> }),
+  helper.accessor("validationState", { header: "Statut", cell: ({ row, getValue }) => <ValidationTag state={getValue()} assignmentState={row.original.state} screeningReason={row.original.screeningReason} /> }),
   helper.accessor("priority", { header: "Priorité", cell: ({ getValue }) => <PriorityMark priority={getValue()} /> }),
   helper.accessor("assigneeName", { header: "Affectation", cell: ({ getValue }) => getValue() || <span className="text-muted-foreground">Non affecté</span> }),
   helper.accessor("reporterName", { header: "Déclarant", cell: ({ row, getValue }) => (

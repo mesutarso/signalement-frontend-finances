@@ -31,7 +31,7 @@ export type AssessmentView = {
   assessment: Assessment;
   reward: { id: string; amount: number; status: string; recordedAt: string } | null;
   fiscalApiAvailable: boolean;
-  precalculation: AssessmentPrecalculation;
+  precalculation: AssessmentPrecalculation | null;
 };
 
 export type AssessmentDecision = { state: string; finding: string | null; reason: string };
@@ -53,7 +53,13 @@ export const VALIDATION_STATES: Record<string, string> = {
   analyzing: "Analyse en cours",
   doubt: "À vérifier",
   validated: "Validé",
-  rejected: "Écarté",
+  rejected: "Rejeté",
 };
 
 export function validationLabel(state: string): string { return VALIDATION_STATES[state] ?? state; }
+
+export const SCREENING_REASONS: Record<string, string> = {
+  unreadable: "Photo illisible",
+  "identity-missing": "Nom et NIF absents",
+  duplicate: "Doublon",
+};

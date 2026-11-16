@@ -23,8 +23,8 @@ export function AssessmentPanel({ view, photos, canReview, canAnalyze }: {
     <Alert><AlertTitle>{current.reason}</AlertTitle></Alert>
     {busy ? <><ImportRefresh /><RefreshButton /></> : null}
     {view.reward ? <p className="flex flex-wrap items-baseline gap-2 text-sm"><span className="font-bold">Récompense : {francs(view.reward.amount)}</span><Badge variant="outline">{rewardStatusLabel(view.reward.status)}</Badge></p> : null}
-    {view.precalculation ? <Precalculation calculation={view.precalculation} /> : null}
     {canReview && !busy && view.precalculation ? <FiscalStatusForm key={`fiscal-${current.revision}`} assessment={current} calculation={view.precalculation} /> : null}
+    {view.precalculation ? <Precalculation calculation={view.precalculation} /> : null}
     {canReview && !busy ? <details><summary className="cursor-pointer text-sm text-primary">Compléter ou corriger les éléments du dossier</summary>
       <div className="pt-4"><AssessmentForm key={current.revision} assessment={current} photos={photos} /></div>
     </details> : null}
@@ -41,25 +41,12 @@ const CRITERION_VALUES: Record<string, string> = {
 };
 
 function Precalculation({ calculation: c }: { calculation: AssessmentPrecalculation }) {
-  return <section className="grid gap-3" aria-label="Précalcul des critères">
-    <h3 className="text-sm font-bold">Critères préparés automatiquement</h3>
-    <p className="text-sm text-muted-foreground">L’import, l’OCR et le précalcul avancent sans accès DGI-REP. Le statut fiscal est renseigné par l’agent.</p>
-    {!c.analysisComplete ? <p role="status" className="text-sm">L’analyse est en cours. Les résultats seront actualisés à la fin du traitement.</p> : null}
-    <dl className="grid gap-3">{c.criteria.map(criterion => <div key={criterion.key} className="grid gap-1 break-words">
-      <dt className="flex flex-wrap items-baseline gap-2 text-sm"><span className="font-medium">{criterion.label}</span><Badge variant="outline">{CRITERION_VALUES[criterion.value] ?? criterion.value}</Badge></dt>
-      <dd className="text-sm text-muted-foreground">{criterion.detail}</dd>
+  return <details>
+    <summary className="cursor-pointer text-sm text-primary">Critères</summary>
+    <dl className="mt-3 grid gap-2">{c.criteria.map(criterion => <div key={criterion.key} className="flex flex-wrap items-baseline justify-between gap-2 text-sm">
+      <dt>{criterion.label}</dt><dd><Badge variant="outline">{CRITERION_VALUES[criterion.value] ?? criterion.value}</Badge></dd>
     </div>)}</dl>
-    <div className="grid gap-3 rounded-md bg-muted p-3 text-sm" aria-label="Décisions selon l’assujettissement">
-      <h4 className="font-medium">Résultat selon le statut fiscal</h4>
-      <Forecast label="Si l’établissement est assujetti" decision={c.ifRegistered} />
-      <Forecast label="S’il n’est pas assujetti" decision={c.ifUnregistered} />
-    </div>
-    {c.onlyFiscalStatusMissing ? <p className="text-sm font-medium">Il ne reste que l’assujettissement à renseigner pour décider.</p> : null}
-  </section>;
-}
-
-function Forecast({ label, decision }: { label: string; decision: AssessmentPrecalculation["ifRegistered"] }) {
-  return <div className="grid gap-1"><p><span className="font-medium">{label} : </span>{validationLabel(decision.state)}</p><p className="text-muted-foreground">{decision.reason}</p></div>;
+  </details>;
 }
 
 function FiscalStatusForm({ assessment: a, calculation: c }: { assessment: Assessment; calculation: AssessmentPrecalculation }) {
@@ -69,7 +56,6 @@ function FiscalStatusForm({ assessment: a, calculation: c }: { assessment: Asses
   return <form action={action} aria-label="Renseigner l’assujettissement à la TVA">
     <input type="hidden" name="reportId" value={a.reportId} /><input type="hidden" name="revision" value={a.revision} />
     <FieldGroup>
-      <h3 className="text-sm font-bold">Contrôle de l’assujettissement à la TVA</h3>
       <Field><FieldLabel htmlFor="fiscal-vat-status">L’établissement est-il assujetti à la TVA ?</FieldLabel>
         <NativeSelect id="fiscal-vat-status" name="vatStatus" value={status} onChange={event => setStatus(event.target.value)} disabled={pending} required>
           <NativeSelectOption value="unknown" disabled>Choisir le statut fiscal</NativeSelectOption>
@@ -77,13 +63,9 @@ function FiscalStatusForm({ assessment: a, calculation: c }: { assessment: Asses
           <NativeSelectOption value="unregistered">Non assujetti à la TVA</NativeSelectOption>
         </NativeSelect>
       </Field>
-      <Field><FieldLabel htmlFor="fiscal-vat-evidence">Source et référence du contrôle fiscal</FieldLabel>
-        <Input id="fiscal-vat-evidence" name="vatEvidence" maxLength={500} required defaultValue={a.vatEvidence ?? ""} disabled={pending} />
-      </Field>
-      {forecast ? <p role="status" className="text-sm">Après enregistrement : <strong>{validationLabel(forecast.state)}</strong>. {forecast.reason}</p> : null}
-      {a.checkedAt ? <p className="text-sm text-muted-foreground">Dernier contrôle enregistré le {reportedAtLabel(a.checkedAt)}</p> : null}
+      {forecast ? <p role="status" className="text-sm">Décision : <strong>{validationLabel(forecast.state)}</strong></p> : null}
       {message ? <p role="status" className="text-sm">{message}</p> : null}
-      <Button type="submit" disabled={pending || status === "unknown"}>{pending ? "Recalcul en cours…" : "Enregistrer et recalculer la décision"}</Button>
+      <Button type="submit" disabled={pending || status === "unknown"}>{pending ? "Recalcul en cours…" : "Enregistrer"}</Button>
     </FieldGroup>
   </form>;
 }
@@ -140,7 +122,7 @@ function CheckField({ name, label, value, options, proofName, proof, proofLabel 
         {options.map(([key, text]) => <NativeSelectOption key={key} value={key}>{text}</NativeSelectOption>)}
       </NativeSelect>
     </Field>
-    {selected !== "unknown" ? <Field><FieldLabel htmlFor={proofName}>{proofLabel}</FieldLabel><Input id={proofName} name={proofName} maxLength={500} required defaultValue={proof ?? ""} /></Field> : null}
+    {selected !== "unknown" && name !== "vatStatus" ? <Field><FieldLabel htmlFor={proofName}>{proofLabel}</FieldLabel><Input id={proofName} name={proofName} maxLength={500} required defaultValue={proof ?? ""} /></Field> : null}
   </div>;
 }
 

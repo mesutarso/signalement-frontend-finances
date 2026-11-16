@@ -26,7 +26,7 @@ async function ReportsContent({ searchParams }: Pick<PageProps<"/signalements">,
   const requestedPage = Number(params.page ?? 0);
   const q = first(params.q).trim();
   const state = first(params.state);
-  const validation = account.role === "AGENT" ? "doubt" : first(params.validation);
+  const validation = account.role === "AGENT" && params.validation === undefined ? "doubt" : first(params.validation);
   const priority = first(params.priority);
   const requestedScope = first(params.scope);
   const scope = requestedScope || "all";

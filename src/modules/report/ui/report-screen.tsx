@@ -64,7 +64,7 @@ export function ReportScreen({
   }
 
   const facts: [string, React.ReactNode][] = [
-    ["État", <ValidationTag key="state" state={report.validationState} assignmentState={report.state} />],
+    ["Statut", <ValidationTag key="state" state={report.validationState} assignmentState={report.state} screeningReason={report.screeningReason} />],
     ["Priorité", <PriorityMark key="priority" priority={report.priority} />],
     ["Agent responsable", report.assigneeName ?? <span key="none" className="text-muted-foreground">Aucun agent affecté</span>],
     ["Reçu le", <span key="date" className="tabular-nums">{received.date} <span className="text-muted-foreground">à {received.time}</span></span>],
