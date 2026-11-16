@@ -8,7 +8,7 @@ type SmsResult = { status: string; code: string };
 const ERRORS: Record<string, string> = {
   "recipient-blocked": "Ce destinataire n’est pas autorisé pour les essais.",
   "not-configured": "Le service SMS est indisponible.",
-  "invalid-message": "Le SMS doit contenir entre 1 et 160 caractères.",
+  "invalid-message": "Le SMS doit contenir entre 1 et 100 caractères.",
   "circuit-open": "Le service SMS est temporairement indisponible.",
   "busy": "Le service SMS est occupé.",
   "rate-limited": "La limite d’envoi est atteinte.",
