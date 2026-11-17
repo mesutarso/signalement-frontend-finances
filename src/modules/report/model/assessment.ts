@@ -60,6 +60,6 @@ export function validationLabel(state: string): string { return VALIDATION_STATE
 
 export const SCREENING_REASONS: Record<string, string> = {
   unreadable: "Photo illisible",
-  "identity-missing": "Nom et NIF absents",
+  "identity-missing": "NIF non récupéré",
   duplicate: "Doublon",
 };

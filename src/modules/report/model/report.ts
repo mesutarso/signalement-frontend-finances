@@ -174,22 +174,8 @@ const STATES: Record<string, string> = {
   assigned: "Affecté",
 };
 
-const PRIORITIES: Record<string, string> = {
-  low: "Faible",
-  normal: "Normale",
-  high: "Haute",
-  urgent: "Urgente",
-};
-
 export function stateLabel(state: string): string {
   return STATES[state] ?? state;
-}
-
-export function priorityLabel(priority: string | null): string {
-  if (!priority) {
-    return "Non définie";
-  }
-  return PRIORITIES[priority] ?? priority;
 }
 
 const QUALITIES: Record<string, string> = {

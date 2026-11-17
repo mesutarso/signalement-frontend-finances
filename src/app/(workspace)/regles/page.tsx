@@ -1,3 +1,4 @@
+import { can } from "@/modules/access/model/account";
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { readJson } from "@/lib/api";
@@ -18,9 +19,9 @@ export default function RulesPage() {
 async function Rules() {
   const account = await readCurrentAccount();
   if (!account) redirect("/connexion");
-  if (!["SUPERVISOR", "AUDITOR", "ADMINISTRATOR"].includes(account.role)) redirect("/signalements");
+  if (!can(account, "setting.read")) redirect("/signalements");
   const current = await readJson<RewardSetting>("/api/reward-settings").catch(() => null);
-  const canChange = account.role === "SUPERVISOR" || account.role === "ADMINISTRATOR";
+  const canChange = can(account, "setting.write");
   return <Page className="max-w-6xl">
     <PageHeader title="Règles" actions={canChange ? <ActionDialog label="Budget prévisionnel" title="Budget des récompenses"><BudgetForm /></ActionDialog> : undefined} />
     <PageSection title="Récompense par signalement validé">
@@ -31,11 +32,10 @@ async function Rules() {
       <ol className="flex list-decimal flex-col gap-2 pl-5 text-sm leading-6">
         <li>Assujettissement de l’établissement à la TVA.</li>
         <li>Facture non normalisée.</li>
-        <li>Facture non conforme à l’achat réel.</li>
         <li>Facture non encore signalée.</li>
         <li>TVA facturée par une entreprise non assujettie.</li>
       </ol>
-      <p className="max-w-[68ch] text-sm leading-6">Une facture inédite est retenue si un établissement assujetti remet une facture non normalisée ou non conforme, ou si une entreprise non assujettie facture de la TVA.</p>
+      <p className="max-w-[68ch] text-sm leading-6">Une facture inédite est retenue si un établissement assujetti remet une facture non normalisée, ou si une entreprise non assujettie facture de la TVA. Les doublons et les factures dont le NIF n’a pas été récupéré sont rejetés automatiquement.</p>
     </PageSection>
 
   </Page>;

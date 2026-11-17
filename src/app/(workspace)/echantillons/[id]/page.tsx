@@ -1,3 +1,4 @@
+import { can } from "@/modules/access/model/account";
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { readJson } from "@/lib/api";
@@ -14,7 +15,6 @@ import { Ledger, LedgerItem } from "@/components/ledger";
 type Line = { id: string; reference: string; operator: string; amount: number; result: string | null; reason: string | null };
 type Detail = { id: string; reference: string; periodStart: string; periodEnd: string; lines: Line[] };
 
-const READERS = ["SUPERVISOR", "AUDITOR", "ADMINISTRATOR"];
 
 export default function SamplePage({ params }: PageProps<"/echantillons/[id]">) {
   return <Suspense fallback={<PageSkeleton />}><Sample params={params} /></Suspense>;
@@ -35,12 +35,12 @@ async function Sample({ params }: Pick<PageProps<"/echantillons/[id]">, "params"
   if (!account) {
     redirect("/connexion");
   }
-  if (!READERS.includes(account.role)) {
+  if (!can(account, "sample.read")) {
     redirect("/signalements");
   }
   const { id } = await params;
   const sample = await readJson<Detail>(`/api/payment-samples/${id}`).catch(() => null);
-  const canReview = account.role === "SUPERVISOR" || account.role === "ADMINISTRATOR";
+  const canReview = can(account, "sample.review");
   return (
     <Page className="max-w-6xl">
       {!sample ? (

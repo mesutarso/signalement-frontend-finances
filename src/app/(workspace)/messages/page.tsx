@@ -1,3 +1,4 @@
+import { can } from "@/modules/access/model/account";
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { readJson } from "@/lib/api";
@@ -18,7 +19,6 @@ type Page = { items: Item[]; page: number; size: number; total: number };
 type Model = { kind: string; body: string; recordedAt: string };
 type Models = { models: Model[]; smsLimit: number; referenceLength: number };
 
-const READERS = ["AGENT", "SUPERVISOR", "AUDITOR", "ADMINISTRATOR"];
 const STATUS: Record<string, string> = { prepared: "À envoyer", sending: "En cours", accepted: "Transmis", failed: "Échec", unknown: "À confirmer" };
 const KINDS: Record<string, string> = {
   photo: "Ancienne demande de photo",
@@ -36,19 +36,19 @@ async function Messages() {
   if (!account) {
     redirect("/connexion");
   }
-  if (!READERS.includes(account.role)) {
+  if (!can(account, "message.read")) {
     redirect("/signalements");
   }
   const messages = await readJson<Page>("/api/declarant-messages?page=0").catch(() => null);
   const models = await readJson<Models>("/api/document-models").catch(() => null);
-  const canPrepare = account.role === "SUPERVISOR" || account.role === "ADMINISTRATOR";
+  const canPrepare = can(account, "message.prepare");
   return (
     <Page className="max-w-6xl">
       <PageHeader
         title="Messages"
         actions={canPrepare ? (
           <>
-            {account.role === "ADMINISTRATOR" ? <TestSmsForm /> : null}
+            {can(account, "sms.test") ? <TestSmsForm /> : null}
             <ActionDialog label="Préparer un message" title="Préparer un message" variant="default"><MessageForm /></ActionDialog>
           </>
         ) : undefined}

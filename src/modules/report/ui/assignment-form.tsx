@@ -11,20 +11,18 @@ import type { Assignee } from "@/modules/report/model/report";
 export function AssignmentForm({
   reportId,
   version,
-  priority,
   assigneeId,
   assignees,
 }: {
   reportId: string;
   version: number;
-  priority: string | null;
   assigneeId: string | null;
   assignees: Assignee[];
 }) {
   const [message, submit, pending] = useActionState(assignReport, null);
 
   return (
-    <form key={`${version}:${assigneeId ?? ""}:${priority}`} action={submit} className="grid gap-3">
+    <form key={`${version}:${assigneeId ?? ""}`} action={submit} className="grid gap-3">
       <input type="hidden" name="reportId" value={reportId} />
       <input type="hidden" name="version" value={version} />
       <FieldGroup>
@@ -37,16 +35,6 @@ export function AssignmentForm({
             {agent.username}
           </NativeSelectOption>
         ))}
-      </NativeSelect>
-      </Field>
-      <Field>
-      <FieldLabel htmlFor="assignment-priority">Priorité</FieldLabel>
-      <NativeSelect id="assignment-priority" name="priority" defaultValue={priority ?? ""} aria-label="Priorité">
-        <NativeSelectOption value="">Non définie</NativeSelectOption>
-        <NativeSelectOption value="urgent">Urgente</NativeSelectOption>
-        <NativeSelectOption value="high">Haute</NativeSelectOption>
-        <NativeSelectOption value="normal">Normale</NativeSelectOption>
-        <NativeSelectOption value="low">Faible</NativeSelectOption>
       </NativeSelect>
       </Field>
       <Button type="submit" disabled={pending}>

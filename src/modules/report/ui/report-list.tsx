@@ -17,7 +17,6 @@ export function ReportList({
   canImport,
   q,
   state,
-  priority,
   scope,
   onlyDoubts,
   validation,
@@ -27,7 +26,6 @@ export function ReportList({
   canImport: boolean;
   q: string;
   state: string;
-  priority: string;
   scope: string;
   onlyDoubts: boolean;
   validation: string;
@@ -37,7 +35,6 @@ export function ReportList({
     const params = new URLSearchParams({ scope: value });
     if (q) params.set("q", q);
     if (state) params.set("state", state);
-    if (priority) params.set("priority", priority);
     if (validation) params.set("validation", validation);
     return `/signalements?${params}`;
   }
@@ -49,7 +46,7 @@ export function ReportList({
       {result === "analyzing" ? <Alert><AlertTitle>Analyse de la pièce demandée.</AlertTitle></Alert> : null}
       <div className="grid gap-5">
         <ViewTabs label="Affectation" items={SCOPES.map((item) => ({ href: href(item.value), label: item.label, active: item.value === scope }))} />
-        <QueueFilters q={q} state={state} priority={priority} scope={scope} validation={validation} onlyDoubts={onlyDoubts} />
+        <QueueFilters q={q} state={state} scope={scope} validation={validation} onlyDoubts={onlyDoubts} />
       </div>
       <ReportsTable page={page} />
     </Page>

@@ -1,3 +1,4 @@
+import { can } from "@/modules/access/model/account";
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { readJson } from "@/lib/api";
@@ -17,7 +18,6 @@ import { Badge } from "@/components/ui/badge";
 import { ActionDialog } from "@/components/action-dialog";
 import { Ledger, LedgerItem } from "@/components/ledger";
 
-const READERS = ["SUPERVISOR", "AUDITOR", "ADMINISTRATOR", "CELLULE", "CABINET", "PAYMASTER"];
 
 export default function PaymentStatementPage({ params }: PageProps<"/etats/[id]">) {
   return <Suspense fallback={<PageSkeleton />}><Statement params={params} /></Suspense>;
@@ -28,16 +28,16 @@ async function Statement({ params }: Pick<PageProps<"/etats/[id]">, "params">) {
   if (!account) {
     redirect("/connexion");
   }
-  if (!READERS.includes(account.role)) {
+  if (!can(account, "payment.read")) {
     redirect("/signalements");
   }
   const { id } = await params;
   const [statement, service] = await Promise.all([readJson<PaymentStatement>(`/api/payment-statements/${id}`).catch(() => null), readJson<PaymentService>(`/api/payment-transfers?statementId=${id}`).catch(() => null)]);
-  const step = statement?.status === "draft" && (account.role === "SUPERVISOR" || account.role === "ADMINISTRATOR")
+  const step = statement?.status === "draft" && (can(account, "payment.control"))
     ? "control"
-    : statement?.status === "controlled" && account.role === "CELLULE"
+    : statement?.status === "controlled" && can(account, "payment.visa")
       ? "visa"
-      : statement?.status === "visaed" && account.role === "CABINET"
+      : statement?.status === "visaed" && can(account, "payment.authorize")
         ? "authorize"
         : null;
   return (
@@ -76,7 +76,7 @@ async function Statement({ params }: Pick<PageProps<"/etats/[id]">, "params">) {
                   key={line.id}
                   title={<span className="tabular-nums">{francs(line.amount)}</span>}
                   meta="Récompense par signalement"
-                  action={statement.status === "authorized" && account.role === "PAYMASTER" && service?.configured && (service.environment !== "sandbox" || isSandboxWallet(line.phone)) && !line.attempts.some((attempt) => attempt.result === "paid") && !service.transfers.some(t => t.lineId === line.id && t.state !== "failed") ? (
+                  action={statement.status === "authorized" && can(account, "payment.execute") && service?.configured && (service.environment !== "sandbox" || isSandboxWallet(line.phone)) && !line.attempts.some((attempt) => attempt.result === "paid") && !service.transfers.some(t => t.lineId === line.id && t.state !== "failed") ? (
                     <ActionDialog label={service.environment === "sandbox" ? "Tester le versement" : "Effectuer le paiement"} title={service.environment === "sandbox" ? "Versement sandbox" : "Versement Mobile Money"} description={`${francs(line.amount)} · ${line.phone}`} variant="default" size="sm">
                       <TransferForm requestId={randomUUID()} statementId={statement.id} lineId={line.id} sandbox={service.environment === "sandbox"} />
                     </ActionDialog>
@@ -84,7 +84,7 @@ async function Statement({ params }: Pick<PageProps<"/etats/[id]">, "params">) {
                 >
                   {service?.environment === "sandbox" && !isSandboxWallet(line.phone) ? <Badge variant="outline">Paiement réel désactivé</Badge> : null}
                   <p>Numéro de paiement : <span className="tabular-nums">{line.phone}</span></p>
-                  {service?.transfers.find(t => t.lineId === line.id) ? <TransferDetails transfer={service.transfers.find(t => t.lineId === line.id)!} canCheck={["PAYMASTER", "ADMINISTRATOR"].includes(account.role)} statementId={id} /> : null}
+                  {service?.transfers.find(t => t.lineId === line.id) ? <TransferDetails transfer={service.transfers.find(t => t.lineId === line.id)!} canCheck={can(account, "payment.check")} statementId={id} /> : null}
                   {line.attempts.map((attempt) => (
                     <p key={attempt.id} className="text-muted-foreground">{paymentOperatorLabel(attempt.operator)} · {paymentAttemptLabel(attempt.result)} le {reportedAtLabel(attempt.recordedAt)}.{attempt.reference ? ` Référence ${attempt.reference}.` : ""}{attempt.reason ? ` ${attempt.reason}` : ""}</p>
                   ))}

@@ -1,3 +1,4 @@
+import { can } from "@/modules/access/model/account";
 import Link from "next/link";
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
@@ -47,7 +48,7 @@ async function Letters({ searchParams }: Pick<PageProps<"/courriers">, "searchPa
   if (!account) {
     redirect("/connexion");
   }
-  if (account.role === "AGENT") {
+  if (!can(account, "letter.read")) {
     redirect("/signalements");
   }
   const params = await searchParams;
@@ -55,7 +56,7 @@ async function Letters({ searchParams }: Pick<PageProps<"/courriers">, "searchPa
   const number = Number(params.page ?? 0);
   const page = Number.isSafeInteger(number) && number >= 0 ? number : 0;
   const letters = await readJson<Page>(`/api/letters?status=${status}&page=${page}`).catch(() => null);
-  const canPrepare = account.role === "SUPERVISOR" || account.role === "ADMINISTRATOR";
+  const canPrepare = can(account, "letter.prepare");
   const routes = canPrepare ? await readJson<{taxId: string; service: string}[]>("/api/letter-routes") : [];
   return (
     <Page className="max-w-6xl">

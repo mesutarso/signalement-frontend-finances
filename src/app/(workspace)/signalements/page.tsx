@@ -1,3 +1,4 @@
+import { can } from "@/modules/access/model/account";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { PageSkeleton } from "@/components/page";
@@ -22,12 +23,12 @@ async function ReportsContent({ searchParams }: Pick<PageProps<"/signalements">,
   if (!account) {
     redirect("/connexion");
   }
+  if (!can(account, "report.read")) redirect("/");
   const params = await searchParams;
   const requestedPage = Number(params.page ?? 0);
   const q = first(params.q).trim();
   const state = first(params.state);
   const validation = account.role === "AGENT" && params.validation === undefined ? "doubt" : first(params.validation);
-  const priority = first(params.priority);
   const requestedScope = first(params.scope);
   const scope = requestedScope || "all";
   const page = await readReports({
@@ -35,20 +36,18 @@ async function ReportsContent({ searchParams }: Pick<PageProps<"/signalements">,
     q,
     state,
     validation,
-    priority,
     assigneeId: scope === "mine" ? account.id : undefined,
     unassigned: scope === "unassigned",
   });
   return (
     <ReportList
       page={page}
-      canImport={account.role === "SUPERVISOR" || account.role === "ADMINISTRATOR"}
+      canImport={can(account, "import.run")}
       onlyDoubts={account.role === "AGENT"}
       validation={validation}
       result={first(params.result)}
       q={q}
       state={state}
-      priority={priority}
       scope={scope}
     />
   );

@@ -13,14 +13,15 @@ import { roleLabel, type Account, type AccountPage } from "@/modules/access/mode
 
 const features = tableFeatures({ rowSortingFeature, sortedRowModel: createSortedRowModel(), sortFns });
 const helper = createColumnHelper<typeof features, Account>();
-const columns = helper.columns([
+function accountColumns(currentId: string, canManage: boolean) { return helper.columns([
   helper.accessor("username", { header: "Identifiant", cell: ({ getValue }) => <span className="font-medium">{getValue()}</span> }),
   helper.accessor((account) => roleLabel(account.role), { id: "role", header: "Rôle" }),
   helper.accessor("enabled", { header: "État", cell: ({ getValue }) => <Badge variant={getValue() ? "success" : "destructive"}>{getValue() ? "Actif" : "Inactif"}</Badge> }),
-  helper.display({ id: "actions", header: "Actions", cell: ({ row }) => <EditAccountDialog account={row.original} /> }),
-]);
+  helper.display({ id: "actions", header: "Actions", cell: ({ row }) => canManage ? <EditAccountDialog account={row.original} currentId={currentId} /> : <span className="text-muted-foreground">Lecture seule</span> }),
+]); }
 
-export function AccountsTable({ page }: { page: AccountPage }) {
+export function AccountsTable({ page, currentId, canManage }: { page: AccountPage; currentId: string; canManage: boolean }) {
+  const columns = accountColumns(currentId, canManage);
   const table = useTable({ features, columns, data: page.accounts, getRowId: (account) => account.id });
 
   return (

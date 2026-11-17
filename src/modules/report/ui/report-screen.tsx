@@ -3,7 +3,6 @@ import { Page, PageHeader } from "@/components/page";
 import { reportedAtLabel, reportedAtParts, supervisionResultLabel, type Assignee, type ReportDetail } from "@/modules/report/model/report";
 import { AssignmentForm } from "@/modules/report/ui/assignment-form";
 import { DuplicateAlerts } from "@/modules/report/ui/duplicate-alerts";
-import { PriorityMark } from "@/modules/report/ui/report-marks";
 import { ReportInstruction, type InstructionTab } from "@/modules/report/ui/report-instruction";
 import { ReportPhotos } from "@/modules/report/ui/report-photos";
 import { AssessmentPanel, AssessmentCriteria, AssessmentCompletion } from "@/modules/report/ui/assessment-panel";
@@ -38,10 +37,10 @@ export function ReportScreen({
       label: "Critères",
       content: <AssessmentCriteria calculation={assessment.precalculation} />,
     }] : []),
-    ...(assessment && canRequest && assessment.assessment.jobState === "done" ? [{
+    ...(assessment && canRequest && !report.screeningReason && assessment.assessment.jobState === "done" ? [{
       value: "completer",
       label: "Compléter",
-      content: <AssessmentCompletion key={assessment.assessment.revision} assessment={assessment.assessment} photos={report.photos} />,
+      content: <AssessmentCompletion key={assessment.assessment.revision} assessment={assessment.assessment} />,
     }] : []),
     {
       value: "doublons",
@@ -75,10 +74,8 @@ export function ReportScreen({
 
   const facts: [string, React.ReactNode][] = [
     ["Statut", <ValidationTag key="state" state={report.validationState} assignmentState={report.state} screeningReason={report.screeningReason} />],
-    ["Priorité", <PriorityMark key="priority" priority={report.priority} />],
     ["Agent responsable", report.assigneeName ?? <span key="none" className="text-muted-foreground">Aucun agent affecté</span>],
     ["Reçu le", <span key="date" className="tabular-nums">{received.date} <span className="text-muted-foreground">à {received.time}</span></span>],
-    ["Référence", <span key="ref" className="ref break-all">{report.identifier}</span>],
   ];
 
   return (
@@ -90,15 +87,15 @@ export function ReportScreen({
         actions={
           <>
             {canAssign ? (
-              <ActionDialog label="Modifier l’affectation" title="Affectation et priorité" variant="default">
-                <AssignmentForm reportId={report.id} version={report.version} priority={report.priority} assigneeId={report.assigneeId} assignees={assignees} />
+              <ActionDialog label="Modifier l’affectation" title="Affectation" variant="default">
+                <AssignmentForm reportId={report.id} version={report.version} assigneeId={report.assigneeId} assignees={assignees} />
               </ActionDialog>
             ) : null}
           </>
         }
       />
 
-      <dl className="-mt-2 grid grid-cols-2 gap-x-6 gap-y-4 border-y border-b-border border-t-foreground py-4 md:grid-cols-[auto_auto_1fr_auto_auto] md:gap-x-12">
+      <dl className="-mt-2 grid grid-cols-2 gap-x-6 gap-y-4 border-y border-b-border border-t-foreground py-4 md:grid-cols-[auto_1fr_auto] md:gap-x-12">
         {facts.map(([label, value]) => (
           <div key={label} className="grid content-start gap-1.5">
             <dt className="text-[13px] text-muted-foreground">{label}</dt>

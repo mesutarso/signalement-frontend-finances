@@ -1,3 +1,4 @@
+import { can } from "@/modules/access/model/account";
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { readJson } from "@/lib/api";
@@ -26,7 +27,7 @@ export default function ImportsPage({ searchParams }: PageProps<"/imports">) {
 async function Imports({ searchParams }: Pick<PageProps<"/imports">, "searchParams">) {
   const account = await readCurrentAccount();
   if (!account) redirect("/connexion");
-  if (account.role === "AUDITOR") redirect("/signalements");
+  if (!can(account, "import.read")) redirect("/signalements");
   const params = await searchParams;
   const number = Number(params.page ?? 0);
   const page = Number.isSafeInteger(number) && number >= 0 ? number : 0;
@@ -43,10 +44,10 @@ async function Imports({ searchParams }: Pick<PageProps<"/imports">, "searchPara
             <Figure compact label="Prochain lancement" value={history.nextRun ? time(history.nextRun) : "Non planifié"} />
             <Figure compact label="Traitement" value={history.active ? "Import en cours" : "Disponible"} />
           </Figures>
-          <Card>
+          {can(account, "import.run") ? <Card>
             <CardHeader><CardTitle>Importer une période</CardTitle></CardHeader>
             <CardContent className="max-w-2xl"><ImportControls today={today} busy={history.active} /></CardContent>
-          </Card>
+          </Card> : null}
           <PageSection title="Traitements">
             <div className="grid gap-4">
               <Table aria-label="Traitements d’import">
@@ -69,7 +70,7 @@ async function Imports({ searchParams }: Pick<PageProps<"/imports">, "searchPara
                       <TableCell className="text-right tabular-nums">{run.skippedReports}</TableCell>
                       <TableCell className="text-right tabular-nums">{run.createdPhotos}</TableCell>
                       <TableCell className="text-muted-foreground tabular-nums">{run.finishedAt ? time(run.finishedAt) : "—"}</TableCell>
-                      <TableCell>{run.periodStart && run.periodEnd && !["running", "queued"].includes(run.status) ? <RetryImportButton id={run.id} disabled={history.active} /> : null}</TableCell>
+                      <TableCell>{can(account, "import.run") && run.periodStart && run.periodEnd && !["running", "queued"].includes(run.status) ? <RetryImportButton id={run.id} disabled={history.active} /> : null}</TableCell>
                     </TableRow>
                   ))}
                   {history.runs.length === 0 ? <TableRow><TableCell colSpan={9} className="py-10 text-center text-muted-foreground">Aucun import enregistré</TableCell></TableRow> : null}

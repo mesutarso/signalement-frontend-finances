@@ -1,3 +1,4 @@
+import { can } from "@/modules/access/model/account";
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { readJson } from "@/lib/api";
@@ -12,7 +13,6 @@ import { Ledger, LedgerEmpty, LedgerItem } from "@/components/ledger";
 type Item = { id: string; reportReference: string; reason: string; recordedAt: string };
 type Page = { items: Item[]; page: number; size: number; total: number };
 
-const READERS = ["AGENT", "SUPERVISOR", "AUDITOR", "ADMINISTRATOR"];
 
 export default function CorrectionsPage() {
   return <Suspense fallback={<PageSkeleton />}><Corrections /></Suspense>;
@@ -23,11 +23,11 @@ async function Corrections() {
   if (!account) {
     redirect("/connexion");
   }
-  if (!READERS.includes(account.role)) {
+  if (!can(account, "correction.read")) {
     redirect("/signalements");
   }
   const corrections = await readJson<Page>("/api/corrections?page=0").catch(() => null);
-  const canRecord = account.role === "SUPERVISOR" || account.role === "ADMINISTRATOR";
+  const canRecord = can(account, "correction.decide");
   return (
     <Page className="max-w-6xl">
       <PageHeader

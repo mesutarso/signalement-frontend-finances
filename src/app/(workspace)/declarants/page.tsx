@@ -1,3 +1,4 @@
+import { can } from "@/modules/access/model/account";
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { readOutcome } from "@/lib/api";
@@ -24,7 +25,6 @@ type Situation = {
   reports: Report[];
 };
 
-const READERS = ["AGENT", "SUPERVISOR", "AUDITOR", "ADMINISTRATOR"];
 const STATUS: Record<string, string> = {
   received: "Reçu",
   review: "En vérification",
@@ -41,13 +41,13 @@ async function Declarants({ searchParams }: Pick<PageProps<"/declarants">, "sear
   if (!account) {
     redirect("/connexion");
   }
-  if (!READERS.includes(account.role)) {
+  if (!can(account, "declarant.read")) {
     redirect("/signalements");
   }
   const reference = String((await searchParams).reference ?? "").trim();
   const situation = reference ? await readOutcome<Situation>(`/api/declarants?reference=${encodeURIComponent(reference)}`) : null;
-  const canVerify = account.role === "SUPERVISOR" || account.role === "ADMINISTRATOR";
-  const beneficiary = reference && account.role !== "AGENT"
+  const canVerify = can(account, "beneficiary.verify");
+  const beneficiary = reference && can(account, "reward.read")
     ? await readOutcome<{ verified: boolean; accounts: number; reservedAmount: number; remainder: number }>(`/api/beneficiaries?reference=${encodeURIComponent(reference)}`)
     : null;
   return (

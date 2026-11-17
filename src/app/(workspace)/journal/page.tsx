@@ -1,3 +1,4 @@
+import { can } from "@/modules/access/model/account";
 import Link from "next/link";
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
@@ -148,7 +149,7 @@ async function Journal({ searchParams }: Pick<PageProps<"/journal">, "searchPara
   if (!account) {
     redirect("/connexion");
   }
-  if (account.role === "AGENT") {
+  if (!can(account, "audit.read")) {
     redirect("/signalements");
   }
   const params = await searchParams;

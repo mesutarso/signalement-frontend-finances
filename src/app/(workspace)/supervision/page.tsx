@@ -1,3 +1,4 @@
+import { can } from "@/modules/access/model/account";
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { readJson } from "@/lib/api";
@@ -53,7 +54,7 @@ async function Supervision({ searchParams }: Pick<PageProps<"/supervision">, "se
   if (!account) {
     redirect("/connexion");
   }
-  if (account.role === "AGENT") {
+  if (!can(account, "supervision.read")) {
     redirect("/signalements");
   }
   const params = await searchParams;
@@ -61,7 +62,7 @@ async function Supervision({ searchParams }: Pick<PageProps<"/supervision">, "se
   const number = Number(params.page ?? 0);
   const page = Number.isSafeInteger(number) && number >= 0 ? number : 0;
   const queue = await readJson<Page>(`/api/supervision?status=${status}&page=${page}`).catch(() => null);
-  const canReview = account.role === "SUPERVISOR" || account.role === "ADMINISTRATOR";
+  const canReview = can(account, "supervision.write");
   return (
     <Page className="max-w-6xl">
       <PageHeader title="Contrôle" />

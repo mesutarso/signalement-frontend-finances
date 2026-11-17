@@ -21,7 +21,7 @@ import {
   UserMultipleIcon,
   UserSettings01Icon,
 } from "@hugeicons/core-free-icons";
-import type { Account, AccountRole } from "@/modules/access/model/account";
+import { can, type Account } from "@/modules/access/model/account";
 
 type Icon = typeof InboxIcon;
 
@@ -29,7 +29,7 @@ export type NavItem = {
   href: string;
   label: string;
   icon: Icon;
-  roles?: AccountRole[];
+  permission?: string;
   keywords?: string;
 };
 
@@ -39,8 +39,6 @@ export type NavSection = {
   items: NavItem[];
 };
 
-const READERS: AccountRole[] = ["AGENT", "SUPERVISOR", "AUDITOR", "ADMINISTRATOR"];
-const OVERSIGHT: AccountRole[] = ["SUPERVISOR", "AUDITOR", "ADMINISTRATOR"];
 
 const SECTIONS: NavSection[] = [
   {
@@ -52,48 +50,48 @@ const SECTIONS: NavSection[] = [
     id: "instruction",
     label: "Instruction",
     items: [
-      { href: "/signalements", label: "Signalements", icon: InboxIcon, roles: READERS, keywords: "file de travail factures" },
-      { href: "/imports", label: "Imports", icon: FileImportIcon, roles: ["AGENT", "SUPERVISOR", "ADMINISTRATOR"], keywords: "suivi récupération" },
-      { href: "/dossiers", label: "Dossiers", icon: FolderOpenIcon, roles: READERS, keywords: "vendeurs constats numéro d'impôt" },
-      { href: "/corrections", label: "Corrections", icon: PencilEdit02Icon, roles: READERS },
-      { href: "/reexamens", label: "Réexamens", icon: RepeatIcon, roles: READERS, keywords: "contestation demande" },
-      { href: "/messages", label: "Messages", icon: Message01Icon, roles: READERS, keywords: "déclarant modèles" },
-      { href: "/courriers", label: "Courriers", icon: Mail01Icon, roles: OVERSIGHT, keywords: "dgi lettre semaine annexes" },
+      { href: "/signalements", label: "Signalements", icon: InboxIcon, permission: "report.read", keywords: "file de travail factures" },
+      { href: "/imports", label: "Imports", icon: FileImportIcon, permission: "import.read", keywords: "suivi récupération" },
+      { href: "/dossiers", label: "Dossiers", icon: FolderOpenIcon, permission: "dossier.read", keywords: "vendeurs constats numéro d'impôt" },
+      { href: "/corrections", label: "Corrections", icon: PencilEdit02Icon, permission: "correction.read" },
+      { href: "/reexamens", label: "Réexamens", icon: RepeatIcon, permission: "reexam.read", keywords: "contestation demande" },
+      { href: "/messages", label: "Messages", icon: Message01Icon, permission: "message.read", keywords: "déclarant modèles" },
+      { href: "/courriers", label: "Courriers", icon: Mail01Icon, permission: "letter.read", keywords: "dgi lettre semaine annexes" },
     ],
   },
   {
     id: "contribuables",
     label: "Contribuables",
     items: [
-      { href: "/contribuables", label: "Contribuables", icon: Building03Icon, roles: READERS, keywords: "nif numéro d'impôt vendeurs" },
-      { href: "/declarants", label: "Déclarants", icon: UserMultipleIcon, roles: READERS, keywords: "situation référence" },
+      { href: "/contribuables", label: "Contribuables", icon: Building03Icon, permission: "taxpayer.read", keywords: "nif numéro d'impôt vendeurs" },
+      { href: "/declarants", label: "Déclarants", icon: UserMultipleIcon, permission: "declarant.read", keywords: "situation référence" },
     ],
   },
   {
     id: "recompenses",
     label: "Récompenses",
     items: [
-      { href: "/recompenses", label: "Récompenses", icon: Award01Icon, roles: OVERSIGHT, keywords: "montants numéros de paiement" },
-      { href: "/etats", label: "États de paiement", icon: Invoice01Icon, roles: ["SUPERVISOR", "AUDITOR", "ADMINISTRATOR", "CELLULE", "CABINET", "PAYMASTER"], keywords: "visa autorisation mobile money" },
-      { href: "/echantillons", label: "Échantillons", icon: Target02Icon, roles: OVERSIGHT, keywords: "contrôle récompenses payées" },
-      { href: "/tirages", label: "Tirages", icon: Ticket01Icon, roles: READERS, keywords: "tickets lots tombola" },
+      { href: "/recompenses", label: "Récompenses", icon: Award01Icon, permission: "reward.read", keywords: "montants numéros de paiement" },
+      { href: "/etats", label: "États de paiement", icon: Invoice01Icon, permission: "payment.read", keywords: "visa autorisation mobile money" },
+      { href: "/echantillons", label: "Échantillons", icon: Target02Icon, permission: "sample.read", keywords: "contrôle récompenses payées" },
+      { href: "/tirages", label: "Tirages", icon: Ticket01Icon, permission: "draw.read", keywords: "tickets lots tombola" },
     ],
   },
   {
     id: "controle",
     label: "Contrôle",
     items: [
-      { href: "/indicateurs", label: "Indicateurs", icon: ChartLineData01Icon, roles: READERS, keywords: "statistiques rapport semaine mois" },
-      { href: "/supervision", label: "Contrôle", icon: SecurityCheckIcon, roles: OVERSIGHT, keywords: "supervision revoir décisions" },
-      { href: "/indices", label: "Indices", icon: SearchList01Icon, roles: OVERSIGHT, keywords: "abus fraude suspension" },
-      { href: "/regles", label: "Règles", icon: LegalDocument01Icon, roles: OVERSIGHT, keywords: "critères montant récompense" },
-      { href: "/journal", label: "Journal", icon: BookOpen01Icon, roles: OVERSIGHT, keywords: "audit actions" },
+      { href: "/indicateurs", label: "Indicateurs", icon: ChartLineData01Icon, permission: "indicator.read", keywords: "statistiques rapport semaine mois" },
+      { href: "/supervision", label: "Contrôle", icon: SecurityCheckIcon, permission: "supervision.read", keywords: "supervision revoir décisions" },
+      { href: "/indices", label: "Indices", icon: SearchList01Icon, permission: "abuse.read", keywords: "abus fraude suspension" },
+      { href: "/regles", label: "Règles", icon: LegalDocument01Icon, permission: "setting.read", keywords: "critères montant récompense" },
+      { href: "/journal", label: "Journal", icon: BookOpen01Icon, permission: "audit.read", keywords: "audit actions" },
     ],
   },
   {
     id: "administration",
     label: "Administration",
-    items: [{ href: "/comptes", label: "Comptes", icon: UserSettings01Icon, roles: ["ADMINISTRATOR"], keywords: "utilisateurs rôles" }],
+    items: [{ href: "/comptes", label: "Utilisateurs", icon: UserSettings01Icon, permission: "user.read", keywords: "utilisateurs rôles" }, { href: "/habilitations", label: "Rôles et permissions", icon: SecurityCheckIcon, permission: "rbac.read", keywords: "rbac droits accès" }],
   },
 ];
 
@@ -112,13 +110,13 @@ export function navigationFor(account: Account | null): NavSection[] {
   }
   return SECTIONS.map((section) => ({
     ...section,
-    items: section.items.filter((item) => account.role === "AGENT" ? item.href === "/signalements" : !item.roles || item.roles.includes(account.role))
+    items: section.items.filter((item) => !item.permission || can(account, item.permission))
       .map(item => account.role === "AGENT" && item.href === "/signalements" ? { ...item, label: "À vérifier" } : item),
   })).filter((section) => section.items.length > 0);
 }
 
 export function canReadReports(account: Account | null): boolean {
-  return account != null && READERS.includes(account.role);
+  return can(account, "report.read");
 }
 
 export function isNavActive(pathname: string, href: string): boolean {

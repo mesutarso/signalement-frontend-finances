@@ -9,7 +9,7 @@ import { createColumnHelper, createSortedRowModel, rowSortingFeature, sortFns, t
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Empty, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
 import { reportedAtParts, type ReportSummary, type ReportPage } from "@/modules/report/model/report";
-import { PriorityMark, ValidationTag } from "@/modules/report/ui/report-marks";
+import { ValidationTag } from "@/modules/report/ui/report-marks";
 
 const features = tableFeatures({ rowSortingFeature, sortedRowModel: createSortedRowModel(), sortFns });
 const helper = createColumnHelper<typeof features, ReportSummary>();
@@ -27,14 +27,12 @@ const columns = helper.columns([
         <span className="ref mt-0.5 block text-muted-foreground">{row.original.identifier}</span>
         <span className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 sm:hidden">
           <ValidationTag state={row.original.validationState} assignmentState={row.original.state} screeningReason={row.original.screeningReason} />
-          <PriorityMark priority={row.original.priority} />
           <span className="text-[13px] text-muted-foreground">{date}</span>
         </span>
       </span>
     );
   } }),
   helper.accessor("validationState", { header: "Statut", cell: ({ row, getValue }) => <ValidationTag state={getValue()} assignmentState={row.original.state} screeningReason={row.original.screeningReason} /> }),
-  helper.accessor("priority", { header: "Priorité", cell: ({ getValue }) => <PriorityMark priority={getValue()} /> }),
   helper.accessor("assigneeName", { header: "Affectation", cell: ({ getValue }) => getValue() || <span className="text-muted-foreground">Non affecté</span> }),
   helper.accessor("reporterName", { header: "Déclarant", cell: ({ row, getValue }) => (
     <span className="grid max-w-52 gap-0.5 whitespace-normal">
@@ -56,7 +54,6 @@ const columns = helper.columns([
 
 const VISIBILITY: Record<string, string> = {
   validationState: "hidden sm:table-cell",
-  priority: "hidden md:table-cell",
   assigneeName: "hidden lg:table-cell",
   reporterName: "hidden xl:table-cell",
   reportedAt: "hidden sm:table-cell",
@@ -97,7 +94,7 @@ export function ReportsTable({ page }: { page: ReportPage }) {
               {row.getAllCells().map((cell) => <TableCell key={cell.id} className={VISIBILITY[cell.column.id]}><table.FlexRender cell={cell} /></TableCell>)}
             </TableRow>
           ))}
-          {page.reports.length === 0 ? <TableRow><TableCell colSpan={7}><Empty><EmptyHeader><EmptyTitle>Aucun signalement</EmptyTitle></EmptyHeader></Empty></TableCell></TableRow> : null}
+          {page.reports.length === 0 ? <TableRow><TableCell colSpan={columns.length}><Empty><EmptyHeader><EmptyTitle>Aucun signalement</EmptyTitle></EmptyHeader></Empty></TableCell></TableRow> : null}
         </TableBody>
       </Table>
       <TablePagination page={page.page} size={page.size} total={page.total} label="Pagination des signalements" />

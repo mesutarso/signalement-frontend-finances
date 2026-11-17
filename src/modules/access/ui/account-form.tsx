@@ -1,5 +1,7 @@
 "use client";
 
+import { ACCOUNT_ROLES, roleLabel } from "@/modules/access/model/account";
+
 import { useActionState } from "react";
 import { Button } from "@/components/ui/button";
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
@@ -47,13 +49,7 @@ export function AccountForm({ onSuccess }: { onSuccess?: () => void }) {
         <Field>
           <FieldLabel htmlFor="role">Rôle</FieldLabel>
           <NativeSelect id="role" name="role" defaultValue="AGENT" className="w-full">
-            <NativeSelectOption value="AGENT">Agent</NativeSelectOption>
-            <NativeSelectOption value="SUPERVISOR">Superviseur</NativeSelectOption>
-            <NativeSelectOption value="AUDITOR">Auditeur</NativeSelectOption>
-            <NativeSelectOption value="ADMINISTRATOR">Administrateur</NativeSelectOption>
-            <NativeSelectOption value="CELLULE">Cellule fiscale</NativeSelectOption>
-            <NativeSelectOption value="CABINET">Cabinet</NativeSelectOption>
-            <NativeSelectOption value="PAYMASTER">Gestionnaire de paiement</NativeSelectOption>
+            {ACCOUNT_ROLES.map(role => <NativeSelectOption key={role} value={role}>{roleLabel(role)}</NativeSelectOption>)}
           </NativeSelect>
         </Field>
         {error ? <FieldError>{error}</FieldError> : null}

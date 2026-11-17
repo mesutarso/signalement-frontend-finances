@@ -1,3 +1,4 @@
+import { can } from "@/modules/access/model/account";
 import Link from "next/link";
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
@@ -13,7 +14,6 @@ import { Ledger, LedgerEmpty, LedgerItem } from "@/components/ledger";
 type Item = { id: string; reference: string; periodStart: string; periodEnd: string; lines: number; preparedAt: string };
 type Page = { items: Item[]; page: number; size: number; total: number };
 
-const READERS = ["SUPERVISOR", "AUDITOR", "ADMINISTRATOR"];
 
 export default function SamplesPage() {
   return <Suspense fallback={<PageSkeleton />}><Samples /></Suspense>;
@@ -24,11 +24,11 @@ async function Samples() {
   if (!account) {
     redirect("/connexion");
   }
-  if (!READERS.includes(account.role)) {
+  if (!can(account, "sample.read")) {
     redirect("/signalements");
   }
   const samples = await readJson<Page>("/api/payment-samples?page=0").catch(() => null);
-  const canPrepare = account.role === "SUPERVISOR" || account.role === "ADMINISTRATOR";
+  const canPrepare = can(account, "sample.review");
   return (
     <Page className="max-w-6xl">
       <PageHeader

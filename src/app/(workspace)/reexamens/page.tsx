@@ -1,3 +1,4 @@
+import { can } from "@/modules/access/model/account";
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { readJson } from "@/lib/api";
@@ -14,7 +15,6 @@ import { Ledger, LedgerEmpty, LedgerItem } from "@/components/ledger";
 type Item = { id: string; reference: string; reportReference: string; requestText: string; receivedOn: string; onTime: boolean; status: string; comment: string | null };
 type Page = { items: Item[]; page: number; size: number; total: number };
 
-const READERS = ["AGENT", "SUPERVISOR", "AUDITOR", "ADMINISTRATOR"];
 const STATUS: Record<string, string> = { received: "Reçue", maintained: "Maintenue", modified: "Modifiée" };
 
 export default function ReexaminationsPage() {
@@ -26,11 +26,11 @@ async function Reexaminations() {
   if (!account) {
     redirect("/connexion");
   }
-  if (!READERS.includes(account.role)) {
+  if (!can(account, "reexam.read")) {
     redirect("/signalements");
   }
   const requests = await readJson<Page>("/api/reexaminations?page=0").catch(() => null);
-  const canRecord = account.role === "SUPERVISOR" || account.role === "ADMINISTRATOR";
+  const canRecord = can(account, "reexam.decide");
   return (
     <Page className="max-w-6xl">
       <PageHeader

@@ -1,3 +1,4 @@
+import { can } from "@/modules/access/model/account";
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { readJson } from "@/lib/api";
@@ -17,7 +18,6 @@ type Result = { id: string; reference: string; label: string; reportReference: s
 type Prize = { id: string; reference: string; label: string; reportReference: string; handed: boolean };
 type Page = { tickets: Ticket[]; draws: Draw[]; results: Result[]; prizes: Prize[] };
 
-const READERS = ["AGENT", "SUPERVISOR", "AUDITOR", "ADMINISTRATOR"];
 
 export default function DrawsPage() {
   return <Suspense fallback={<PageSkeleton />}><Draws /></Suspense>;
@@ -32,11 +32,11 @@ async function Draws() {
   if (!account) {
     redirect("/connexion");
   }
-  if (!READERS.includes(account.role)) {
+  if (!can(account, "draw.read")) {
     redirect("/signalements");
   }
   const draws = await readJson<Page>("/api/draws").catch(() => null);
-  const canOrganize = account.role === "SUPERVISOR" || account.role === "ADMINISTRATOR";
+  const canOrganize = can(account, "draw.manage");
   return (
     <Page className="max-w-6xl">
       <PageHeader

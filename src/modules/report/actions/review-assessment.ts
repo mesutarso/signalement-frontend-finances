@@ -1,5 +1,7 @@
 "use server";
 
+import { can } from "@/modules/access/model/account";
+
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { writeJson } from "@/lib/api";
@@ -8,7 +10,7 @@ import type { AssessmentView } from "@/modules/report/model/assessment";
 
 export async function reviewFiscalStatus(_current: string | null, data: FormData): Promise<string | null> {
   const account = await readCurrentAccount();
-  if (!account || !["AGENT", "SUPERVISOR", "ADMINISTRATOR"].includes(account.role)) return "Cette action n’est pas autorisée.";
+  if (!can(account, "report.review")) return "Cette action n’est pas autorisée.";
   const id = String(data.get("reportId") ?? "");
   if (!/^[a-f\d-]{36}$/i.test(id)) return "Le signalement est introuvable.";
   const revision = Number(data.get("revision"));
@@ -19,7 +21,7 @@ export async function reviewFiscalStatus(_current: string | null, data: FormData
   if (!result.ok) return result.message;
   refreshAssessment(id);
   const state = result.body?.assessment.state;
-  if (account.role === "AGENT" && state && state !== "doubt") redirect(`/signalements?result=${state}`);
+  if (account?.role === "AGENT" && state && state !== "doubt") redirect(`/signalements?result=${state}`);
   return result.body?.assessment.reason ?? "Statut fiscal enregistré et décision recalculée.";
 }
 
@@ -32,19 +34,18 @@ function refreshAssessment(id: string): void {
 
 export async function reviewAssessment(_current: string | null, data: FormData): Promise<string | null> {
   const account = await readCurrentAccount();
-  if (!account || !["AGENT", "SUPERVISOR", "ADMINISTRATOR"].includes(account.role)) return "Cette action n’est pas autorisée.";
+  if (!can(account, "report.review")) return "Cette action n’est pas autorisée.";
   const id = String(data.get("reportId") ?? "");
   if (!/^[a-f\d-]{36}$/i.test(id)) return "Le signalement est introuvable.";
   const revision = Number(data.get("revision"));
   if (!Number.isSafeInteger(revision) || revision < 0) return "Actualisez le dossier avant d’enregistrer.";
-  const names = ["photoId", "sellerName", "sellerTaxId", "documentNumber", "documentDate", "vatStatus", "vatEvidence", "normalization",
-    "normalizationEvidence", "purchaseConformity", "purchaseEvidence", "vatCharged", "vatChargeEvidence", "uniqueness", "uniquenessEvidence"];
+  const names = ["sellerName", "sellerTaxId", "documentNumber", "documentDate", "normalization"];
   const body: Record<string, string | number | null> = { revision };
   for (const name of names) body[name] = String(data.get(name) ?? "").trim() || null;
   const result = await writeJson<AssessmentView>(`/api/reports/${id}/assessment`, "POST", body);
   if (!result.ok) return result.message;
   refreshAssessment(id);
   const state = result.body?.assessment.state;
-  if (account.role === "AGENT" && state && state !== "doubt") redirect(`/signalements?result=${state}`);
-  return result.body?.assessment.reason ?? "Vérifications enregistrées.";
+  if (account?.role === "AGENT" && state && state !== "doubt") redirect(`/signalements?result=${state}`);
+  return result.body?.assessment.reason ?? "Facture enregistrée.";
 }

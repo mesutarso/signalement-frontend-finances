@@ -1,3 +1,4 @@
+import { can } from "@/modules/access/model/account";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
@@ -20,7 +21,7 @@ import { paymentStatusLabel, paymentStatusVariant, type PaymentItem } from "@/mo
 import { francs } from "@/modules/report/model/reward";
 import { calendarLabel, reportedAtParts } from "@/modules/report/model/report";
 import { readReports } from "@/modules/report/queries/read-reports";
-import { PriorityMark, ValidationTag } from "@/modules/report/ui/report-marks";
+import { ValidationTag } from "@/modules/report/ui/report-marks";
 
 export default function DashboardPage() {
   return <Suspense fallback={<PageSkeleton />}><Dashboard /></Suspense>;
@@ -51,21 +52,23 @@ async function Dashboard() {
   const account = await readCurrentAccount();
   if (!account) redirect("/connexion");
   if (account.role === "AGENT") redirect("/signalements");
-  if (!canReadReports(account)) return <PaymentDashboard account={account} />;
+  if (!canReadReports(account)) {
+    if (can(account, "letter.read")) redirect("/courriers");
+    return <PaymentDashboard account={account} />;
+  }
 
   const admin = account.role === "ADMINISTRATOR";
   const auditor = account.role === "AUDITOR";
-  const [recent, pending, urgent, unassigned, mine, accounts, availability, indicators] = await Promise.all([
+  const [recent, pending, unassigned, mine, accounts, availability, indicators] = await Promise.all([
     readReports().catch(() => null),
     readReports({ validation: "doubt" }).catch(() => null),
-    readReports({ priority: "urgent" }).catch(() => null),
     readReports({ unassigned: true }).catch(() => null),
     auditor ? Promise.resolve(null) : readReports({ assigneeId: account.id }).catch(() => null),
     admin ? readAccounts().catch(() => null) : Promise.resolve(null),
     readAvailability(),
     readJson<Indicators>("/api/indicators").catch(() => null),
   ]);
-  const unavailable = !recent || !pending || !urgent || !unassigned || (admin && !accounts);
+  const unavailable = !recent || !pending || !unassigned || (admin && !accounts);
   const week = indicators?.week;
 
   return (
@@ -73,9 +76,8 @@ async function Dashboard() {
       <PageHeader title="Tableau de bord" description={headerDescription(account)} actions={<RefreshButton />} />
       {unavailable ? <Alert variant="destructive"><AlertTitle>Certaines données ne sont pas disponibles. Actualisez la page.</AlertTitle></Alert> : null}
 
-      <Figures>
+      <Figures columns={3}>
         <Figure label="À vérifier" value={count(pending?.total)} href="/signalements?scope=all&validation=doubt" />
-        <Figure label="Urgents" value={count(urgent?.total)} href="/signalements?scope=all&priority=urgent" signal={Boolean(urgent?.total)} />
         <Figure label="Non affectés" value={count(unassigned?.total)} href="/signalements?scope=unassigned" />
         {auditor
           ? <Figure label="Enregistrés" value={count(recent?.total)} href="/signalements?scope=all" />
@@ -100,7 +102,6 @@ async function Dashboard() {
                         <span className="ref text-muted-foreground">{report.identifier}</span>
                       </span>
                       <span className="flex items-center gap-4">
-                        <PriorityMark priority={report.priority} />
                         <ValidationTag state={report.validationState} assignmentState={report.state} />
                         <span className="w-[6.75rem] text-right text-[13px] text-muted-foreground tabular-nums max-sm:hidden">{date}</span>
                       </span>

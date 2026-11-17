@@ -1,3 +1,4 @@
+import { can } from "@/modules/access/model/account";
 import { notFound, redirect } from "next/navigation";
 import { Suspense } from "react";
 import { PageSkeleton } from "@/components/page";
@@ -21,13 +22,14 @@ async function ReportContent({ params }: { params: Promise<{ id: string }> }) {
   if (!account) {
     redirect("/connexion");
   }
+  if (!can(account, "report.read")) redirect("/");
   const { id } = await params;
   const report = await readReport(id);
   if (!report) {
     notFound();
   }
-  const canAssign = account.role === "SUPERVISOR" || account.role === "ADMINISTRATOR";
-  const canRequest = account.role !== "AUDITOR" && (account.role !== "AGENT" || report.validationState === "doubt");
+  const canAssign = can(account, "report.assign");
+  const canRequest = can(account, "report.review") && (account.role !== "AGENT" || report.validationState === "doubt");
   const legacy = report.validationState === "legacy";
   const [assignees, assessment] = await Promise.all([
     canAssign ? readAssignees() : Promise.resolve([]),

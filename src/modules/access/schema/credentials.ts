@@ -1,3 +1,4 @@
+import { ACCOUNT_ROLES } from "@/modules/access/model/account";
 const USERNAME = /^[a-z0-9][a-z0-9._-]*$/;
 const PASSWORD = /^(?=.*\p{L})(?=.*\d).+$/u;
 
@@ -25,7 +26,7 @@ export function readAccount(formData: FormData): AccountInput | string {
   if (passwordError) {
     return passwordError;
   }
-  if (!["AGENT", "SUPERVISOR", "AUDITOR", "ADMINISTRATOR", "CELLULE", "CABINET", "PAYMASTER"].includes(role)) {
+  if (!ACCOUNT_ROLES.some(value => value === role)) {
     return "Choisissez un rôle.";
   }
   return { username, password, role };

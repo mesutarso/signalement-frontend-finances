@@ -6,7 +6,6 @@ export type ReportFilters = {
   q?: string;
   state?: string;
   validation?: string;
-  priority?: string;
   assigneeId?: string;
   unassigned?: boolean;
 };
@@ -18,7 +17,6 @@ export async function readReports(filters: ReportFilters = {}): Promise<ReportPa
   if (filters.q) params.set("q", filters.q);
   if (filters.state) params.set("state", filters.state);
   if (filters.validation) params.set("validation", filters.validation);
-  if (filters.priority) params.set("priority", filters.priority);
   if (filters.unassigned) params.set("unassigned", "true");
   else if (filters.assigneeId) params.set("assigneeId", filters.assigneeId);
   return readJson<ReportPage>(`/api/reports?${params}`);

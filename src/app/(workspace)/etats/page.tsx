@@ -1,3 +1,4 @@
+import { can } from "@/modules/access/model/account";
 import { TransferPanel } from "@/modules/report/ui/transfer-panel";
 import type { PaymentService } from "@/modules/report/model/transfer";
 import Link from "next/link";
@@ -17,7 +18,6 @@ import { Ledger, LedgerEmpty, LedgerItem } from "@/components/ledger";
 
 type Page = { items: PaymentItem[]; page: number; size: number; total: number };
 
-const READERS = ["SUPERVISOR", "AUDITOR", "ADMINISTRATOR", "CELLULE", "CABINET", "PAYMASTER"];
 
 export default function PaymentStatementsPage({ searchParams }: PageProps<"/etats">) {
   return <Suspense fallback={<PageSkeleton />}><Statements searchParams={searchParams} /></Suspense>;
@@ -28,14 +28,14 @@ async function Statements({ searchParams }: Pick<PageProps<"/etats">, "searchPar
   if (!account) {
     redirect("/connexion");
   }
-  if (!READERS.includes(account.role)) {
+  if (!can(account, "payment.read")) {
     redirect("/signalements");
   }
   const params = await searchParams;
   const number = Number(params.page ?? 0);
   const page = Number.isSafeInteger(number) && number >= 0 ? number : 0;
   const [statements, service] = await Promise.all([readJson<Page>(`/api/payment-statements?page=${page}`).catch(() => null), readJson<PaymentService>("/api/payment-transfers").catch(() => null)]);
-  const canPrepare = account.role === "SUPERVISOR" || account.role === "ADMINISTRATOR";
+  const canPrepare = can(account, "payment.prepare");
   return (
     <Page className="max-w-6xl">
       <PageHeader
@@ -59,7 +59,7 @@ async function Statements({ searchParams }: Pick<PageProps<"/etats">, "searchPar
           <TablePagination page={statements.page} size={statements.size} total={statements.total} label="Pagination des états" />
         </div>
       )}
-      {service ? <TransferPanel service={service} canTest={account.role === "ADMINISTRATOR"} canCheck={["ADMINISTRATOR", "PAYMASTER"].includes(account.role)} /> : <Alert variant="destructive"><AlertTitle>Le service de paiement est indisponible.</AlertTitle></Alert>}
+      {service ? <TransferPanel service={service} canTest={can(account, "payment.test")} canCheck={can(account, "payment.check")} /> : <Alert variant="destructive"><AlertTitle>Le service de paiement est indisponible.</AlertTitle></Alert>}
     </Page>
   );
 }

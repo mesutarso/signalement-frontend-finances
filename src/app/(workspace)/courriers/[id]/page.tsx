@@ -1,3 +1,4 @@
+import { can } from "@/modules/access/model/account";
 import { Suspense } from "react";
 import { notFound, redirect } from "next/navigation";
 import { readMissingJson } from "@/lib/api";
@@ -70,7 +71,7 @@ async function LetterDetail({ params }: { params: Promise<{ id: string }> }) {
   if (!account) {
     redirect("/connexion");
   }
-  if (account.role === "AGENT") {
+  if (!can(account, "letter.read")) {
     redirect("/signalements");
   }
   const { id } = await params;
@@ -79,9 +80,8 @@ async function LetterDetail({ params }: { params: Promise<{ id: string }> }) {
     notFound();
   }
   const dispatch = await readMissingJson<{service: string; sentOn: string | null; reference: string | null}>(`/api/letters/${id}/dispatches`);
-  const canWrite = account.role === "SUPERVISOR" || account.role === "ADMINISTRATOR";
-  const canDecide = canWrite && detail.letter.status === "draft";
-  const canRespond = canWrite && detail.letter.status === "validated";
+  const canDecide = can(account, "letter.validate") && detail.letter.status === "draft";
+  const canRespond = can(account, "letter.response") && detail.letter.status === "validated";
   return (
     <Page className="max-w-6xl">
 
@@ -103,7 +103,7 @@ async function LetterDetail({ params }: { params: Promise<{ id: string }> }) {
           </div>
         ) : null}
       </PageHeader>
-      <PageSection title="Transmission au service"><p className="text-sm">Service : {dispatch?.service || detail.letter.recipient || "À préciser"}</p>{dispatch?.sentOn ? <p>Envoyé le {calendarLabel(dispatch.sentOn)} · {dispatch.reference}</p> : detail.letter.status === "validated" && (account.role === "SUPERVISOR" || account.role === "ADMINISTRATOR") ? <LetterDispatchForm letterId={id} /> : <p>Envoi non enregistré.</p>}</PageSection>
+      <PageSection title="Transmission au service"><p className="text-sm">Service : {dispatch?.service || detail.letter.recipient || "À préciser"}</p>{dispatch?.sentOn ? <p>Envoyé le {calendarLabel(dispatch.sentOn)} · {dispatch.reference}</p> : detail.letter.status === "validated" && (can(account, "letter.dispatch")) ? <LetterDispatchForm letterId={id} /> : <p>Envoi non enregistré.</p>}</PageSection>
       {ANNEXES.map((annex) => {
         const lines = detail.lines.filter((line) => line.annex === annex.value);
         return (

@@ -1,3 +1,4 @@
+import { can } from "@/modules/access/model/account";
 import { CaptureReportForm } from "@/modules/report/ui/campaign-reporting-forms";
 import { ActionDialog } from "@/components/action-dialog";
 import { Suspense } from "react";
@@ -12,7 +13,6 @@ import { Page, PageHeader, PageSection, PageSkeleton } from "@/components/page";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import type { Figures, Indicators as IndicatorsData } from "@/modules/report/model/indicators";
 
-const READERS = ["AGENT", "SUPERVISOR", "AUDITOR", "ADMINISTRATOR"];
 const FINDINGS = ["fake-invoice", "missing-transmission", "understated", "non-normalized", "refusal", "unknown-seller", "nonconform", "vat-unregistered"];
 
 export default function IndicatorsPage({ searchParams }: PageProps<"/indicateurs">) {
@@ -39,7 +39,7 @@ async function Indicators({ searchParams }: Pick<PageProps<"/indicateurs">, "sea
   if (!account) {
     redirect("/connexion");
   }
-  if (!READERS.includes(account.role)) {
+  if (!can(account, "indicator.read")) {
     redirect("/signalements");
   }
   const params = await searchParams;
@@ -80,7 +80,7 @@ async function Indicators({ searchParams }: Pick<PageProps<"/indicateurs">, "sea
     <Page className="max-w-6xl">
       <PageHeader
         title="Indicateurs"
-        actions={account.role === "SUPERVISOR" || account.role === "ADMINISTRATOR" ? <ActionDialog label="Archiver un rapport" title="Rapport de la dernière période close"><CaptureReportForm /></ActionDialog> : undefined}
+        actions={can(account, "reporting.write") ? <ActionDialog label="Archiver un rapport" title="Rapport de la dernière période close"><CaptureReportForm /></ActionDialog> : undefined}
       />
       <PageSection title="Budget prévisionnel des récompenses">
         {budget.amount === null ? <p className="text-sm">Budget non renseigné.</p> : <p className="text-sm">Budget : {amount(budget.amount)} FC · Récompenses approuvées : {amount(budget.approvedAmount)} FC · Montant payé : {amount(budget.paidAmount)} FC ({(100 * budget.paidAmount / budget.amount).toLocaleString("fr-FR", { maximumFractionDigits: 2 })} % du budget).</p>}

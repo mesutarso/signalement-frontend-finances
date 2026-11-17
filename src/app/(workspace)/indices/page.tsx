@@ -1,3 +1,4 @@
+import { can } from "@/modules/access/model/account";
 import Link from "next/link";
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
@@ -45,7 +46,7 @@ async function Indices({ searchParams }: Pick<PageProps<"/indices">, "searchPara
   if (!account) {
     redirect("/connexion");
   }
-  if (account.role === "AGENT") {
+  if (!can(account, "abuse.read")) {
     redirect("/signalements");
   }
   const params = await searchParams;
@@ -53,7 +54,7 @@ async function Indices({ searchParams }: Pick<PageProps<"/indices">, "searchPara
   const page = Number.isSafeInteger(number) && number >= 0 ? number : 0;
   const indices = await readJson<Page>(`/api/abuse-indices?page=${page}`).catch(() => null);
   const suspensions = await readJson<{ items: Suspension[] }>("/api/reward-suspensions").catch(() => null);
-  const canNote = account.role === "SUPERVISOR" || account.role === "ADMINISTRATOR";
+  const canNote = can(account, "abuse.write");
   return (
     <Page className="max-w-6xl">
       <PageHeader

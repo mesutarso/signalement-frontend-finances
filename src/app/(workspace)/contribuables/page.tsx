@@ -1,3 +1,4 @@
+import { can } from "@/modules/access/model/account";
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { readJson } from "@/lib/api";
@@ -13,7 +14,6 @@ import { Ledger, LedgerEmpty, LedgerItem } from "@/components/ledger";
 type Item = { id: string; taxId: string; name: string | null; verified: boolean; recordedAt: string };
 type Page = { items: Item[]; page: number; size: number; total: number };
 
-const READERS = ["AGENT", "SUPERVISOR", "AUDITOR", "ADMINISTRATOR"];
 
 export default function TaxpayersPage() {
   return <Suspense fallback={<PageSkeleton />}><Taxpayers /></Suspense>;
@@ -24,11 +24,11 @@ async function Taxpayers() {
   if (!account) {
     redirect("/connexion");
   }
-  if (!READERS.includes(account.role)) {
+  if (!can(account, "taxpayer.read")) {
     redirect("/signalements");
   }
   const taxpayers = await readJson<Page>("/api/taxpayers?page=0").catch(() => null);
-  const canKeep = account.role === "SUPERVISOR" || account.role === "ADMINISTRATOR";
+  const canKeep = can(account, "taxpayer.verify");
   return (
     <Page className="max-w-6xl">
       <PageHeader

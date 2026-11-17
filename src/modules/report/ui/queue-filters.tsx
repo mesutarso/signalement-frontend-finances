@@ -11,22 +11,20 @@ import { VALIDATION_STATES } from "@/modules/report/model/assessment";
 export function QueueFilters({
   q,
   state,
-  priority,
   scope,
   validation,
   onlyDoubts,
 }: {
   q: string;
   state: string;
-  priority: string;
   scope: string;
   validation: string;
   onlyDoubts: boolean;
 }) {
-  const filtered = Boolean(q || state || priority || (validation && validation !== (onlyDoubts ? "doubt" : "all")));
+  const filtered = Boolean(q || state || (validation && validation !== (onlyDoubts ? "doubt" : "all")));
   return (
     <form
-      key={`${q}|${state}|${priority}|${scope}|${validation}`}
+      key={`${q}|${state}|${scope}|${validation}`}
       className="flex flex-wrap items-center gap-2"
       action="/signalements"
       method="get"
@@ -36,7 +34,7 @@ export function QueueFilters({
         <NativeSelectOption value="all">Tous les statuts</NativeSelectOption>
         {Object.entries(VALIDATION_STATES).map(([value, label]) => <NativeSelectOption key={value} value={value}>{label}</NativeSelectOption>)}
         <NativeSelectOption value="rejected-unreadable">Rejeté · Photo illisible</NativeSelectOption>
-        <NativeSelectOption value="rejected-identity-missing">Rejeté · Nom et NIF absents</NativeSelectOption>
+        <NativeSelectOption value="rejected-identity-missing">Rejeté · NIF non récupéré</NativeSelectOption>
         <NativeSelectOption value="rejected-duplicate">Rejeté · Doublon</NativeSelectOption>
       </NativeSelect>
       <div className="relative min-w-64 flex-1">
@@ -47,14 +45,6 @@ export function QueueFilters({
         <NativeSelectOption value="">Toutes les affectations</NativeSelectOption>
         <NativeSelectOption value="pending">À traiter</NativeSelectOption>
         <NativeSelectOption value="assigned">Affecté</NativeSelectOption>
-      </NativeSelect>
-      <NativeSelect name="priority" size="sm" defaultValue={priority} aria-label="Priorité" className="w-[calc(50%-0.25rem)] sm:w-44" onChange={(event) => event.currentTarget.form?.requestSubmit()}>
-        <NativeSelectOption value="">Toutes les priorités</NativeSelectOption>
-        <NativeSelectOption value="unset">Non définie</NativeSelectOption>
-        <NativeSelectOption value="urgent">Urgente</NativeSelectOption>
-        <NativeSelectOption value="high">Haute</NativeSelectOption>
-        <NativeSelectOption value="normal">Normale</NativeSelectOption>
-        <NativeSelectOption value="low">Faible</NativeSelectOption>
       </NativeSelect>
       <Button type="submit" variant="outline">Rechercher</Button>
       {filtered ? <Button variant="ghost" nativeButton={false} render={<Link href={`/signalements?scope=${scope}`} />}>Effacer</Button> : null}

@@ -1,3 +1,4 @@
+import { can } from "@/modules/access/model/account";
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { readJson } from "@/lib/api";
@@ -46,7 +47,7 @@ async function Rewards({ searchParams }: Pick<PageProps<"/recompenses">, "search
   const params = await searchParams;
   const number = Number(params.page ?? 0);
   const page = Number.isSafeInteger(number) && number >= 0 ? number : 0;
-  const canReview = account.role === "SUPERVISOR" || account.role === "ADMINISTRATOR";
+  const canReview = can(account, "reward.approve");
   const rewards = await readJson<Page>(`/api/rewards?page=${page}`).catch(() => null);
   return (
     <Page className="max-w-6xl">
