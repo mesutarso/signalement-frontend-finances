@@ -38,7 +38,7 @@ export function ReportInstruction({ tabs, notice }: { tabs: InstructionTab[]; no
             <Tabs.Tab
               key={tab.value}
               value={tab.value}
-              className="flex h-11 items-center gap-1.5 text-sm whitespace-nowrap text-muted-foreground transition-colors hover:text-foreground data-[active]:font-bold data-[active]:text-primary"
+              className="flex h-11 items-center gap-1.5 text-sm whitespace-nowrap text-muted-foreground transition-colors hover:text-foreground data-[active]:font-bold data-[active]:text-foreground"
             >
               {tab.label}
               {tab.count ? (
@@ -46,7 +46,7 @@ export function ReportInstruction({ tabs, notice }: { tabs: InstructionTab[]; no
               ) : null}
             </Tabs.Tab>
           ))}
-          <Tabs.Indicator renderBeforeHydration className="absolute bottom-0 left-0 h-0.5 w-(--active-tab-width) translate-x-(--active-tab-left) bg-primary transition-[translate,width] duration-200 ease-out" />
+          <Tabs.Indicator renderBeforeHydration className="absolute bottom-0 left-0 h-0.5 w-(--active-tab-width) translate-x-(--active-tab-left) bg-foreground transition-[translate,width] duration-200 ease-out" />
         </Tabs.List>
         {tabs.map((tab) => (
           <Tabs.Panel key={tab.value} value={tab.value} keepMounted className="pt-5 outline-none">

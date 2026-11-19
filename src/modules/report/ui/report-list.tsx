@@ -1,5 +1,7 @@
 import { Page, PageHeader } from "@/components/page";
 import { ViewTabs } from "@/components/view-tabs";
+import { workParams, type WorkFilters } from "@/modules/report/model/work-filters";
+import type { Assignee } from "@/modules/report/model/report";
 import type { ReportPage } from "@/modules/report/model/report";
 import { ImportButton } from "@/modules/report/ui/import-button";
 import { QueueFilters } from "@/modules/report/ui/queue-filters";
@@ -13,7 +15,7 @@ const SCOPES = [
 ];
 
 export function ReportList({
-  page,
+  page, filters, assignees, agent,
   canImport,
   q,
   state,
@@ -22,7 +24,7 @@ export function ReportList({
   validation,
   result,
 }: {
-  page: ReportPage;
+  page: ReportPage; filters: WorkFilters; assignees: Assignee[]; agent: string;
   canImport: boolean;
   q: string;
   state: string;
@@ -32,7 +34,7 @@ export function ReportList({
   result: string;
 }) {
   function href(value: string) {
-    const params = new URLSearchParams({ scope: value });
+    const params = workParams({...filters, scope: value, page: ""});
     if (q) params.set("q", q);
     if (state) params.set("state", state);
     if (validation) params.set("validation", validation);
@@ -46,9 +48,9 @@ export function ReportList({
       {result === "analyzing" ? <Alert><AlertTitle>Analyse de la pièce demandée.</AlertTitle></Alert> : null}
       <div className="grid gap-5">
         <ViewTabs label="Affectation" items={SCOPES.map((item) => ({ href: href(item.value), label: item.label, active: item.value === scope }))} />
-        <QueueFilters q={q} state={state} scope={scope} validation={validation} onlyDoubts={onlyDoubts} />
+        <QueueFilters filters={filters} assignees={assignees} agent={agent} />
       </div>
-      <ReportsTable page={page} />
+      <ReportsTable page={page} filters={filters} />
     </Page>
   );
 }

@@ -67,7 +67,7 @@ export function ReportPhotos({
       {photos.length > 1 ? (
         <div role="group" aria-label="Choisir une pièce jointe" className="flex gap-2 overflow-x-auto p-0.5">
           {photos.map((item, index) => (
-            <button key={item.id} type="button" aria-label={`Afficher la pièce ${index + 1}`} aria-pressed={selected === index} onClick={() => setSelected(index)} className="relative h-16 w-14 shrink-0 overflow-hidden rounded-sm bg-muted outline-offset-1 transition-opacity not-aria-pressed:opacity-70 hover:opacity-100 aria-pressed:outline-2 aria-pressed:outline-primary">
+            <button key={item.id} type="button" aria-label={`Afficher la pièce ${index + 1}`} aria-pressed={selected === index} onClick={() => setSelected(index)} className="relative h-16 w-14 shrink-0 overflow-hidden rounded-sm bg-muted outline-offset-1 transition-opacity not-aria-pressed:opacity-70 hover:opacity-100 aria-pressed:outline-2 aria-pressed:outline-foreground">
               {item.contentType.startsWith("image/") ? <Image src={`/signalements/${reportId}/photos/${item.id}`} alt="" fill unoptimized sizes="56px" className="object-contain p-0.5" /> : <span className="text-xs">Pièce {index + 1}</span>}
             </button>
           ))}

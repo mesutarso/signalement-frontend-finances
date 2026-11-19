@@ -6,6 +6,9 @@ export type ReportSummary = {
   state: string;
   validationState: string;
   screeningReason: string | null;
+  work?: { sellerName: string | null; sellerTaxId: string | null; documentNumber: string | null;
+    documentDate: string | null; totalAmount: string | null; currency: string | null;
+    vatStatus: string; jobState: string; reason: string; photoRequested: boolean } | null;
   priority: string | null;
   assigneeName: string | null;
   version: number;
@@ -55,21 +58,9 @@ export type PhotoReading = {
   errorCode: string | null;
 };
 
-const READING_ERRORS: Record<string, string> = {
-  "not-configured": "Le service de lecture n’est pas configuré. Contactez l’administrateur.",
-  "rejected-token": "L’accès au service de lecture est refusé. Contactez l’administrateur.",
-  "rejected-document": "Le service n’a pas pu traiter cette pièce. Consultez l’image pour vérifier sa lisibilité.",
-  "too-large": "Cette pièce dépasse la limite de lecture de 5 Mio.",
-  "rejected-type": "La lecture accepte les images JPEG, PNG et WebP.",
-  quota: "Le quota du service de lecture est atteint. Réessayez plus tard.",
-  timeout: "Le service de lecture a mis trop de temps à répondre. Vous pouvez réessayer.",
-  "unexpected-response": "La réponse du service de lecture est inexploitable. Vous pouvez réessayer.",
-  "provider-error": "Le service de lecture a rencontré une erreur. Vous pouvez réessayer.",
-  unavailable: "Le service de lecture est momentanément inaccessible. Consultez la pièce jointe.",
-};
-
-export function readingErrorLabel(code: string | null): string {
-  return (code && READING_ERRORS[code]) || "La lecture a échoué. Vous pouvez réessayer.";
+export function readingErrorLabel(_code: string | null): string {
+  void _code;
+  return "La facture n’a pas pu être lue. Consultez la photo pour compléter les informations.";
 }
 
 export type PhotoRequest = {
@@ -84,6 +75,7 @@ export type PhotoRequest = {
   resolvedAt: string | null;
   linkedIdentifier: string | null;
   notice: string;
+  messageId: string | null; messageStatus: string | null; messageBody: string | null;
 };
 
 export type ReportDetail = ReportSummary & {

@@ -8,6 +8,8 @@ export type ReportFilters = {
   validation?: string;
   assigneeId?: string;
   unassigned?: boolean;
+  start?: string; end?: string; vat?: string; reading?: string; missing?: string;
+  duplicates?: string; photoRequest?: string; sort?: string;
 };
 
 export async function readReports(filters: ReportFilters = {}): Promise<ReportPage> {
@@ -19,5 +21,8 @@ export async function readReports(filters: ReportFilters = {}): Promise<ReportPa
   if (filters.validation) params.set("validation", filters.validation);
   if (filters.unassigned) params.set("unassigned", "true");
   else if (filters.assigneeId) params.set("assigneeId", filters.assigneeId);
+  for (const key of ["start", "end", "vat", "reading", "missing", "duplicates", "photoRequest", "sort"] as const) {
+    if (filters[key]) params.set(key, filters[key]);
+  }
   return readJson<ReportPage>(`/api/reports?${params}`);
 }

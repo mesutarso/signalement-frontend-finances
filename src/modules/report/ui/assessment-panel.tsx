@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
+import { reportedAtLabel } from "@/modules/report/model/report";
 import { RefreshButton } from "@/components/refresh-button";
 import { ImportRefresh } from "@/modules/report/ui/import-refresh";
 import { reviewAssessment, reviewFiscalStatus } from "@/modules/report/actions/review-assessment";
@@ -22,7 +23,16 @@ export function AssessmentPanel({ view, canReview }: {
     <Alert><AlertTitle>{current.reason}</AlertTitle></Alert>
     {busy ? <><ImportRefresh /><RefreshButton /></> : null}
     {view.reward ? <p className="flex flex-wrap items-baseline gap-2 text-sm"><span className="font-bold">Récompense : {francs(view.reward.amount)}</span><Badge variant="outline">{rewardStatusLabel(view.reward.status)}</Badge></p> : null}
-    {canReview && !busy && view.precalculation ? <FiscalStatusForm key={`fiscal-${current.revision}`} assessment={current} /> : null}
+    {view.precalculation ? <>
+      {view.precalculation.missingFields.length > 0 ? <div className="grid gap-2"><h3 className="text-sm font-medium">À compléter</h3><ul className="list-inside list-disc text-sm text-muted-foreground">{view.precalculation.missingFields.map(field=><li key={field}>{field}</li>)}</ul></div> : null}
+      <AssessmentCriteria calculation={view.precalculation} />
+      {!busy ? <div className="grid gap-3 border-y py-4"><h3 className="text-sm font-medium">Résultat selon l’assujettissement</h3>
+        <Forecast label="Si l’établissement est assujetti" decision={view.precalculation.ifRegistered} />
+        <Forecast label="S’il n’est pas assujetti" decision={view.precalculation.ifUnregistered} />
+      </div> : null}
+    </> : null}
+    {canReview && !busy && current.sellerTaxId && view.precalculation && current.state === "doubt" ? <FiscalStatusForm key={`fiscal-${current.revision}`} assessment={current} /> : null}
+    {current.checkedAt ? <p className="text-xs text-muted-foreground">Assujettissement contrôlé le {reportedAtLabel(current.checkedAt)}{current.vatEvidence ? ` · ${current.vatEvidence}` : ""}</p> : null}
     {!canReview ? <EvidenceDetails evidence={current} /> : null}
   </section>;
 }
@@ -31,13 +41,17 @@ const CRITERION_VALUES: Record<string, string> = {
   unknown: "À vérifier", normalized: "Normalisée", "non-normalized": "Non normalisée",
   conform: "Conforme", nonconform: "Non conforme", yes: "TVA facturée", no: "Aucune TVA facturée",
   unique: "Antériorité vérifiée", duplicate: "Doublon confirmé",
-  READABLE: "Lisible", PARTIAL: "Lecture partielle", UNREADABLE: "Illisible — rejet", UNKNOWN: "À déterminer",
+  READABLE: "Lisible", PARTIAL: "Lecture partielle", UNREADABLE: "Nouvelle photo nécessaire", UNKNOWN: "À déterminer",
 };
 
 export function AssessmentCriteria({ calculation: c }: { calculation: AssessmentPrecalculation }) {
   return <dl className="grid gap-2" aria-label="Critères du signalement">{c.criteria.map(criterion => <div key={criterion.key} className="flex flex-wrap items-baseline justify-between gap-2 text-sm">
       <dt>{criterion.label}</dt><dd><Badge variant="outline">{CRITERION_VALUES[criterion.value] ?? criterion.value}</Badge></dd>
     </div>)}</dl>;
+}
+
+function Forecast({label,decision}:{label:string;decision:AssessmentPrecalculation["ifRegistered"]}) {
+  return <div className="grid gap-1 text-sm"><p className="font-medium">{label} · {decision.state === "validated" ? "Recevable" : decision.state === "rejected" ? "Non recevable" : "À vérifier"}</p><p className="text-muted-foreground">{decision.reason}</p></div>;
 }
 
 function FiscalStatusForm({ assessment: a }: { assessment: Assessment }) {
@@ -53,6 +67,7 @@ function FiscalStatusForm({ assessment: a }: { assessment: Assessment }) {
           <NativeSelectOption value="unregistered">Non assujetti à la TVA</NativeSelectOption>
         </NativeSelect>
       </Field>
+      <Field><FieldLabel htmlFor="fiscal-evidence">Référence de la vérification</FieldLabel><Input id="fiscal-evidence" name="vatEvidence" required maxLength={500} defaultValue={a.vatEvidence ?? ""} /></Field>
       {message ? <p role="status" className="text-sm">{message}</p> : null}
       <Button type="submit" disabled={pending || status === "unknown"}>{pending ? "Recalcul en cours…" : "Enregistrer"}</Button>
     </FieldGroup>

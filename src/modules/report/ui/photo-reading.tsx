@@ -1,7 +1,5 @@
 import { cn } from "cn";
 import {
-  confidenceLabel,
-  qualityLabel,
   readValue,
   readingErrorLabel,
   type ReportPhoto,
@@ -13,8 +11,8 @@ export function PhotoReading({ photo }: { photo: ReportPhoto }) {
     <section aria-labelledby={`reading-${photo.id}`} className="grid gap-3">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="grid gap-0.5">
-          <h3 id={`reading-${photo.id}`} className="text-[15px] font-bold">Lecture automatique de la pièce</h3>
-          {reading?.status === "READ" ? <p className="text-[13px] text-muted-foreground">Qualité {qualityLabel(reading.quality).toLowerCase()} · confiance {confidenceLabel(reading.confidence)}</p> : null}
+          <h3 id={`reading-${photo.id}`} className="text-[15px] font-bold">Informations de la facture</h3>
+
         </div>
       </div>
       {!reading ? <p role="status" className="text-sm text-muted-foreground">La lecture automatique de cette pièce est en attente.</p> : null}

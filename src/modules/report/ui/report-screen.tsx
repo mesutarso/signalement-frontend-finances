@@ -1,3 +1,4 @@
+import { ReportNavigation } from "@/modules/report/ui/report-navigation";
 import { ActionDialog } from "@/components/action-dialog";
 import { Page, PageHeader } from "@/components/page";
 import { reportedAtLabel, reportedAtParts, supervisionResultLabel, type Assignee, type ReportDetail } from "@/modules/report/model/report";
@@ -5,7 +6,7 @@ import { AssignmentForm } from "@/modules/report/ui/assignment-form";
 import { DuplicateAlerts } from "@/modules/report/ui/duplicate-alerts";
 import { ReportInstruction, type InstructionTab } from "@/modules/report/ui/report-instruction";
 import { ReportPhotos } from "@/modules/report/ui/report-photos";
-import { AssessmentPanel, AssessmentCriteria, AssessmentCompletion } from "@/modules/report/ui/assessment-panel";
+import { AssessmentPanel, AssessmentCompletion } from "@/modules/report/ui/assessment-panel";
 import type { AssessmentView } from "@/modules/report/model/assessment";
 import { ValidationTag } from "@/modules/report/ui/report-marks";
 
@@ -15,12 +16,14 @@ export function ReportScreen({
   canRequest,
   assignees,
   assessment,
+  backHref = "/signalements", nextHref, previousHref,
 }: {
   report: ReportDetail;
   canAssign: boolean;
   canRequest: boolean;
   assignees: Assignee[];
   assessment: AssessmentView | null;
+  backHref?: string; nextHref?: string; previousHref?: string;
 }) {
   const hasReporter = report.reporterName || report.reporterEmail || report.reporterPhone;
   const received = reportedAtParts(report.reportedAt);
@@ -32,14 +35,9 @@ export function ReportScreen({
       label: "Vérification",
       content: <AssessmentPanel view={assessment} canReview={canRequest} />,
     }] : []),
-    ...(assessment?.precalculation ? [{
-      value: "criteres",
-      label: "Critères",
-      content: <AssessmentCriteria calculation={assessment.precalculation} />,
-    }] : []),
-    ...(assessment && canRequest && !report.screeningReason && assessment.assessment.jobState === "done" ? [{
+    ...(assessment && canRequest && report.screeningReason !== "duplicate" && assessment.assessment.jobState === "done" ? [{
       value: "completer",
-      label: "Compléter",
+      label: "Corriger la facture",
       content: <AssessmentCompletion key={assessment.assessment.revision} assessment={assessment.assessment} />,
     }] : []),
     {
@@ -82,10 +80,11 @@ export function ReportScreen({
     <Page className="gap-8 md:gap-10">
       <PageHeader
         compact
-        back={{ href: "/signalements", label: "Signalements" }}
+        back={{ href: backHref, label: "Signalements" }}
         title={report.title || "Signalement sans titre"}
         actions={
           <>
+            <ReportNavigation key={`${report.id}:${backHref}`} nextHref={nextHref} previousHref={previousHref} />
             {canAssign ? (
               <ActionDialog label="Modifier l’affectation" title="Affectation" variant="default">
                 <AssignmentForm reportId={report.id} version={report.version} assigneeId={report.assigneeId} assignees={assignees} />

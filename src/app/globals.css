@@ -322,11 +322,11 @@ textarea {
 }
 :is(.institution-sidebar, [data-mobile="true"]) [data-slot="sidebar-menu-button"][data-active]::before {
   top: calc(var(--tab-radius) * -1);
-  background: radial-gradient(circle at 0 0, transparent var(--tab-radius), var(--background) calc(var(--tab-radius) + 0.5px));
+  display: none;
 }
 :is(.institution-sidebar, [data-mobile="true"]) [data-slot="sidebar-menu-button"][data-active]::after {
   bottom: calc(var(--tab-radius) * -1);
-  background: radial-gradient(circle at 0 100%, transparent var(--tab-radius), var(--background) calc(var(--tab-radius) + 0.5px));
+  display: none;
 }
 
 :is(.institution-sidebar, [data-mobile="true"]) [data-slot="sidebar-group-label"] {
@@ -421,7 +421,7 @@ textarea {
   inset-block: 0;
   left: 0;
   width: 5px;
-  background: linear-gradient(var(--fin-sky) 0 33.33%, var(--fin-gold) 33.33% 66.66%, var(--fin-red) 66.66%);
+  background: var(--fin-line);
 }
 .login-form {
   width: 100%;
@@ -455,7 +455,7 @@ textarea {
     inset-inline: 0;
     width: auto;
     height: 4px;
-    background: linear-gradient(90deg, var(--fin-sky) 0 33.33%, var(--fin-gold) 33.33% 66.66%, var(--fin-red) 66.66%);
+    background: var(--fin-line);
   }
   .login-form {
     max-width: none;

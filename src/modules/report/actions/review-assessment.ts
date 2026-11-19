@@ -3,7 +3,6 @@
 import { can } from "@/modules/access/model/account";
 
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 import { writeJson } from "@/lib/api";
 import { readCurrentAccount } from "@/modules/access/queries/read-current-account";
 import type { AssessmentView } from "@/modules/report/model/assessment";
@@ -17,11 +16,11 @@ export async function reviewFiscalStatus(_current: string | null, data: FormData
   if (!Number.isSafeInteger(revision) || revision < 0) return "Actualisez le dossier avant d’enregistrer.";
   const vatStatus = String(data.get("vatStatus") ?? "");
   if (!["registered", "unregistered"].includes(vatStatus)) return "Indiquez si l’établissement est assujetti à la TVA.";
-  const result = await writeJson<AssessmentView>(`/api/reports/${id}/assessment/fiscal-status`, "POST", { revision, vatStatus });
+  const vatEvidence=String(data.get("vatEvidence") || "").trim();
+  if(!vatEvidence) return "Indiquez la référence de votre vérification.";
+  const result = await writeJson<AssessmentView>(`/api/reports/${id}/assessment/fiscal-status`, "POST", { revision, vatStatus, vatEvidence });
   if (!result.ok) return result.message;
   refreshAssessment(id);
-  const state = result.body?.assessment.state;
-  if (account?.role === "AGENT" && state && state !== "doubt") redirect(`/signalements?result=${state}`);
   return result.body?.assessment.reason ?? "Statut fiscal enregistré et décision recalculée.";
 }
 
@@ -45,7 +44,5 @@ export async function reviewAssessment(_current: string | null, data: FormData):
   const result = await writeJson<AssessmentView>(`/api/reports/${id}/assessment`, "POST", body);
   if (!result.ok) return result.message;
   refreshAssessment(id);
-  const state = result.body?.assessment.state;
-  if (account?.role === "AGENT" && state && state !== "doubt") redirect(`/signalements?result=${state}`);
   return result.body?.assessment.reason ?? "Facture enregistrée.";
 }

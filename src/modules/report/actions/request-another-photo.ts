@@ -1,9 +1,12 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { can } from "@/modules/access/model/account";
+import { readCurrentAccount } from "@/modules/access/queries/read-current-account";
 import { writeJson } from "@/lib/api";
 
 export async function requestAnotherPhoto(_current: string | null, formData: FormData): Promise<string | null> {
+  if (!can(await readCurrentAccount(), "report.review")) return "Cette action n’est pas autorisée.";
   const reportId = String(formData.get("reportId") ?? "");
   const photoId = String(formData.get("photoId") ?? "");
   const reason = String(formData.get("reason") ?? "");
@@ -12,5 +15,6 @@ export async function requestAnotherPhoto(_current: string | null, formData: For
     return result.message;
   }
   revalidatePath(`/signalements/${reportId}`);
-  return "Demande enregistrée. Le signalement d'origine n'est pas modifié.";
+  revalidatePath("/signalements");
+  return "Demande préparée. Vous pouvez envoyer le SMS.";
 }

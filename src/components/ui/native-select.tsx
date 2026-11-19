@@ -24,7 +24,7 @@ function NativeSelect({
       <select
         data-slot="native-select"
         data-size={size}
-        className="h-11 w-full min-w-0 appearance-none rounded-md border border-input bg-card py-2 pr-8 pl-3 text-base text-foreground select-none md:text-[15px] selection:bg-primary selection:text-primary-foreground disabled:pointer-events-none disabled:cursor-not-allowed aria-invalid:border-destructive data-[size=sm]:h-10 data-[size=sm]:text-sm"
+        className="h-11 w-full min-w-0 appearance-none rounded-md border border-input bg-card py-2 pr-8 pl-3 text-base text-foreground select-none md:text-[15px] selection:bg-primary selection:text-primary-foreground disabled:pointer-events-none disabled:cursor-not-allowed aria-invalid:border-foreground data-[size=sm]:h-10 data-[size=sm]:text-sm"
         {...props}
       />
       <HugeiconsIcon icon={ArrowDown01Icon} strokeWidth={2} className="pointer-events-none absolute top-1/2 right-3 size-4 -translate-y-1/2 text-muted-foreground select-none" aria-hidden="true" data-slot="native-select-icon" />

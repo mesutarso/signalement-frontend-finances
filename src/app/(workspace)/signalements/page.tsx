@@ -4,6 +4,8 @@ import { Suspense } from "react";
 import { PageSkeleton } from "@/components/page";
 import { readCurrentAccount } from "@/modules/access/queries/read-current-account";
 import { readReports } from "@/modules/report/queries/read-reports";
+import { WORK_FILTER_KEYS, type WorkFilters } from "@/modules/report/model/work-filters";
+import { readAssignees } from "@/modules/report/queries/read-assignees";
 import { ReportList } from "@/modules/report/ui/report-list";
 
 function first(value: string | string[] | undefined): string {
@@ -31,17 +33,24 @@ async function ReportsContent({ searchParams }: Pick<PageProps<"/signalements">,
   const validation = account.role === "AGENT" && params.validation === undefined ? "doubt" : first(params.validation);
   const requestedScope = first(params.scope);
   const scope = requestedScope || "all";
-  const page = await readReports({
+  const filters: WorkFilters = Object.fromEntries(WORK_FILTER_KEYS.map(key => [key, first(params[key]) ]));
+  filters.scope=scope; filters.validation=validation;
+  const assignee = first(params.agent);
+  const [assignees, page] = await Promise.all([readAssignees(), readReports({
+    ...filters,
     page: Number.isSafeInteger(requestedPage) && requestedPage >= 0 ? requestedPage : 0,
     q,
     state,
     validation,
-    assigneeId: scope === "mine" ? account.id : undefined,
+    assigneeId: scope === "mine" ? account.id : assignee || undefined,
     unassigned: scope === "unassigned",
-  });
+  })]);
   return (
     <ReportList
       page={page}
+      filters={filters}
+      assignees={assignees}
+      agent={assignee}
       canImport={can(account, "import.run")}
       onlyDoubts={account.role === "AGENT"}
       validation={validation}

@@ -41,6 +41,7 @@ export type AssessmentPrecalculation = {
   analysisComplete: boolean;
   fiscalStatusMissing: boolean;
   onlyFiscalStatusMissing: boolean;
+  missingFields: string[];
   criteria: { key: string; label: string; value: string; source: string; detail: string | null }[];
   ifRegistered: AssessmentDecision;
   ifUnregistered: AssessmentDecision;
