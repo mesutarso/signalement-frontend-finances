@@ -45,7 +45,7 @@ export function ReportScreen({
       label: "Doublons",
       count: report.duplicates.length,
       attention: openDuplicates > 0,
-      content: <DuplicateAlerts reportId={report.id} alerts={report.duplicates} canDecide={canRequest} />,
+      content: <DuplicateAlerts reportId={report.id} alerts={report.duplicates} canDecide={canRequest} identifier={report.identifier} reportedAt={report.reportedAt} />,
     },
   ];
   if (report.reviews.length > 0) {

@@ -117,6 +117,9 @@ export type DuplicateAlert = {
   priorityReportedAt: string | null;
   priorityBasis: string | null;
   currentKeepsPriority: boolean;
+  currentReporterName: string | null; currentReporterPhone: string | null;
+  otherReporterName: string | null; otherReporterPhone: string | null;
+  differentDeclarants: boolean | null;
 };
 
 export type Assignee = {
@@ -304,12 +307,7 @@ export function duplicatePriorityLabel(alert: DuplicateAlert): string | null {
   if (alert.priorityBasis === "reference") {
     return "Reçus en même temps : la référence la plus petite conserve la priorité.";
   }
-  if (alert.priorityBasis === "complete") {
-    return alert.currentKeepsPriority
-      ? "La priorité reste à ce signalement, car sa lecture est complète."
-      : `La priorité reste au signalement reçu le ${when}.`;
-  }
   return alert.currentKeepsPriority
-    ? "Aucun des deux n'a encore une lecture complète. La priorité reste à ce signalement, le plus ancien."
-    : `Aucun des deux n'a encore une lecture complète. La priorité reste au signalement reçu le ${when}.`;
+    ? "Premier signalement conservé. Le signalement ultérieur est rejeté."
+    : `Signalement ultérieur rejeté. Le premier, reçu le ${when}, est conservé.`;
 }

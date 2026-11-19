@@ -17,17 +17,19 @@ export function DuplicateAlerts({
   reportId,
   alerts,
   canDecide,
+  identifier, reportedAt,
 }: {
   reportId: string;
   alerts: DuplicateAlert[];
   canDecide: boolean;
+  identifier: string; reportedAt: string;
 }) {
   return (
     <section aria-labelledby="report-duplicates" className="grid gap-4">
       <h3 id="report-duplicates" className="sr-only">Doublons</h3>
       {alerts.length === 0 ? <p className="text-sm text-muted-foreground">Aucun rapprochement à vérifier.</p> : (
         <ul className="border-t">
-          {alerts.map((alert) => <li key={alert.id}><DuplicateCard reportId={reportId} alert={alert} canDecide={canDecide} /></li>)}
+          {alerts.map((alert) => <li key={alert.id}><DuplicateCard reportId={reportId} alert={alert} canDecide={canDecide} identifier={identifier} reportedAt={reportedAt} /></li>)}
         </ul>
       )}
     </section>
@@ -38,10 +40,12 @@ function DuplicateCard({
   reportId,
   alert,
   canDecide,
+  identifier, reportedAt,
 }: {
   reportId: string;
   alert: DuplicateAlert;
   canDecide: boolean;
+  identifier: string; reportedAt: string;
 }) {
   const [message, action, pending] = useActionState(decideDuplicate, null);
   const priority = duplicatePriorityLabel(alert);
@@ -52,6 +56,17 @@ function DuplicateCard({
         <Badge variant={alert.status === "confirmed" ? "destructive" : alert.status === "dismissed" ? "outline" : "warning"}>{label}</Badge>
         {alert.otherReportedAt ? <p className="text-[13px] text-muted-foreground">Reçu le {reportedAtLabel(alert.otherReportedAt)}</p> : null}
       </div>
+      {alert.currentReporterName || alert.currentReporterPhone || alert.otherReporterName || alert.otherReporterPhone ? <section className="grid gap-2" aria-label="Déclarants des signalements">
+        <h4 className="font-medium">{alert.differentDeclarants && alert.status === "confirmed" ? "Même facture, deux déclarants" : "Signalements à comparer"}</h4>
+        <ol className="grid gap-3">{[
+          {id:reportId,reference:identifier,date:reportedAt,name:alert.currentReporterName,phone:alert.currentReporterPhone},
+          {id:alert.otherReportId,reference:alert.otherIdentifier,date:alert.otherReportedAt,name:alert.otherReporterName,phone:alert.otherReporterPhone},
+        ].sort((a,b)=>(a.date||"").localeCompare(b.date||"")).map(item=><li key={item.id} className="grid gap-1 border-b pb-3">
+          <div className="flex flex-wrap items-center justify-between gap-2"><span className="font-medium">{item.name || "Déclarant non renseigné"}</span>{alert.status === "confirmed" ? <Badge variant="outline">{item.id===alert.priorityReportId ? "Premier conservé" : "Rejeté"}</Badge> : null}</div>
+          {item.phone ? <span className="text-muted-foreground">{item.phone}</span> : null}
+          <span className="text-xs text-muted-foreground">{item.reference}{item.date ? ` · ${reportedAtLabel(item.date)}` : ""}</span>
+        </li>)}</ol>
+      </section> : null}
       <p>{alert.explanation}</p>
       {alert.otherIdentifier ? (
         <Link href={`/signalements/${alert.otherReportId}`} className="w-fit break-all text-primary underline-offset-4 hover:underline">
