@@ -27,7 +27,7 @@ async function ReportContent({ params, searchParams }: PageProps<"/signalements/
   if (!can(account, "report.read")) redirect("/");
   const { id } = await params;
   const search=await searchParams;
-  const rawList=typeof search.list === "string" ? search.list : account.role==="AGENT" ? "validation=doubt" : "";
+  const rawList=typeof search.list === "string" ? search.list : account.role==="AGENT" ? "validation=doubt&scope=mine" : "";
   const context=listContext(rawList);
   const encoded=encodeURIComponent(workParams(context).toString());
   const safePage=Math.max(0,Number(context.page)||0);
@@ -47,11 +47,13 @@ async function ReportContent({ params, searchParams }: PageProps<"/signalements/
     notFound();
   }
   const canAssign = can(account, "report.assign");
-  const canRequest = can(account, "report.review") && (account.role !== "AGENT" || report.validationState === "doubt");
+  const canReview = can(account, "report.review") && (account.role !== "AGENT" || report.validationState === "doubt");
+  const canDecide = canReview && (report.validationState === "doubt"
+    || (account.role === "ADMINISTRATOR" && ["validated", "rejected"].includes(report.validationState)));
   const legacy = report.validationState === "legacy";
   const [assignees, assessment] = await Promise.all([
     canAssign ? readAssignees() : Promise.resolve([]),
     legacy ? Promise.resolve(null) : readJson<AssessmentView>(`/api/reports/${id}/assessment`),
   ]);
-  return <ReportScreen report={report} canAssign={canAssign} canRequest={canRequest} assignees={assignees} assessment={assessment} backHref={listHref(rawList)} nextHref={next ? `/signalements/${next.id}?list=${nextList}` : undefined} previousHref={previous ? `/signalements/${previous.id}?list=${encoded}` : undefined} />;
+  return <ReportScreen report={report} canAssign={canAssign} canReview={canReview} canDecide={canDecide} assignees={assignees} assessment={assessment} backHref={listHref(rawList)} nextHref={next ? `/signalements/${next.id}?list=${nextList}` : undefined} previousHref={previous ? `/signalements/${previous.id}?list=${encoded}` : undefined} />;
 }

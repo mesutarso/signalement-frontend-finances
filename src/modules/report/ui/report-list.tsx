@@ -23,6 +23,7 @@ export function ReportList({
   onlyDoubts,
   validation,
   result,
+  validatedOnly = false,
 }: {
   page: ReportPage; filters: WorkFilters; assignees: Assignee[]; agent: string;
   canImport: boolean;
@@ -32,23 +33,25 @@ export function ReportList({
   onlyDoubts: boolean;
   validation: string;
   result: string;
+  validatedOnly?: boolean;
 }) {
   function href(value: string) {
     const params = workParams({...filters, scope: value, page: ""});
     if (q) params.set("q", q);
     if (state) params.set("state", state);
     if (validation) params.set("validation", validation);
-    return `/signalements?${params}`;
+    if (validatedOnly) params.delete("validation");
+    return `${validatedOnly ? "/dossiers-valides" : "/signalements"}?${params}`;
   }
 
   return (
     <Page className="gap-8 md:gap-8">
-      <PageHeader title={onlyDoubts && validation === "doubt" ? "Signalements à vérifier" : "Signalements"} actions={canImport ? <ImportButton /> : null} />
+      <PageHeader title={validatedOnly ? "Dossiers validés" : onlyDoubts && validation === "doubt" ? "Signalements à vérifier" : "Signalements"} actions={!validatedOnly && canImport ? <ImportButton /> : null} />
       {result === "validated" || result === "rejected" ? <Alert><AlertTitle>{result === "validated" ? "Signalement validé. Récompense attribuée." : "Signalement écarté."}</AlertTitle></Alert> : null}
       {result === "analyzing" ? <Alert><AlertTitle>Analyse de la pièce demandée.</AlertTitle></Alert> : null}
       <div className="grid gap-5">
         <ViewTabs label="Affectation" items={SCOPES.map((item) => ({ href: href(item.value), label: item.label, active: item.value === scope }))} />
-        <QueueFilters filters={filters} assignees={assignees} agent={agent} />
+        <QueueFilters filters={filters} assignees={assignees} agent={agent} validatedOnly={validatedOnly} />
       </div>
       <ReportsTable page={page} filters={filters} />
     </Page>

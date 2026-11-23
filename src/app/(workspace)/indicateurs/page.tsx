@@ -13,7 +13,7 @@ import { Page, PageHeader, PageSection, PageSkeleton } from "@/components/page";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import type { Figures, Indicators as IndicatorsData } from "@/modules/report/model/indicators";
 
-const FINDINGS = ["fake-invoice", "missing-transmission", "understated", "non-normalized", "refusal", "unknown-seller", "nonconform", "vat-unregistered"];
+const FINDINGS = ["fake-invoice", "missing-transmission", "understated", "non-normalized", "refusal", "unknown-seller", "nonconform", "vat-unregistered", "fake-normalization", "vat-without-normalization", "registered-non-normalized"];
 
 export default function IndicatorsPage({ searchParams }: PageProps<"/indicateurs">) {
   return <Suspense fallback={<PageSkeleton />}><Indicators searchParams={searchParams} /></Suspense>;

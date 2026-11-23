@@ -17,21 +17,19 @@ export function DuplicateAlerts({
   reportId,
   alerts,
   canDecide,
-  identifier, reportedAt,
+  reportedAt,
 }: {
   reportId: string;
   alerts: DuplicateAlert[];
   canDecide: boolean;
-  identifier: string; reportedAt: string;
+  reportedAt: string;
 }) {
   return (
-    <section aria-labelledby="report-duplicates" className="grid gap-4">
-      <h3 id="report-duplicates" className="sr-only">Doublons</h3>
-      {alerts.length === 0 ? <p className="text-sm text-muted-foreground">Aucun rapprochement à vérifier.</p> : (
-        <ul className="border-t">
-          {alerts.map((alert) => <li key={alert.id}><DuplicateCard reportId={reportId} alert={alert} canDecide={canDecide} identifier={identifier} reportedAt={reportedAt} /></li>)}
-        </ul>
-      )}
+    <section aria-labelledby="report-duplicates" className="grid gap-2 border-t border-foreground pt-3.5">
+      <h2 id="report-duplicates" className="scroll-mt-4 text-[15px] font-bold">Doublons</h2>
+      <ul>
+        {alerts.map((alert) => <li key={alert.id}><DuplicateCard reportId={reportId} alert={alert} canDecide={canDecide} reportedAt={reportedAt} /></li>)}
+      </ul>
     </section>
   );
 }
@@ -40,12 +38,12 @@ function DuplicateCard({
   reportId,
   alert,
   canDecide,
-  identifier, reportedAt,
+  reportedAt,
 }: {
   reportId: string;
   alert: DuplicateAlert;
   canDecide: boolean;
-  identifier: string; reportedAt: string;
+  reportedAt: string;
 }) {
   const [message, action, pending] = useActionState(decideDuplicate, null);
   const priority = duplicatePriorityLabel(alert);
@@ -59,19 +57,19 @@ function DuplicateCard({
       {alert.currentReporterName || alert.currentReporterPhone || alert.otherReporterName || alert.otherReporterPhone ? <section className="grid gap-2" aria-label="Déclarants des signalements">
         <h4 className="font-medium">{alert.differentDeclarants && alert.status === "confirmed" ? "Même facture, deux déclarants" : "Signalements à comparer"}</h4>
         <ol className="grid gap-3">{[
-          {id:reportId,reference:identifier,date:reportedAt,name:alert.currentReporterName,phone:alert.currentReporterPhone},
-          {id:alert.otherReportId,reference:alert.otherIdentifier,date:alert.otherReportedAt,name:alert.otherReporterName,phone:alert.otherReporterPhone},
+          {id:reportId,date:reportedAt,name:alert.currentReporterName,phone:alert.currentReporterPhone},
+          {id:alert.otherReportId,date:alert.otherReportedAt,name:alert.otherReporterName,phone:alert.otherReporterPhone},
         ].sort((a,b)=>(a.date||"").localeCompare(b.date||"")).map(item=><li key={item.id} className="grid gap-1 border-b pb-3">
           <div className="flex flex-wrap items-center justify-between gap-2"><span className="font-medium">{item.name || "Déclarant non renseigné"}</span>{alert.status === "confirmed" ? <Badge variant="outline">{item.id===alert.priorityReportId ? "Premier conservé" : "Rejeté"}</Badge> : null}</div>
           {item.phone ? <span className="text-muted-foreground">{item.phone}</span> : null}
-          <span className="text-xs text-muted-foreground">{item.reference}{item.date ? ` · ${reportedAtLabel(item.date)}` : ""}</span>
+          {item.date ? <span className="text-xs text-muted-foreground">{reportedAtLabel(item.date)}</span> : null}
         </li>)}</ol>
       </section> : null}
       <p>{alert.explanation}</p>
       {alert.otherIdentifier ? (
-        <Link href={`/signalements/${alert.otherReportId}`} className="w-fit break-all text-primary underline-offset-4 hover:underline">
-          Voir le signalement <span className="ref">{alert.otherIdentifier}</span>
-        </Link>
+        <Button className="w-fit" variant="outline" size="sm" nativeButton={false} render={<Link href={`/signalements/${alert.otherReportId}`} />}>
+          Voir l’autre signalement
+        </Button>
       ) : null}
       {priority ? <p className="font-medium">{priority}</p> : null}
       {alert.reason ? <p className="text-muted-foreground">Motif : {alert.reason}{alert.actorName ? ` — ${alert.actorName}` : ""}</p> : null}

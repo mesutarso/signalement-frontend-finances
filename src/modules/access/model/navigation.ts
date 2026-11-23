@@ -51,6 +51,7 @@ const SECTIONS: NavSection[] = [
     label: "Instruction",
     items: [
       { href: "/signalements", label: "Signalements", icon: InboxIcon, permission: "report.read", keywords: "file de travail factures" },
+      { href: "/dossiers-valides", label: "Dossiers validés", icon: FolderOpenIcon, permission: "report.read", keywords: "signalements acceptés" },
       { href: "/imports", label: "Imports", icon: FileImportIcon, permission: "import.read", keywords: "suivi récupération" },
       { href: "/dossiers", label: "Dossiers", icon: FolderOpenIcon, permission: "dossier.read", keywords: "vendeurs constats numéro d'impôt" },
       { href: "/corrections", label: "Corrections", icon: PencilEdit02Icon, permission: "correction.read" },

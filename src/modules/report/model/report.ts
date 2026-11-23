@@ -1,3 +1,4 @@
+import { VALIDATION_FINDINGS } from "@/modules/report/model/assessment";
 export type ReportSummary = {
   id: string;
   identifier: string;
@@ -23,6 +24,15 @@ export type ReportPage = {
   size: number;
   total: number;
 };
+
+export function reportReferenceLabel(reference: string | null): string | null {
+  const text = reference?.trim();
+  return text && !/^[\da-f]{8}(?:-[\da-f]{4}){3}-[\da-f]{12}$/i.test(text) ? text : null;
+}
+
+export function reportTitle(title: string | null): string {
+  return reportReferenceLabel(title) ?? "Signalement sans titre";
+}
 
 export type ReportPhoto = {
   id: string;
@@ -279,7 +289,7 @@ export function findingLabel(finding: string | null): string | null {
   if (!finding) {
     return null;
   }
-  return FINDINGS[finding] ?? finding;
+  return (VALIDATION_FINDINGS as Record<string, string>)[finding] ?? FINDINGS[finding] ?? finding;
 }
 
 export function proofLabel(proof: string | null): string | null {

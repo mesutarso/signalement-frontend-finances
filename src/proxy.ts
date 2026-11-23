@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-const PROTECTED = ["/compte", "/comptes", "/signalements", "/imports", "/indices", "/journal", "/supervision", "/dossiers", "/courriers", "/recompenses", "/etats", "/contribuables", "/echantillons", "/tirages", "/declarants", "/indicateurs", "/corrections", "/reexamens", "/messages", "/regles"];
+const PROTECTED = ["/compte", "/comptes", "/signalements", "/imports", "/indices", "/journal", "/supervision", "/dossiers", "/dossiers-valides", "/courriers", "/recompenses", "/etats", "/contribuables", "/echantillons", "/tirages", "/declarants", "/indicateurs", "/corrections", "/reexamens", "/messages", "/regles"];
 
 function protectedPath(pathname: string): boolean {
   return PROTECTED.some((path) => pathname === path || pathname.startsWith(`${path}/`));
@@ -36,7 +36,7 @@ export async function proxy(request: NextRequest) {
   if (pathname === "/connexion" && signedIn) {
     return NextResponse.redirect(new URL(["CELLULE", "CABINET", "PAYMASTER"].includes(role ?? "") ? "/etats" : "/signalements", request.url));
   }
-  if (role === "AGENT" && protectedPath(pathname) && pathname !== "/compte" && !pathname.startsWith("/signalements")) {
+  if (role === "AGENT" && protectedPath(pathname) && pathname !== "/compte" && pathname !== "/dossiers-valides" && !pathname.startsWith("/signalements")) {
     return NextResponse.redirect(new URL("/signalements", request.url));
   }
   return NextResponse.next();
@@ -60,6 +60,7 @@ export const config = {
     "/supervision/:path*",
     "/dossiers",
     "/dossiers/:path*",
+    "/dossiers-valides",
     "/courriers",
     "/courriers/:path*",
     "/recompenses",

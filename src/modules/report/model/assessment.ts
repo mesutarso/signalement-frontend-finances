@@ -29,6 +29,7 @@ export type Assessment = {
 
 export type AssessmentView = {
   assessment: Assessment;
+  finding: string | null;
   reward: { id: string; amount: number; status: string; recordedAt: string } | null;
   fiscalApiAvailable: boolean;
   precalculation: AssessmentPrecalculation | null;
@@ -48,6 +49,22 @@ export type AssessmentPrecalculation = {
 };
 
 export type RewardSetting = { id: string; amount: number; active: boolean; actorName: string | null; recordedAt: string };
+
+export const VALIDATION_FINDINGS = {
+  "fake-normalization": "Facture faussement normalisée",
+  "vat-without-normalization": "TVA collectée sans facture normalisée",
+  "registered-non-normalized": "Entreprise assujettie ne délivrant pas de facture normalisée",
+  "non-normalized": "Facture non normalisée",
+} as const;
+
+export const REJECTION_REASONS = {
+  normalized: "Facture déjà normalisée",
+  unregistered: "Entreprise non assujettie à la TVA (non éligible)",
+  unreadable: "Facture illisible",
+  duplicate: "Facture déjà signalée",
+} as const;
+
+export const UNREADABLE_MESSAGE = "Veuillez refaire votre signalement avec une photo plus lisible.";
 
 export const VALIDATION_STATES: Record<string, string> = {
   queued: "Analyse en attente",

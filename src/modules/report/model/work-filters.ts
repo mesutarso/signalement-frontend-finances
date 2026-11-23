@@ -10,6 +10,8 @@ export function listContext(value: string): WorkFilters {
   return Object.fromEntries(WORK_FILTER_KEYS.map(key => [key, params.get(key) ?? ""])) as WorkFilters;
 }
 export function listHref(value: string): string {
-  const params=workParams(listContext(value));
-  return `/signalements${params.size ? `?${params}` : ""}`;
+  const params = workParams(listContext(value));
+  const path = params.get("validation") === "validated" ? "/dossiers-valides" : "/signalements";
+  if (path === "/dossiers-valides") params.delete("validation");
+  return `${path}${params.size ? `?${params}` : ""}`;
 }
