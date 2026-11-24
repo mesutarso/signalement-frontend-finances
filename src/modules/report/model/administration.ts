@@ -11,7 +11,6 @@ export type DeclarantOverview = {
   rejected: number;
   duplicates: number;
   pending: number;
-  registryVerified: boolean | null;
 };
 
 export type CompanyOverview = {
@@ -22,6 +21,7 @@ export type CompanyOverview = {
   rejected: number;
   duplicates: number;
   pending: number;
+  registryVerified: boolean | null;
 };
 
 export const DOSSIER_PAYMENT_STATUSES = {

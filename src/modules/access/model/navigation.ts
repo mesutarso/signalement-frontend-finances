@@ -30,6 +30,7 @@ export type NavItem = {
   label: string;
   icon: Icon;
   permission?: string;
+  alternatePermission?: string;
   keywords?: string;
 };
 
@@ -53,7 +54,7 @@ const SECTIONS: NavSection[] = [
       { href: "/signalements", label: "Signalements", icon: InboxIcon, permission: "report.read", keywords: "file de travail factures" },
       { href: "/dossiers-valides", label: "Dossiers validés", icon: FolderOpenIcon, permission: "report.read", keywords: "signalements acceptés" },
       { href: "/imports", label: "Imports", icon: FileImportIcon, permission: "import.read", keywords: "suivi récupération" },
-      { href: "/dossiers", label: "Dossiers", icon: FolderOpenIcon, permission: "dossier.read", keywords: "vendeurs constats numéro d'impôt" },
+      { href: "/dossiers", label: "Établissements", icon: Building03Icon, permission: "dossier.read", keywords: "entreprises vendeurs constats numéro d'impôt" },
       { href: "/corrections", label: "Corrections", icon: PencilEdit02Icon, permission: "correction.read" },
       { href: "/reexamens", label: "Réexamens", icon: RepeatIcon, permission: "reexam.read", keywords: "contestation demande" },
       { href: "/messages", label: "Messages", icon: Message01Icon, permission: "message.read", keywords: "déclarant modèles" },
@@ -72,7 +73,7 @@ const SECTIONS: NavSection[] = [
     id: "recompenses",
     label: "Récompenses",
     items: [
-      { href: "/recompenses", label: "Récompenses", icon: Award01Icon, permission: "reward.read", keywords: "montants numéros de paiement" },
+      { href: "/recompenses", label: "Récompenses", icon: Award01Icon, permission: "reward.read", alternatePermission: "payment.execute", keywords: "montants numéros de paiement" },
       { href: "/etats", label: "États de paiement", icon: Invoice01Icon, permission: "payment.read", keywords: "visa autorisation mobile money" },
       { href: "/echantillons", label: "Échantillons", icon: Target02Icon, permission: "sample.read", keywords: "contrôle récompenses payées" },
       { href: "/tirages", label: "Tirages", icon: Ticket01Icon, permission: "draw.read", keywords: "tickets lots tombola" },
@@ -132,7 +133,7 @@ const ADMIN_CHILDREN: Record<string, { parent: string; label: string }> = {
   "/etats": { parent: "/paiements", label: "États de paiement" },
   "/echantillons": { parent: "/paiements", label: "Échantillons" },
   "/tirages": { parent: "/recompenses", label: "Tirages" },
-  "/dossiers": { parent: "/contribuables", label: "Constats par établissement" },
+  "/dossiers": { parent: "/contribuables", label: "Établissements" },
   "/indicateurs": { parent: "/imports", label: "Indicateurs" },
   "/supervision": { parent: "/imports", label: "Supervision" },
   "/indices": { parent: "/imports", label: "Indices d’abus" },
@@ -156,7 +157,8 @@ export function navigationFor(account: Account | null): NavSection[] {
     : SECTIONS;
   return sections.map((section) => ({
     ...section,
-    items: section.items.filter((item) => !item.permission || can(account, item.permission)),
+    items: section.items.filter((item) => !item.permission || can(account, item.permission)
+      || (item.alternatePermission && can(account, item.alternatePermission))),
   })).filter((section) => section.items.length > 0);
 }
 

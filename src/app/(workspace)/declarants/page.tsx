@@ -21,6 +21,8 @@ type Report = { id: string; reference: string; status: string };
 type Situation = {
   reference: string;
   rewardAmount: number;
+  validatedCount: number;
+  validatedRewardAmount: number;
   paidAmount: number;
   ceiling: number;
   remainder: number;
@@ -35,7 +37,7 @@ const STATUS: Record<string, string> = {
   received: "Reçu",
   review: "En vérification",
   rejected: "Non retenu",
-  confirmed: "Confirmé",
+  confirmed: "Validé",
 };
 
 export default function DeclarantsPage({ searchParams }: PageProps<"/declarants">) {
@@ -54,14 +56,15 @@ async function Declarants({ searchParams }: Pick<PageProps<"/declarants">, "sear
   const reference = typeof params.reference === "string" ? params.reference.trim() : "";
   const page = pageIndex(params.page);
   const canReadOverview = account.role === "ADMINISTRATOR";
-  const overview = !reference && canReadOverview
-    ? await readJson<ListPage<DeclarantOverview>>(`/api/declarants/overview?page=${page}`).catch(() => null)
-    : null;
-  const situation = reference ? await readOutcome<Situation>(`/api/declarants?reference=${encodeURIComponent(reference)}`) : null;
   const canVerify = can(account, "beneficiary.verify");
-  const beneficiary = reference && can(account, "reward.read")
-    ? await readOutcome<{ verified: boolean; accounts: number; reservedAmount: number; remainder: number }>(`/api/beneficiaries?reference=${encodeURIComponent(reference)}`)
-    : null;
+  const encodedReference = encodeURIComponent(reference);
+  const [overview, situation, beneficiary] = await Promise.all([
+    !reference && canReadOverview ? readJson<ListPage<DeclarantOverview>>(`/api/declarants/overview?page=${page}`).catch(() => null) : null,
+    reference ? readOutcome<Situation>(`/api/declarants?reference=${encodedReference}`) : null,
+    reference && can(account, "reward.read")
+      ? readOutcome<{ verified: boolean; accounts: number; reservedAmount: number; remainder: number }>(`/api/beneficiaries?reference=${encodedReference}`).catch(() => null)
+      : null,
+  ]);
   return (
     <Page className="max-w-6xl">
       <PageHeader
@@ -87,7 +90,9 @@ async function Declarants({ searchParams }: Pick<PageProps<"/declarants">, "sear
           <div className="grid gap-4">
             <p className="ref text-sm font-medium">{situation.body.reference}</p>
             <Figures>
-              <Figure label="Récompenses (FC)" value={situation.body.rewardAmount.toLocaleString("fr-FR")} />
+              <Figure label="Récompenses des dossiers validés (FC)" value={situation.body.validatedRewardAmount.toLocaleString("fr-FR")}
+                note={`${situation.body.validatedCount.toLocaleString("fr-FR")} dossier${situation.body.validatedCount > 1 ? "s validés" : " validé"}`} />
+              <Figure label="Récompenses enregistrées (FC)" value={situation.body.rewardAmount.toLocaleString("fr-FR")} />
               <Figure label="Payé (FC)" value={situation.body.paidAmount.toLocaleString("fr-FR")} />
               <Figure label="Solde (FC)" value={situation.body.remainder.toLocaleString("fr-FR")} note={`Plafond de ${situation.body.ceiling.toLocaleString("fr-FR")} FC`} />
             </Figures>
@@ -98,7 +103,7 @@ async function Declarants({ searchParams }: Pick<PageProps<"/declarants">, "sear
               {situation.body.reports.map((report) => (
                 <li key={report.id} className="flex flex-wrap items-center justify-between gap-3 border-b py-3 text-sm">
                   <span className="ref">{report.reference}</span>
-                  <span className="flex items-center gap-4"><Badge variant="secondary">{STATUS[report.status] ?? report.status}</Badge></span>
+                  <span className="flex items-center gap-4"><Badge variant={report.status === "confirmed" ? "success" : "secondary"}>{STATUS[report.status] ?? report.status}</Badge></span>
                 </li>
               ))}
             </Ledger>
@@ -125,6 +130,7 @@ function DeclarantTable({ overview }: { overview: ListPage<DeclarantOverview> | 
       <Table aria-label="Signalements par déclarant">
         <TableHeader><TableRow>
           <TableHead>Déclarant</TableHead><TableHead>Total</TableHead><TableHead>Validés</TableHead>
+          <TableHead className="text-right">Récompenses des dossiers validés (FC)</TableHead>
           <TableHead>Rejetés</TableHead><TableHead>Doublons</TableHead><TableHead>En cours</TableHead>
         </TableRow></TableHeader>
         <TableBody>{overview.items.map(item => (
@@ -137,6 +143,7 @@ function DeclarantTable({ overview }: { overview: ListPage<DeclarantOverview> | 
             </TableCell>
             <TableCell className="tabular-nums">{item.total}</TableCell>
             <TableCell className="tabular-nums">{item.validated}</TableCell>
+            <TableCell className="text-right font-medium tabular-nums">{item.validatedRewardAmount.toLocaleString("fr-FR")}</TableCell>
             <TableCell className="tabular-nums">{item.rejected}</TableCell>
             <TableCell className="tabular-nums">{item.duplicates}</TableCell>
             <TableCell className="tabular-nums">{item.pending}</TableCell>

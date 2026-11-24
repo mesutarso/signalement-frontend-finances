@@ -1,19 +1,21 @@
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
 import { can } from "@/modules/access/model/account";
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { readJson } from "@/lib/api";
 import { readCurrentAccount } from "@/modules/access/queries/read-current-account";
-import { francs, payoutStateLabel, rewardStatusLabel, rewardStatusVariant, type Reward } from "@/modules/report/model/reward";
+import { payoutStateLabel, type Reward } from "@/modules/report/model/reward";
+import type { TransferEnvironment } from "@/modules/report/model/transfer";
 import { reportedAtLabel } from "@/modules/report/model/report";
-import { ReviewRewardForm } from "@/modules/report/ui/review-reward-form";
+import { RewardsTable } from "@/modules/report/ui/rewards-table";
 import { Alert, AlertTitle } from "@/components/ui/alert";
 import { TablePagination } from "@/components/table-pagination";
 import { Page, PageHeader, PageSection, PageSkeleton } from "@/components/page";
 import { Badge } from "@/components/ui/badge";
-import { ActionDialog } from "@/components/action-dialog";
-import { Ledger, LedgerEmpty, LedgerItem, ReportLink } from "@/components/ledger";
+import { Ledger, LedgerEmpty, LedgerItem } from "@/components/ledger";
 
-type Page = { items: Reward[]; page: number; size: number; total: number };
+type RewardPage = { items: Reward[]; page: number; size: number; total: number; environment: TransferEnvironment; paymentConfigured: boolean };
 type Payout = { id: string; phone: string | null; state: string; updatedAt: string };
 type PayoutPage = { items: Payout[]; page: number; size: number; total: number };
 
@@ -47,42 +49,35 @@ async function Rewards({ searchParams }: Pick<PageProps<"/recompenses">, "search
   const params = await searchParams;
   const number = Number(params.page ?? 0);
   const page = Number.isSafeInteger(number) && number >= 0 ? number : 0;
+  const canRead = can(account, "reward.read");
+  const canPay = can(account, "payment.execute");
+  if (!canRead && !canPay) redirect("/");
   const canReview = can(account, "reward.approve");
-  const rewards = await readJson<Page>(`/api/rewards?page=${page}`).catch(() => null);
+  const canReadStatements = can(account, "payment.read");
+  const rewards = await readJson<RewardPage>(`/api/rewards?page=${page}`).catch(() => null);
   return (
-    <Page className="max-w-6xl">
-      <PageHeader title="Récompenses" />
-      {!rewards ? <Alert variant="destructive"><AlertTitle>Les récompenses sont indisponibles. Actualisez la page.</AlertTitle></Alert> : rewards.items.length === 0 ? <LedgerEmpty>Aucune récompense proposée.</LedgerEmpty> : (
+    <Page className="max-w-7xl">
+      <PageHeader title="Récompenses" actions={
+        <div className="flex flex-wrap items-center gap-2">
+          {canPay && rewards?.environment === "sandbox" ? <Badge variant="warning">Mode test Araka</Badge> : null}
+          {canReadStatements ? <Button variant="outline" nativeButton={false} render={<Link href="/etats" />}>États de paiement</Button> : null}
+          {can(account, "draw.read") ? <Button variant="outline" nativeButton={false} render={<Link href="/tirages" />}>Tirages</Button> : null}
+        </div>
+      } />
+      {canPay && rewards && !rewards.paymentConfigured ? (
+        <Alert variant="destructive"><AlertTitle>Le service de versement Araka est indisponible.</AlertTitle></Alert>
+      ) : null}
+      {!rewards ? <Alert variant="destructive"><AlertTitle>Les récompenses sont indisponibles. Actualisez la page.</AlertTitle></Alert> : (
         <div className="grid gap-5">
-          <Ledger>
-            {rewards.items.map((tier) => (
-              <LedgerItem
-                key={tier.id}
-                title={<span className="tabular-nums">{francs(tier.amount)}</span>}
-                status={<Badge variant={rewardStatusVariant(tier.status)}>{rewardStatusLabel(tier.status)}</Badge>}
-                meta="Signalement validé"
-                action={canReview && tier.status === "proposed" ? (
-                  <ActionDialog label="Examiner" title="Examiner la récompense" description={francs(tier.amount)} variant="default" size="sm">
-                    <ReviewRewardForm rewardId={tier.id} />
-                  </ActionDialog>
-                ) : undefined}
-              >
-                <p className="text-muted-foreground">Enregistrée le {reportedAtLabel(tier.recordedAt)}.</p>
-                {tier.reportId && tier.reportReference ? <ReportLink id={tier.reportId} reference={tier.reportReference} /> : null}
-                {tier.phone ? <p>Numéro de paiement : <span className="tabular-nums">{tier.phone}</span></p> : null}
-                {tier.reviews.map((review) => (
-                  <div key={review.id} className="grid gap-0.5">
-                    <p>{rewardStatusLabel(review.result)}{review.reason ? ` : ${review.reason}` : ""}</p>
-                    <p className="text-[13px] text-muted-foreground">{review.actorName ?? "Compte introuvable"} · {reportedAtLabel(review.recordedAt)}</p>
-                  </div>
-                ))}
-              </LedgerItem>
-            ))}
-          </Ledger>
+          {rewards.items.length === 0
+            ? <LedgerEmpty>{canRead ? "Aucune récompense sur cette page." : "Aucune récompense dans un état autorisé sur cette page."}</LedgerEmpty>
+            : <RewardsTable key={rewards.page} rewards={rewards.items} environment={rewards.environment}
+                configured={rewards.paymentConfigured} canPay={canPay} canCheck={can(account, "payment.check")}
+                canReview={canReview} canReadReports={can(account, "report.read")} canReadStatements={canReadStatements} />}
           <TablePagination page={rewards.page} size={rewards.size} total={rewards.total} label="Pagination des récompenses" />
         </div>
       )}
-      <PayoutNumbers />
+      {canRead ? <Suspense><PayoutNumbers /></Suspense> : null}
     </Page>
   );
 }

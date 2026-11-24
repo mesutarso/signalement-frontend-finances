@@ -5,8 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
 import { checkTransfer, transferPayment } from "@/modules/report/actions/transfer-payment";
-
-const OPERATORS = [["mpesa", "M-Pesa", "81"], ["orange", "Orange Money", "84"], ["airtel", "Airtel Money", "97"], ["afrimoney", "Afrimoney", "90"]] as const;
+import { TRANSFER_OPERATORS } from "@/modules/report/model/transfer";
 
 export function TransferForm({ requestId: initialId, statementId, lineId, sandbox = false, test = false }: {
   requestId: string; statementId?: string; lineId?: string; sandbox?: boolean; test?: boolean;
@@ -14,7 +13,7 @@ export function TransferForm({ requestId: initialId, statementId, lineId, sandbo
   const [feedback, action, pending] = useActionState(transferPayment, null);
   const [requestId, setRequestId] = useState(initialId);
   const [operator, setOperator] = useState("mpesa");
-  const prefix = OPERATORS.find(([key]) => key === operator)?.[2] ?? "81";
+  const prefix = TRANSFER_OPERATORS.find(([key]) => key === operator)?.[2] ?? "81";
   const [sample, setSample] = useState("1");
   function changed() { setRequestId(crypto.randomUUID()); }
   return <form action={action} onReset={event => event.preventDefault()}>
@@ -25,7 +24,7 @@ export function TransferForm({ requestId: initialId, statementId, lineId, sandbo
     <FieldGroup>
       <Field><FieldLabel htmlFor={`transfer-operator-${lineId ?? "test"}`}>Opérateur</FieldLabel>
         <NativeSelect id={`transfer-operator-${lineId ?? "test"}`} name="operator" value={operator} disabled={pending} onChange={e => { setOperator(e.target.value); changed(); }}>
-          {OPERATORS.map(([key, label]) => <NativeSelectOption key={key} value={key}>{label}</NativeSelectOption>)}
+          {TRANSFER_OPERATORS.map(([key, label]) => <NativeSelectOption key={key} value={key}>{label}</NativeSelectOption>)}
         </NativeSelect>
       </Field>
       {test ? <Field><FieldLabel htmlFor="transfer-test-number">Numéro de test</FieldLabel>

@@ -3,7 +3,7 @@ import { backendUrl } from "@/config/env";
 
 type ApiError = { message?: string };
 
-export type WriteResult<T = null> = { ok: true; body: T | null } | { ok: false; message: string };
+export type WriteResult<T = null> = { ok: true; body: T | null } | { ok: false; message: string; status: number };
 
 async function cookieHeader(): Promise<string> {
   const jar = await cookies();
@@ -145,7 +145,7 @@ export async function writeJson<T = null>(path: string, method: string, body?: u
     return { ok: true, body: text ? (JSON.parse(text) as T) : null };
   }
   const error = (await response.json().catch(() => null)) as ApiError | null;
-  return { ok: false, message: error?.message ?? "Les informations saisies ne sont pas acceptées." };
+  return { ok: false, status: response.status, message: error?.message ?? "Les informations saisies ne sont pas acceptées." };
 }
 
 export async function writeForm<T = null>(path: string, formData: FormData): Promise<WriteResult<T>> {
@@ -165,5 +165,5 @@ export async function writeForm<T = null>(path: string, formData: FormData): Pro
     return { ok: true, body: text ? (JSON.parse(text) as T) : null };
   }
   const error = (await response.json().catch(() => null)) as ApiError | null;
-  return { ok: false, message: error?.message ?? "Les informations saisies ne sont pas acceptées." };
+  return { ok: false, status: response.status, message: error?.message ?? "Les informations saisies ne sont pas acceptées." };
 }

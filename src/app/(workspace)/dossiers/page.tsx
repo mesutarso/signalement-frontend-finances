@@ -1,6 +1,9 @@
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
+import { readJson } from "@/lib/api";
+import { can } from "@/modules/access/model/account";
 import { readCurrentAccount } from "@/modules/access/queries/read-current-account";
+import { pageIndex, type CompanyOverview, type ListPage } from "@/modules/report/model/administration";
 import {
   findingLabel,
   proofLabel,
@@ -9,6 +12,7 @@ import {
   type SellerFile,
 } from "@/modules/report/model/report";
 import { readSellerFiles } from "@/modules/report/queries/read-seller-files";
+import { CompanyOverviewTable } from "@/modules/report/ui/company-overview-table";
 import { Alert, AlertTitle } from "@/components/ui/alert";
 import { TablePagination } from "@/components/table-pagination";
 import { Page, PageHeader, PageSkeleton } from "@/components/page";
@@ -17,8 +21,9 @@ import { ViewTabs } from "@/components/view-tabs";
 import { Ledger, LedgerEmpty, LedgerItem, ReportLink } from "@/components/ledger";
 
 const FILTERS = [
-  { value: "identified", label: "Même numéro d'impôt" },
-  { value: "unidentified", label: "Sans numéro" },
+  { value: "companies", label: "Entreprises recensées", href: "/dossiers" },
+  { value: "identified", label: "Constats avec NIF", href: "/dossiers?status=identified" },
+  { value: "unidentified", label: "Constats sans NIF", href: "/dossiers?status=unidentified" },
 ];
 
 export default function SellerFilesPage({ searchParams }: PageProps<"/dossiers">) {
@@ -30,26 +35,42 @@ async function SellerFiles({ searchParams }: Pick<PageProps<"/dossiers">, "searc
   if (!account) {
     redirect("/connexion");
   }
+  if (!can(account, "dossier.read")) {
+    redirect("/signalements");
+  }
   const params = await searchParams;
-  const status = FILTERS.some((filter) => filter.value === params.status) ? String(params.status) : "identified";
-  const number = Number(params.page ?? 0);
-  const page = Number.isSafeInteger(number) && number >= 0 ? number : 0;
-  const files = await readSellerFiles(status, page).catch(() => null);
+  const status = FILTERS.find((filter) => filter.value === params.status)?.value ?? "companies";
+  const page = pageIndex(params.page);
   return (
     <Page className="max-w-6xl">
-      <PageHeader title="Constats par établissement" />
+      <PageHeader title="Établissements" />
       <div className="grid gap-5">
-        <ViewTabs label="Filtrer les dossiers" items={FILTERS.map((filter) => ({ href: `/dossiers?status=${filter.value}`, label: filter.label, active: filter.value === status }))} />
-        {!files ? <Alert variant="destructive"><AlertTitle>Les dossiers sont indisponibles. Actualisez la page.</AlertTitle></Alert> : files.items.length === 0 ? <LedgerEmpty className="border-t-0">{status === "identified" ? "Aucun constat retenu ne porte un numéro d'impôt." : "Aucun constat retenu n'est sans numéro d'impôt."}</LedgerEmpty> : (
-          <div className="grid gap-5">
-            <Ledger>
-              {files.items.map((file) => <SellerFileCard key={file.taxId ?? file.reports[0]?.reportId} file={file} />)}
-            </Ledger>
-            <TablePagination page={files.page} size={files.size} total={files.total} label="Pagination des dossiers" />
-          </div>
-        )}
+        <ViewTabs label="Vues des établissements" items={FILTERS.map((filter) => ({ href: filter.href, label: filter.label, active: filter.value === status }))} />
+        <Suspense key={`${status}:${page}`} fallback={<PageSkeleton />}>
+          {status === "companies" ? <Companies page={page} /> : <Findings status={status} page={page} />}
+        </Suspense>
       </div>
     </Page>
+  );
+}
+
+async function Companies({ page }: { page: number }) {
+  const overview = await readJson<ListPage<CompanyOverview>>(`/api/seller-files/companies?page=${page}`).catch(() => null);
+  return <CompanyOverviewTable overview={overview} />;
+}
+
+async function Findings({ status, page }: { status: string; page: number }) {
+  const files = await readSellerFiles(status, page).catch(() => null);
+  if (!files) return <Alert variant="destructive"><AlertTitle>Les dossiers sont indisponibles. Actualisez la page.</AlertTitle></Alert>;
+  if (!files.items.length) return <LedgerEmpty className="border-t-0">{status === "identified" ? "Aucun constat retenu ne porte un numéro d'impôt." : "Aucun constat retenu n'est sans numéro d'impôt."}</LedgerEmpty>;
+
+  return (
+    <div className="grid gap-5">
+      <Ledger>
+        {files.items.map((file) => <SellerFileCard key={file.taxId ?? file.reports[0]?.reportId} file={file} />)}
+      </Ledger>
+      <TablePagination page={files.page} size={files.size} total={files.total} label="Pagination des dossiers" />
+    </div>
   );
 }
 
