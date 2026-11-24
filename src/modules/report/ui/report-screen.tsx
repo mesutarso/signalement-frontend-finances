@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { ActionDialog } from "@/components/action-dialog";
 import { Page } from "@/components/page";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 import { requiresFiscalReview, type AssessmentView } from "@/modules/report/model/assessment";
 import { findingLabel, formatDeclarantName, reportedAtLabel, reportedAtParts, reportTitle, supervisionResultLabel, type Assignee, type ReportDetail } from "@/modules/report/model/report";
 import { AssessmentPanel } from "@/modules/report/ui/assessment-panel";
@@ -42,6 +43,8 @@ export function ReportScreen({
   const current = assessment?.assessment;
   const validationState = report.historicalDecision === "confirm" ? "validated"
     : report.historicalDecision === "reject" ? "rejected" : current?.state ?? report.validationState;
+  const assignmentLocked = validationState === "validated" || report.validationState === "validated";
+  const assignmentLabel = report.assigneeId ? "Modifier l’affectation" : "Affecter le dossier";
   const analysisPending = current ? current.jobState !== "done" : ["queued", "analyzing"].includes(validationState);
   const analysisPhotoId = current?.photoId;
   const analysisPiece = report.photos.findIndex((photo) => photo.id === analysisPhotoId) + 1;
@@ -146,11 +149,13 @@ export function ReportScreen({
             </dl>
           ),
         }}
-        assignment={canAssign ? (
-          <ActionDialog label={report.assigneeId ? "Modifier l’affectation" : "Affecter le dossier"} title="Affectation">
+        assignment={!canAssign ? null : assignmentLocked ? (
+          <Button variant="outline" disabled>{assignmentLabel}</Button>
+        ) : (
+          <ActionDialog label={assignmentLabel} title="Affectation">
             <AssignmentForm reportId={report.id} version={report.version} assigneeId={report.assigneeId} assignees={assignees} />
           </ActionDialog>
-        ) : null}
+        )}
         reviewAction={reviewAction}
         reportId={report.id}
         photos={report.photos}

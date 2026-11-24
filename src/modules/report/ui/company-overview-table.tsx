@@ -1,7 +1,6 @@
 import { LedgerEmpty } from "@/components/ledger";
 import { TablePagination } from "@/components/table-pagination";
 import { Alert, AlertTitle } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import type { CompanyOverview, ListPage } from "@/modules/report/model/administration";
 
@@ -15,11 +14,10 @@ export function CompanyOverviewTable({ overview }: { overview: ListPage<CompanyO
         <TableHeader className="bg-accent">
           <TableRow>
             <TableHead scope="col">Entreprise</TableHead>
-            <TableHead scope="col">Registre fiscal</TableHead>
-            <TableHead scope="col">Dossiers hors doublons</TableHead>
-            <TableHead scope="col">Avec manquement</TableHead>
-            <TableHead scope="col">Sans manquement retenu</TableHead>
-            <TableHead scope="col">À examiner</TableHead>
+            <TableHead scope="col">Total hors doublons</TableHead>
+            <TableHead scope="col">Signalements validés</TableHead>
+            <TableHead scope="col">Signalements rejetés</TableHead>
+            <TableHead scope="col">Signalements à traiter</TableHead>
             <TableHead scope="col">Doublons</TableHead>
           </TableRow>
         </TableHeader>
@@ -28,11 +26,6 @@ export function CompanyOverviewTable({ overview }: { overview: ListPage<CompanyO
             <TableCell>
               <p className="font-medium">{item.name ?? "Nom non renseigné"}</p>
               <p className="text-xs text-muted-foreground">{item.taxId ?? "NIF non renseigné"}</p>
-            </TableCell>
-            <TableCell>
-              {item.registryVerified == null ? <span className="text-muted-foreground">{item.taxId ? "Non inscrite" : "Non rapprochée"}</span> : (
-                <Badge variant={item.registryVerified ? "success" : "secondary"}>{item.registryVerified ? "Vérifiée" : "Reprise"}</Badge>
-              )}
             </TableCell>
             <TableCell className="tabular-nums">{item.total}</TableCell>
             <TableCell className="tabular-nums">{item.validated}</TableCell>

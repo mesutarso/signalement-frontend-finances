@@ -8,10 +8,12 @@ import { LetterRoutingForm } from "@/modules/report/ui/letter-routing-form";
 import { ActionDialog } from "@/components/action-dialog";
 import { PrepareLetterForm } from "@/modules/report/ui/prepare-letter-form";
 import { Alert, AlertTitle } from "@/components/ui/alert";
+import { FilterBar } from "@/components/filter-bar";
+import { Field, FieldLabel } from "@/components/ui/field";
+import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
 import { TablePagination } from "@/components/table-pagination";
 import { Page, PageHeader, PageSkeleton } from "@/components/page";
 import { Badge } from "@/components/ui/badge";
-import { ViewTabs } from "@/components/view-tabs";
 import { Ledger, LedgerEmpty, LedgerItem, LedgerLink } from "@/components/ledger";
 
 type Letter = {
@@ -28,7 +30,7 @@ type Letter = {
 type Page = { items: Letter[]; page: number; size: number; total: number };
 
 const FILTERS = [
-  { value: "all", label: "Tous" },
+  { value: "all", label: "Tous les courriers" },
   { value: "waiting", label: "En attente de réponse" },
 ];
 
@@ -61,7 +63,16 @@ async function Letters({ searchParams }: Pick<PageProps<"/courriers">, "searchPa
     <Page className="max-w-6xl">
       <PageHeader title="Courriers aux services" actions={canPrepare ? <><ActionDialog label="Services destinataires" title="Affecter les entreprises aux services"><LetterRoutingForm />{routes.map(route => <p key={route.taxId} className="mt-3 text-sm">{route.taxId} · {route.service}</p>)}</ActionDialog><PrepareLetterForm /></> : undefined} />
       <div className="grid gap-5">
-        <ViewTabs label="Filtrer les courriers" items={FILTERS.map((filter) => ({ href: `/courriers?status=${filter.value}`, label: filter.label, active: filter.value === status }))} />
+        <div className="max-w-xl">
+          <FilterBar key={status} action="/courriers" label="Filtres des courriers" clearHref={status !== "all" ? "/courriers" : undefined}>
+            <Field>
+              <FieldLabel htmlFor="letter-status">Statut</FieldLabel>
+              <NativeSelect id="letter-status" name="status" defaultValue={status} className="w-full">
+                {FILTERS.map(({ value, label }) => <NativeSelectOption key={value} value={value}>{label}</NativeSelectOption>)}
+              </NativeSelect>
+            </Field>
+          </FilterBar>
+        </div>
         {!letters ? <Alert variant="destructive"><AlertTitle>Les courriers sont indisponibles. Actualisez la page.</AlertTitle></Alert> : letters.items.length === 0 ? <LedgerEmpty className="border-t-0">{status === "waiting" ? "Aucun courrier validé n'attend de réponse." : "Aucun courrier."}</LedgerEmpty> : (
           <div className="grid gap-5">
             <Ledger>

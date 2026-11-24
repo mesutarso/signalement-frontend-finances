@@ -9,8 +9,10 @@ import { KeepTaxpayersForm } from "@/modules/report/ui/keep-taxpayers-form";
 import { VerifyTaxpayerForm } from "@/modules/report/ui/verify-taxpayer-form";
 import { Alert, AlertTitle } from "@/components/ui/alert";
 import { Page, PageHeader, PageSkeleton } from "@/components/page";
-import { ViewTabs } from "@/components/view-tabs";
+import { FilterBar } from "@/components/filter-bar";
 import { Button } from "@/components/ui/button";
+import { Field, FieldLabel } from "@/components/ui/field";
+import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
 import { TablePagination } from "@/components/table-pagination";
 import { pageIndex, type CompanyOverview, type ListPage } from "@/modules/report/model/administration";
 import { CompanyOverviewTable } from "@/modules/report/ui/company-overview-table";
@@ -50,10 +52,19 @@ async function Taxpayers({ searchParams }: Pick<PageProps<"/contribuables">, "se
           ? <Button variant="outline" nativeButton={false} render={<Link href="/dossiers" />}>Établissements</Button>
           : canKeep ? <KeepTaxpayersForm /> : undefined}
       />
-      {isAdmin ? <ViewTabs label="Vues des contribuables" items={[
-        { href: "/contribuables", label: "Entreprises signalées", active: companies },
-        { href: "/contribuables?vue=registre", label: "Registre fiscal", active: !companies },
-      ]} /> : null}
+      {isAdmin ? (
+        <div className="max-w-xl">
+          <FilterBar key={String(companies)} action="/contribuables" label="Filtres des contribuables" clearHref={companies ? undefined : "/contribuables"}>
+            <Field>
+              <FieldLabel htmlFor="taxpayer-view">Affichage</FieldLabel>
+              <NativeSelect id="taxpayer-view" name="vue" defaultValue={companies ? "" : "registre"} className="w-full">
+                <NativeSelectOption value="">Entreprises signalées</NativeSelectOption>
+                <NativeSelectOption value="registre">Registre fiscal</NativeSelectOption>
+              </NativeSelect>
+            </Field>
+          </FilterBar>
+        </div>
+      ) : null}
       {companies ? <CompanyOverviewTable overview={overview} /> : !taxpayers ? <Alert variant="destructive"><AlertTitle>Les contribuables sont indisponibles. Actualisez la page.</AlertTitle></Alert> : taxpayers.items.length === 0 ? <LedgerEmpty>Aucun contribuable.</LedgerEmpty> : (
         <Ledger>
           {taxpayers.items.map((taxpayer) => (

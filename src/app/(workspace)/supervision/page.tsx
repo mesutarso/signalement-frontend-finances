@@ -12,11 +12,13 @@ import {
 } from "@/modules/report/model/report";
 import { SupervisionForm } from "@/modules/report/ui/supervision-form";
 import { Alert, AlertTitle } from "@/components/ui/alert";
+import { FilterBar } from "@/components/filter-bar";
+import { Field, FieldLabel } from "@/components/ui/field";
+import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
 import { TablePagination } from "@/components/table-pagination";
 import { Page, PageHeader, PageSkeleton } from "@/components/page";
 import { Badge } from "@/components/ui/badge";
 import { ActionDialog } from "@/components/action-dialog";
-import { ViewTabs } from "@/components/view-tabs";
 import { Ledger, LedgerEmpty, LedgerItem, ReportLink } from "@/components/ledger";
 
 type Item = {
@@ -42,7 +44,7 @@ const FILTERS = [
   { value: "open", label: "À revoir" },
   { value: "returned", label: "Renvoyés" },
   { value: "upheld", label: "Maintenus" },
-  { value: "all", label: "Tous" },
+  { value: "all", label: "Tous les statuts" },
 ];
 
 export default function SupervisionPage({ searchParams }: PageProps<"/supervision">) {
@@ -67,7 +69,16 @@ async function Supervision({ searchParams }: Pick<PageProps<"/supervision">, "se
     <Page className="max-w-6xl">
       <PageHeader title="Contrôle" />
       <div className="grid gap-5">
-        <ViewTabs label="Filtrer le contrôle" items={FILTERS.map((filter) => ({ href: `/supervision?status=${filter.value}`, label: filter.label, active: filter.value === status }))} />
+        <div className="max-w-xl">
+          <FilterBar key={status} action="/supervision" label="Filtres du contrôle" clearHref={status !== "open" ? "/supervision" : undefined}>
+            <Field>
+              <FieldLabel htmlFor="supervision-status">Statut</FieldLabel>
+              <NativeSelect id="supervision-status" name="status" defaultValue={status} className="w-full">
+                {FILTERS.map(({ value, label }) => <NativeSelectOption key={value} value={value}>{label}</NativeSelectOption>)}
+              </NativeSelect>
+            </Field>
+          </FilterBar>
+        </div>
         {!queue ? <Alert variant="destructive"><AlertTitle>Le contrôle est indisponible. Actualisez la page.</AlertTitle></Alert> : queue.items.length === 0 ? <LedgerEmpty className="border-t-0">Aucun dossier dans cette liste.</LedgerEmpty> : (
           <div className="grid gap-5">
             <Ledger>

@@ -49,6 +49,7 @@ const ACTIONS: Record<string, string> = {
   "payment-statement": "État de paiement",
   "payment-control": "Contrôle de l'état",
   "payment-visa": "Visa de l'état",
+  "exception-payment-authorization": "Autorisation exceptionnelle d’un lot",
   "payment-authorization": "Autorisation de l'état",
   "payment-return": "Renvoi de l'état",
   "payment-refusal": "Refus de l'état",

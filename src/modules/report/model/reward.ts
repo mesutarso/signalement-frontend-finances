@@ -40,6 +40,7 @@ export function rewardPaymentStatus(reward: Reward): {
     case "failed": return { label: "Échec", variant: "destructive" };
     case "ready": return { label: "À payer", variant: "secondary" };
     case "blocked": return { label: "À vérifier", variant: "warning" };
+    case "exceptional": return { label: "Régime d’exception", variant: "secondary" };
     case "another-payer": return { label: "Autre gestionnaire requis", variant: "warning" };
     default: return reward.status === "approved"
       ? { label: "En attente d’autorisation", variant: "outline" }

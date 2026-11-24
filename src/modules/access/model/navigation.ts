@@ -108,6 +108,7 @@ const WORKSPACE_MENU: NavSection = {
     DOSSIERS,
     { href: "/recompenses", label: "Récompenses", icon: Award01Icon, permission: "reward.read" },
     { href: "/paiements", label: "Paiements", icon: Invoice01Icon, permission: "payment.read" },
+    { href: "/regime-exception", label: "Régime d’exception", icon: LegalDocument01Icon, keywords: "validation et paiement groupés" },
     { href: "/declarants", label: "Déclarants", icon: UserMultipleIcon, permission: "declarant.read" },
     { href: "/contribuables", label: "Contribuables", icon: Building03Icon, permission: "taxpayer.read" },
   ],

@@ -48,7 +48,7 @@ async function Statements({ searchParams }: Pick<PageProps<"/etats">, "searchPar
               <LedgerItem
                 key={statement.id}
                 title={<span className="ref">{statement.reference}</span>}
-                status={<Badge variant={paymentStatusVariant(statement.status)}>{paymentStatusLabel(statement.status)}</Badge>}
+                status={<Badge variant={paymentStatusVariant(statement.status)}>{statement.exceptional ? "Autorisation exceptionnelle" : paymentStatusLabel(statement.status)}</Badge>}
                 action={<LedgerLink href={`/etats/${statement.id}`}>Ouvrir l’état<span className="sr-only"> {statement.reference}</span></LedgerLink>}
               >
                 <p className="text-[15px] font-medium tabular-nums">{francs(statement.total)}</p>

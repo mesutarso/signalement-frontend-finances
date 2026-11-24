@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Empty, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { formatDeclarantName, reportedAtParts, type ReportSummary } from "@/modules/report/model/report";
+import { REJECTION_REASONS, UNREADABLE_MESSAGE } from "@/modules/report/model/assessment";
+import { findingLabel, formatDeclarantName, reportedAtParts, type ReportSummary } from "@/modules/report/model/report";
 import { ClickableReportRow } from "@/modules/report/ui/clickable-report-row";
 import { ValidationTag } from "@/modules/report/ui/report-marks";
 
@@ -35,6 +36,30 @@ const statusColumn = column.display({
   cell: ({ row: { original: report } }) => (
     <ValidationTag state={report.validationState} assignmentState={report.state} screeningReason={report.screeningReason} />
   ),
+});
+
+const decisionColumn = column.display({
+  id: "decision",
+  header: "Catégorie / motif",
+  cell: ({ row: { original: { work, validationState, screeningReason } } }) => {
+    const reason = work?.reason?.trim();
+    const finding = findingLabel(work?.finding ?? null);
+    const rejection = work?.rejectionReason?.trim();
+    if (validationState === "rejected" || rejection) {
+      if (screeningReason === "duplicate") return REJECTION_REASONS.duplicate;
+      const recorded = rejection || reason;
+      if (screeningReason === "unreadable" || recorded === UNREADABLE_MESSAGE) return REJECTION_REASONS.unreadable;
+      return recorded || "Motif de rejet non renseigné";
+    }
+    if (finding) return finding;
+    switch (validationState) {
+      case "validated": return reason || "Catégorie non renseignée";
+      case "doubt": return work?.photoRequested ? "Nouvelle photo attendue" : reason || "À vérifier par l’agent";
+      case "analyzing": return "Analyse des pièces en cours";
+      case "queued": return "En attente d’analyse";
+      default: return "Décision non renseignée";
+    }
+  },
 });
 
 const reportTracking = column.columns([
@@ -67,6 +92,7 @@ const signalementColumns = column.columns([
     cell: ({ getValue }) => formatDeclarantName(getValue()) ?? "—",
   }),
   statusColumn,
+  decisionColumn,
   ...reportTracking,
 ]);
 
@@ -81,15 +107,7 @@ const dossierColumns = column.columns([
     </>,
   }),
   statusColumn,
-  column.display({
-    id: "task",
-    header: "À faire",
-    cell: ({ row: { original: { validationState, work } } }) => {
-      if (validationState !== "doubt") return "—";
-      if (work?.photoRequested) return "Nouvelle photo attendue";
-      return work?.reason ?? "Vérifier le dossier";
-    },
-  }),
+  decisionColumn,
   ...reportTracking,
 ]);
 
@@ -97,7 +115,7 @@ const cellClasses: Record<string, string> = {
   title: "max-w-64 font-medium whitespace-normal",
   seller: "max-w-52 whitespace-normal",
   reporterName: "max-w-52 whitespace-normal break-words",
-  task: "max-w-64 whitespace-normal text-muted-foreground",
+  decision: "min-w-40 max-w-64 break-words whitespace-normal",
   reportedAt: "tabular-nums",
   actions: "text-right",
 };
@@ -161,7 +179,7 @@ export function ReportsTable({ rows, pageIndex, pageSize, total, validatedOnly }
   );
 }
 
-const signalementSkeletonWidths = ["w-32", "w-28", "w-28", "w-16", "w-16", "w-20", "w-16"];
+const signalementSkeletonWidths = ["w-32", "w-28", "w-28", "w-16", "w-24", "w-16", "w-20", "w-16"];
 const dossierSkeletonWidths = ["w-32", "w-28", "w-20", "w-16", "w-24", "w-16", "w-20", "w-16"];
 
 export function ReportsTableSkeleton({ validatedOnly = false }: { validatedOnly?: boolean }) {

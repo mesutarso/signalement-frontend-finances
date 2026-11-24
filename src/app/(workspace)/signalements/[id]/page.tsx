@@ -38,12 +38,13 @@ async function ReportContent({ params, searchParams }: PageProps<"/signalements/
     notFound();
   }
   const canAssign = can(account, "report.assign");
+  const alreadyValidated = report.validationState === "validated" || report.historicalDecision === "confirm";
   const canAnalyze = can(account, "report.analyze");
   const legacy = report.validationState === "legacy";
   const isAdmin = account.role === "ADMINISTRATOR";
   const showPayments = isAdmin && can(account, "payment.read");
   const [assignees, assessment, corrections, reexaminations, payments] = await Promise.all([
-    canAssign ? readAssignees() : Promise.resolve([]),
+    canAssign && !alreadyValidated ? readAssignees() : Promise.resolve([]),
     legacy ? Promise.resolve(null) : readMissingJson<AssessmentView>(`/api/reports/${id}/assessment`),
     isAdmin ? readJson<ListPage<Correction>>(`/api/corrections?reportId=${id}&page=${pageIndex(search.corrections)}`).catch(() => null) : null,
     isAdmin ? readJson<ListPage<Reexamination>>(`/api/reexaminations?reportId=${id}&page=${pageIndex(search.reexamens)}`).catch(() => null) : null,

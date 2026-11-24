@@ -25,6 +25,7 @@ export type PaymentStatement = {
   id: string;
   reference: string;
   status: string;
+  exceptional: boolean;
   total: number;
   preparedAt: string;
   controlledAt: string | null;
@@ -40,6 +41,7 @@ export type PaymentItem = {
   id: string;
   reference: string;
   status: string;
+  exceptional: boolean;
   total: number;
   preparedAt: string;
   dueOn: string | null;

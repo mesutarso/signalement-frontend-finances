@@ -14,17 +14,13 @@ import {
 import { readSellerFiles } from "@/modules/report/queries/read-seller-files";
 import { CompanyOverviewTable } from "@/modules/report/ui/company-overview-table";
 import { Alert, AlertTitle } from "@/components/ui/alert";
+import { FilterBar } from "@/components/filter-bar";
+import { Field, FieldLabel } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
 import { TablePagination } from "@/components/table-pagination";
 import { Page, PageHeader, PageSkeleton } from "@/components/page";
 import { Badge } from "@/components/ui/badge";
-import { ViewTabs } from "@/components/view-tabs";
 import { Ledger, LedgerEmpty, LedgerItem, ReportLink } from "@/components/ledger";
-
-const FILTERS = [
-  { value: "companies", label: "Entreprises recensées", href: "/dossiers" },
-  { value: "identified", label: "Constats avec NIF", href: "/dossiers?status=identified" },
-  { value: "unidentified", label: "Constats sans NIF", href: "/dossiers?status=unidentified" },
-];
 
 export default function SellerFilesPage({ searchParams }: PageProps<"/dossiers">) {
   return <Suspense fallback={<PageSkeleton />}><SellerFiles searchParams={searchParams} /></Suspense>;
@@ -39,23 +35,34 @@ async function SellerFiles({ searchParams }: Pick<PageProps<"/dossiers">, "searc
     redirect("/signalements");
   }
   const params = await searchParams;
-  const status = FILTERS.find((filter) => filter.value === params.status)?.value ?? "companies";
+  const query = typeof params.q === "string" ? params.q.trim() : "";
+  const status = !query && (params.status === "identified" || params.status === "unidentified") ? params.status : null;
   const page = pageIndex(params.page);
   return (
     <Page className="max-w-6xl">
       <PageHeader title="Établissements" />
       <div className="grid gap-5">
-        <ViewTabs label="Vues des établissements" items={FILTERS.map((filter) => ({ href: filter.href, label: filter.label, active: filter.value === status }))} />
-        <Suspense key={`${status}:${page}`} fallback={<PageSkeleton />}>
-          {status === "companies" ? <Companies page={page} /> : <Findings status={status} page={page} />}
+        <div className="max-w-xl">
+          <FilterBar key={query} action="/dossiers" label="Recherche d’établissements" submitLabel="Rechercher" clearHref={query || status ? "/dossiers" : undefined}>
+            <Field>
+              <FieldLabel htmlFor="establishment-search">NIF ou nom de l’établissement</FieldLabel>
+              <Input id="establishment-search" name="q" type="search" defaultValue={query} />
+            </Field>
+          </FilterBar>
+        </div>
+        <Suspense key={JSON.stringify([status, query, page])} fallback={<PageSkeleton />}>
+          {status ? <Findings status={status} page={page} /> : <Companies page={page} query={query} />}
         </Suspense>
       </div>
     </Page>
   );
 }
 
-async function Companies({ page }: { page: number }) {
-  const overview = await readJson<ListPage<CompanyOverview>>(`/api/seller-files/companies?page=${page}`).catch(() => null);
+async function Companies({ page, query }: { page: number; query: string }) {
+  const params = new URLSearchParams({ page: String(page) });
+  if (query) params.set("q", query);
+  const overview = await readJson<ListPage<CompanyOverview>>(`/api/seller-files/companies?${params}`).catch(() => null);
+  if (query && overview?.total === 0) return <LedgerEmpty>Aucun établissement ne correspond à la recherche.</LedgerEmpty>;
   return <CompanyOverviewTable overview={overview} />;
 }
 

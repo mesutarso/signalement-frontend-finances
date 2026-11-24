@@ -53,10 +53,12 @@ async function Statement({ params }: Pick<PageProps<"/etats/[id]">, "params">) {
             back={{ href: "/etats", label: "États de paiement" }}
             title={<span className="tabular-nums">{francs(statement.total)}</span>}
             description={<>Référence <span className="ref text-foreground">{statement.reference}</span></>}
-            actions={<div className="flex gap-2">{service?.environment === "sandbox" ? <Badge variant="outline">Sandbox</Badge> : null}<Badge variant={paymentStatusVariant(statement.status)}>{paymentStatusLabel(statement.status)}</Badge></div>}
+            actions={<div className="flex gap-2">{service?.environment === "sandbox" ? <Badge variant="outline">Sandbox</Badge> : null}<Badge variant={paymentStatusVariant(statement.status)}>{statement.exceptional ? "Autorisation exceptionnelle" : paymentStatusLabel(statement.status)}</Badge></div>}
           />
           <ol aria-label="Étapes de validation" className="grid grid-cols-2 gap-x-6 gap-y-5 md:grid-cols-4">
-            {([["Préparé", statement.preparedAt], ["Contrôlé", statement.controlledAt], ["Visé", statement.visaedAt], ["Autorisé", statement.authorizedAt]] as const).map(([label, at]) => (
+            {(statement.exceptional
+              ? [["Préparé", statement.preparedAt], ["Autorisé par l’administration", statement.authorizedAt]] as const
+              : [["Préparé", statement.preparedAt], ["Contrôlé", statement.controlledAt], ["Visé", statement.visaedAt], ["Autorisé", statement.authorizedAt]] as const).map(([label, at]) => (
               <li key={label} className={at ? "grid gap-1 border-t-2 border-primary pt-2.5" : "grid gap-1 border-t-2 border-border pt-2.5"}>
                 <p className={at ? "text-sm font-bold" : "text-sm text-muted-foreground"}>{label}</p>
                 <p className="text-[13px] leading-5 text-muted-foreground">{at ? reportedAtLabel(at) : "À venir"}</p>
@@ -76,7 +78,7 @@ async function Statement({ params }: Pick<PageProps<"/etats/[id]">, "params">) {
                   key={line.id}
                   title={<span className="tabular-nums">{francs(line.amount)}</span>}
                   meta="Récompense par signalement"
-                  action={statement.status === "authorized" && can(account, "payment.execute") && service?.configured && (service.environment !== "sandbox" || isSandboxWallet(line.phone)) && !line.attempts.some((attempt) => attempt.result === "paid") && !service.transfers.some(t => t.lineId === line.id && t.state !== "failed") ? (
+                  action={!statement.exceptional && statement.status === "authorized" && can(account, "payment.execute") && service?.configured && (service.environment !== "sandbox" || isSandboxWallet(line.phone)) && !line.attempts.some((attempt) => attempt.result === "paid") && !service.transfers.some(t => t.lineId === line.id && t.state !== "failed") ? (
                     <ActionDialog label={service.environment === "sandbox" ? "Tester le versement" : "Effectuer le paiement"} title={service.environment === "sandbox" ? "Versement sandbox" : "Versement Mobile Money"} description={`${francs(line.amount)} · ${line.phone}`} variant="default" size="sm">
                       <TransferForm requestId={randomUUID()} statementId={statement.id} lineId={line.id} sandbox={service.environment === "sandbox"} />
                     </ActionDialog>

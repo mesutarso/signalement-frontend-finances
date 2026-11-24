@@ -9,7 +9,8 @@ export type ReportSummary = {
   screeningReason: string | null;
   work?: { sellerName: string | null; sellerTaxId: string | null; documentNumber: string | null;
     documentDate: string | null; totalAmount: string | null; currency: string | null;
-    vatStatus: string; jobState: string; reason: string; photoRequested: boolean } | null;
+    vatStatus: string | null; jobState: string | null; reason: string | null; photoRequested: boolean;
+    finding?: string | null; rejectionReason?: string | null } | null;
   priority: string | null;
   assigneeName: string | null;
   version: number;
@@ -293,6 +294,7 @@ export function qualificationDecisionLabel(decision: string): string {
 export function findingLabel(finding: string | null): string | null {
   if (finding === "nonconform") return "Facture non conforme à l’achat réel";
   if (finding === "vat-unregistered") return "TVA facturée par une entreprise non assujettie";
+  if (finding === "exceptional-validation") return "Validation exceptionnelle";
   if (finding === "verification") return "Vérification requise";
   if (!finding) {
     return null;
@@ -301,6 +303,7 @@ export function findingLabel(finding: string | null): string | null {
 }
 
 export function proofLabel(proof: string | null): string | null {
+  if (proof === "exception") return "Décision administrative";
   if (!proof) {
     return null;
   }
