@@ -1,22 +1,25 @@
 import { cn } from "cn";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   readValue,
   readingErrorLabel,
   type ReportPhoto,
 } from "@/modules/report/model/report";
 
-export function PhotoReading({ photo }: { photo: ReportPhoto }) {
+export function PhotoReading({ photo, pieceNumber, loading }: { photo: ReportPhoto; pieceNumber?: number; loading: boolean }) {
   const reading = photo.reading;
   return (
-    <section aria-labelledby={`reading-${photo.id}`} className="grid gap-3">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="grid gap-0.5">
-          <h3 id={`reading-${photo.id}`} className="text-[15px] font-bold">Informations de la facture</h3>
-
+    <section aria-label="Données extraites par l’OCR" className="grid gap-3">
+      {pieceNumber ? <h2 className="text-sm font-medium">Données OCR de la pièce {pieceNumber}</h2> : null}
+      {!reading && loading ? (
+        <div role="status" className="grid gap-2">
+          <span className="sr-only">Lecture de la pièce</span>
+          <Skeleton className="h-4 w-2/3" />
+          <Skeleton className="h-4 w-1/2" />
         </div>
-      </div>
-      {!reading ? <p role="status" className="text-sm text-muted-foreground">La lecture automatique de cette pièce est en attente.</p> : null}
-      {reading?.status === "FAILED" ? <p role="status" className="text-sm text-muted-foreground">{readingErrorLabel(reading.errorCode)}</p> : null}
+      ) : null}
+      {!reading && !loading ? <p className="text-sm text-muted-foreground">Aucune donnée OCR pour cette pièce.</p> : null}
+      {reading?.status === "FAILED" ? <p className="text-sm text-muted-foreground">{readingErrorLabel(reading.errorCode)}</p> : null}
       {reading?.status === "READ" ? <ReadingFields reading={reading} /> : null}
     </section>
   );

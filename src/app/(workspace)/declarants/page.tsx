@@ -1,14 +1,20 @@
 import { can } from "@/modules/access/model/account";
+import Link from "next/link";
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
-import { readOutcome } from "@/lib/api";
+import { readJson, readOutcome } from "@/lib/api";
 import { readCurrentAccount } from "@/modules/access/queries/read-current-account";
 import { Alert, AlertTitle } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
+import { FilterBar } from "@/components/filter-bar";
+import { Field, FieldLabel } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
 import { Page, PageHeader, PageSection, PageSkeleton } from "@/components/page";
 import { Badge } from "@/components/ui/badge";
 import { Figure, Figures } from "@/components/figures";
-import { Ledger } from "@/components/ledger";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { TablePagination } from "@/components/table-pagination";
+import { pageIndex, type DeclarantOverview, type ListPage } from "@/modules/report/model/administration";
+import { Ledger, LedgerEmpty } from "@/components/ledger";
 import { BeneficiaryForm } from "@/modules/report/ui/beneficiary-form";
 
 type Report = { id: string; reference: string; status: string };
@@ -44,7 +50,13 @@ async function Declarants({ searchParams }: Pick<PageProps<"/declarants">, "sear
   if (!can(account, "declarant.read")) {
     redirect("/signalements");
   }
-  const reference = String((await searchParams).reference ?? "").trim();
+  const params = await searchParams;
+  const reference = typeof params.reference === "string" ? params.reference.trim() : "";
+  const page = pageIndex(params.page);
+  const canReadOverview = account.role === "ADMINISTRATOR";
+  const overview = !reference && canReadOverview
+    ? await readJson<ListPage<DeclarantOverview>>(`/api/declarants/overview?page=${page}`).catch(() => null)
+    : null;
   const situation = reference ? await readOutcome<Situation>(`/api/declarants?reference=${encodeURIComponent(reference)}`) : null;
   const canVerify = can(account, "beneficiary.verify");
   const beneficiary = reference && can(account, "reward.read")
@@ -53,14 +65,23 @@ async function Declarants({ searchParams }: Pick<PageProps<"/declarants">, "sear
   return (
     <Page className="max-w-6xl">
       <PageHeader
-        title="Situation du déclarant"
+        title={reference ? "Situation du déclarant" : "Déclarants"}
       />
-      <form className="flex max-w-2xl flex-wrap items-end gap-2" method="get">
-        <label className="grid min-w-64 flex-1 gap-2 text-[13px] font-medium">Référence du signalement
-          <input className="h-11 rounded-md border border-input bg-card px-3 text-base font-normal md:text-[15px]" name="reference" defaultValue={reference} maxLength={80} required />
-        </label>
-        <Button type="submit" className="h-11">Consulter</Button>
-      </form>
+      <div className="max-w-2xl">
+        <FilterBar
+          key={reference}
+          action="/declarants"
+          label="Recherche d’un déclarant"
+          submitLabel="Consulter"
+          clearHref={reference ? "/declarants" : undefined}
+        >
+          <Field className="min-w-0">
+            <FieldLabel htmlFor="declarant-reference">Référence du signalement</FieldLabel>
+            <Input id="declarant-reference" name="reference" type="search" defaultValue={reference} maxLength={80} required />
+          </Field>
+        </FilterBar>
+      </div>
+      {!reference && canReadOverview ? <DeclarantTable overview={overview} /> : null}
       {!situation ? null : !situation.ok ? <Alert variant="destructive"><AlertTitle>{situation.message}</AlertTitle></Alert> : (
         <>
           <div className="grid gap-4">
@@ -91,5 +112,38 @@ async function Declarants({ searchParams }: Pick<PageProps<"/declarants">, "sear
         </>
       )}
     </Page>
+  );
+}
+
+
+function DeclarantTable({ overview }: { overview: ListPage<DeclarantOverview> | null }) {
+  if (!overview) return <Alert variant="destructive"><AlertTitle>Les compteurs des déclarants sont indisponibles.</AlertTitle></Alert>;
+  if (!overview.items.length) return <LedgerEmpty>Aucun déclarant sur cette page.</LedgerEmpty>;
+
+  return (
+    <div className="grid gap-4">
+      <Table aria-label="Signalements par déclarant">
+        <TableHeader><TableRow>
+          <TableHead>Déclarant</TableHead><TableHead>Total</TableHead><TableHead>Validés</TableHead>
+          <TableHead>Rejetés</TableHead><TableHead>Doublons</TableHead><TableHead>En cours</TableHead>
+        </TableRow></TableHeader>
+        <TableBody>{overview.items.map(item => (
+          <TableRow key={item.reportId}>
+            <TableCell>
+              <Link className="font-medium text-primary hover:underline" href={`/declarants?reference=${encodeURIComponent(item.reference)}`}>
+                {item.name ?? "Déclarant non renseigné"}
+              </Link>
+              {!item.identified ? <p className="text-xs text-muted-foreground">Compte non identifié</p> : null}
+            </TableCell>
+            <TableCell className="tabular-nums">{item.total}</TableCell>
+            <TableCell className="tabular-nums">{item.validated}</TableCell>
+            <TableCell className="tabular-nums">{item.rejected}</TableCell>
+            <TableCell className="tabular-nums">{item.duplicates}</TableCell>
+            <TableCell className="tabular-nums">{item.pending}</TableCell>
+          </TableRow>
+        ))}</TableBody>
+      </Table>
+      <TablePagination page={overview.page} size={overview.size} total={overview.total} label="Pagination des déclarants" />
+    </div>
   );
 }

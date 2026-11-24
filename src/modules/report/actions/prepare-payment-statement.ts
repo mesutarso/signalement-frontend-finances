@@ -9,5 +9,6 @@ export async function preparePaymentStatement(): Promise<string | null> {
     return result.message;
   }
   revalidatePath("/etats");
+  revalidatePath("/paiements");
   return null;
 }

@@ -1,8 +1,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { cn } from "cn";
-import { HugeiconsIcon } from "@hugeicons/react";
-import { ArrowUpRight01Icon } from "@hugeicons/core-free-icons";
+import { Button } from "@/components/ui/button";
 
 const COLUMNS = {
   2: "grid-cols-2 [&>li:nth-child(odd)]:pl-0",
@@ -32,20 +31,21 @@ export function Figure({
 }) {
   // Les très grands montants passent à une taille inférieure pour rester dans leur colonne.
   const long = typeof value === "string" && value.length > 7;
-  const body = (
-    <>
-      <span className="flex items-center gap-2 text-[13px] leading-5 text-muted-foreground">
-        {signal ? <span aria-hidden="true" className="size-1.5 shrink-0 rounded-full bg-destructive" /> : null}
-        {label}
-        {href ? <HugeiconsIcon icon={ArrowUpRight01Icon} strokeWidth={2} className="ml-auto size-3.5 opacity-0 transition-opacity group-hover/figure:opacity-100 group-focus-visible/figure:opacity-100" /> : null}
-      </span>
-      <span className={cn("leading-none font-medium tracking-[-0.02em] tabular-nums transition-colors", compact ? "text-[1.3125rem] leading-tight" : long ? "text-[1.75rem] md:text-[2.25rem] md:leading-[3.25rem]" : "text-[2.5rem] md:text-[3.25rem]", href && "group-hover/figure:text-primary")}>{value}</span>
-      {note ? <span className="text-[13px] leading-5 text-muted-foreground">{note}</span> : null}
-    </>
-  );
   return (
-    <li className="bg-background px-5 pt-3.5 pb-6">
-      {href ? <Link href={href} className="group/figure flex h-full flex-col gap-3">{body}</Link> : <div className="flex h-full flex-col gap-3">{body}</div>}
+    <li className="relative flex flex-col items-start gap-3 bg-background px-5 pt-3.5 pb-6">
+      {href ? (
+        <Button variant="outline" size="sm" className="after:absolute after:inset-0 active:translate-none" nativeButton={false} render={<Link href={href} />}>
+          {signal ? <span aria-hidden="true" className="size-1.5 shrink-0 rounded-full bg-destructive" /> : null}
+          {label}
+        </Button>
+      ) : (
+        <span className="flex items-center gap-2 text-[13px] leading-5 text-muted-foreground">
+          {signal ? <span aria-hidden="true" className="size-1.5 shrink-0 rounded-full bg-destructive" /> : null}
+          {label}
+        </span>
+      )}
+      <span className={cn("leading-none font-medium tracking-[-0.02em] tabular-nums", compact ? "text-[1.3125rem] leading-tight" : long ? "text-[1.75rem] md:text-[2.25rem] md:leading-[3.25rem]" : "text-[2.5rem] md:text-[3.25rem]")}>{value}</span>
+      {note ? <span className="text-[13px] leading-5 text-muted-foreground">{note}</span> : null}
     </li>
   );
 }

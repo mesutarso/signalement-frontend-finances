@@ -1,66 +1,83 @@
 "use client";
 
-import { useActionState, useRef, useState } from "react";
+import { useActionState, useRef, useState, type ReactNode } from "react";
 import { ActionDialog } from "@/components/action-dialog";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Alert, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
-import { findingLabel, reportedAtLabel } from "@/modules/report/model/report";
-import { RefreshButton } from "@/components/refresh-button";
-import { ImportRefresh } from "@/modules/report/ui/import-refresh";
+import { calendarLabel, reportedAtLabel } from "@/modules/report/model/report";
 import { decideAssessment, reviewFiscalStatus } from "@/modules/report/actions/review-assessment";
 import {
-  REJECTION_REASONS, UNREADABLE_MESSAGE, VALIDATION_FINDINGS, validationLabel,
+  REJECTION_REASONS, UNREADABLE_MESSAGE, VALIDATION_FINDINGS, requiresFiscalReview,
   type Assessment, type AssessmentPrecalculation, type AssessmentView,
 } from "@/modules/report/model/assessment";
 import { francs, rewardStatusLabel } from "@/modules/report/model/reward";
 
-export function AssessmentPanel({ view, reference, canReview, canDecide }: {
+export function AssessmentPanel({ view, canReview, canDecide, canModifyDecision, openDuplicates }: {
   view: AssessmentView;
-  reference: string;
   canReview: boolean;
   canDecide: boolean;
+  canModifyDecision: boolean;
+  openDuplicates?: ReactNode;
 }) {
   const current = view.assessment;
-  const busy = current.jobState !== "done";
   const calculation = view.precalculation;
-  const validated = current.state === "validated";
-  const outcome = validated ? `Votre signalement ${reference} a été validé.` : validationLabel(current.state);
-  const reason = validated ? findingLabel(view.finding) ?? current.reason : current.reason;
-  return <section className="grid gap-5" aria-label="Vérification du signalement">
-    <div aria-live="polite" className="grid gap-2">
-      <Alert>
-        <AlertTitle>{outcome}</AlertTitle>
-        <AlertDescription>{reason}</AlertDescription>
-      </Alert>
-      {current.checkedAt && VAT_LABELS[current.vatStatus] ? (
-        <div className="grid gap-1 text-sm">
-          <p className="font-medium">{current.vatSource === "ocr" ? "Assujettissement établi par l’OCR" : "Assujettissement vérifié"} · {VAT_LABELS[current.vatStatus]}</p>
-          <p className="text-muted-foreground">{reportedAtLabel(current.checkedAt)}{current.vatEvidence ? ` · ${current.vatEvidence}` : ""}</p>
-        </div>
-      ) : null}
-    </div>
-    {busy ? <><ImportRefresh /><RefreshButton /></> : null}
-    {view.reward ? <p className="flex flex-wrap items-baseline gap-2 text-sm"><span className="font-bold">Récompense : {francs(view.reward.amount)}</span><Badge variant="outline">{rewardStatusLabel(view.reward.status)}</Badge></p> : null}
-    {calculation && !busy ? <AssessmentCriteria calculation={calculation} /> : null}
-    {canReview && !busy && current.vatCharged !== "yes" && current.state === "doubt" ? (
-      <FiscalStatusForm key={`fiscal-${current.revision}`} assessment={current} />
-    ) : null}
-    {canDecide && !busy ? (
-      <div className="flex flex-wrap gap-2" key={`decision-${current.revision}`}>
-        <ActionDialog label="Valider" title="Valider le signalement" variant="default">
-          <DecisionForm assessment={current} decision="validate" />
-        </ActionDialog>
-        <ActionDialog label="Rejeter" title="Rejeter le signalement" variant="destructive">
+  const decided = current.state === "validated" || current.state === "rejected";
+  const fiscalReviewRequired = requiresFiscalReview(view);
+  const canValidate = !openDuplicates && (!fiscalReviewRequired || current.vatStatus === "registered");
+  const validationPrerequisite = openDuplicates ? "Examinez le rapprochement avant de valider."
+    : current.vatStatus === "unregistered" ? "L’établissement est non assujetti à la TVA."
+      : "Vérifiez l’assujettissement avant de valider.";
+  const canVerifyFiscalStatus = canReview && fiscalReviewRequired && current.state === "doubt";
+  const actions = (decided ? canModifyDecision : canDecide) ? (
+    <div className="grid gap-3" key={`decision-${current.revision}`}>
+      <div className="flex flex-wrap gap-2">
+        {!canValidate ? (
+          <Button disabled aria-describedby="validation-prerequisite">Valider</Button>
+        ) : (
+          <ActionDialog label="Valider" title="Valider le signalement" variant="default">
+            <DecisionForm assessment={current} decision="validate" />
+          </ActionDialog>
+        )}
+        <ActionDialog label="Rejeter" title="Rejeter le signalement" variant="outline">
           <DecisionForm assessment={current} decision="reject" />
         </ActionDialog>
       </div>
+      {!canValidate ? <p id="validation-prerequisite" className="text-sm text-muted-foreground">{validationPrerequisite}</p> : null}
+    </div>
+  ) : null;
+
+  return <div className="grid gap-5">
+    <EvidenceDetails evidence={current} calculation={calculation} />
+    {current.checkedAt && current.vatSource !== "ocr" && VAT_LABELS[current.vatStatus] ? (
+      <div className="grid gap-1 rounded-md bg-muted p-3 text-sm">
+        <p className="font-medium">{VAT_LABELS[current.vatStatus]}</p>
+        <p className="wrap-anywhere text-muted-foreground">{[reportedAtLabel(current.checkedAt), current.vatEvidence].filter(Boolean).join(" · ")}</p>
+      </div>
     ) : null}
-    {!busy ? <EvidenceDetails evidence={current} /> : null}
-  </section>;
+    {canVerifyFiscalStatus ? (
+      <section id="report-fiscal-review" aria-labelledby="fiscal-review-heading" tabIndex={-1} className="grid scroll-mt-20 gap-3 border-t pt-4">
+        <h3 id="fiscal-review-heading" className="text-sm font-bold">Assujettissement à la TVA</h3>
+        <FiscalStatusForm key={`fiscal-${current.revision}`} assessment={current} />
+      </section>
+    ) : null}
+    {openDuplicates}
+    {actions ? decided ? (
+      <details className="rounded-md border px-3">
+        <summary className="cursor-pointer py-3 text-sm font-medium">Modifier la décision</summary>
+        <div className="pb-3">{actions}</div>
+      </details>
+    ) : <div className="border-t pt-4">{actions}</div> : null}
+    {view.reward ? (
+      <div className="flex flex-wrap items-center justify-between gap-2 border-t pt-4 text-sm">
+        <p>Récompense <strong className="ml-1 tabular-nums">{francs(view.reward.amount)}</strong></p>
+        <Badge variant="outline">{rewardStatusLabel(view.reward.status)}</Badge>
+      </div>
+    ) : null}
+  </div>;
 }
 
 const VAT_LABELS: Record<string, string> = {
@@ -74,15 +91,6 @@ const CRITERION_VALUES: Record<string, string> = {
   unique: "Antériorité vérifiée", duplicate: "Doublon confirmé",
   READABLE: "Lisible", PARTIAL: "Lecture partielle", UNREADABLE: "Photo illisible", UNKNOWN: "À déterminer",
 };
-
-export function AssessmentCriteria({ calculation: c }: { calculation: AssessmentPrecalculation }) {
-  return <dl className="grid gap-3" aria-label="Critères du signalement">{c.criteria.map(criterion => <div key={criterion.key} className="grid gap-1 text-sm">
-    <dt className="flex flex-wrap items-baseline justify-between gap-2">
-      {criterion.label}<Badge variant="outline">{CRITERION_VALUES[criterion.value] ?? criterion.value}</Badge>
-    </dt>
-    {criterion.detail ? <dd className="text-muted-foreground">{criterion.detail}</dd> : null}
-  </div>)}</dl>;
-}
 
 function FiscalStatusForm({ assessment: a }: { assessment: Assessment }) {
   const [message, action, pending] = useActionState(reviewFiscalStatus, null);
@@ -152,16 +160,33 @@ function DecisionForm({ assessment, decision }: { assessment: Assessment; decisi
   </form>;
 }
 
-function EvidenceDetails({ evidence }: { evidence: Partial<Assessment> }) {
+function EvidenceDetails({ evidence, calculation }: { evidence: Assessment; calculation: AssessmentPrecalculation | null }) {
+  const amount = evidence.extracted?.vatAmount?.trim();
+  const currency = evidence.extracted?.currency?.trim();
+  const vatAmount = amount && /^[0-9]+(?:[.,][0-9]{1,2})?$/.test(amount)
+    ? [Number(amount.replace(",", ".")).toLocaleString("fr-FR", { maximumFractionDigits: 2 }), currency].filter(Boolean).join(" ")
+    : null;
+  const readability = calculation?.criteria.find((criterion) => criterion.key === "readability")?.value ?? "UNKNOWN";
+  const normalization = calculation?.criteria.find((criterion) => criterion.key === "normalization")?.value ?? evidence.normalization;
+  const uniqueness = calculation?.criteria.find((criterion) => criterion.key === "uniqueness")?.value ?? evidence.uniqueness;
   const entries = [
-    ["Établissement", evidence.sellerName], ["NIF", evidence.sellerTaxId],
-    ["Facture", [evidence.documentNumber, evidence.documentDate].filter(Boolean).join(" · ")],
+    ["Établissement", evidence.sellerName ?? "Non relevé"],
+    ["NIF", evidence.sellerTaxId ?? "Non relevé"],
+    ["TVA facturée", vatAmount ?? CRITERION_VALUES[evidence.vatCharged]],
+    ["Normalisation", CRITERION_VALUES[normalization] ?? normalization],
+    ["Lisibilité", CRITERION_VALUES[readability] ?? readability],
+    ["Antériorité", CRITERION_VALUES[uniqueness] ?? uniqueness],
+    ["Numéro de facture", evidence.documentNumber],
+    ["Date de la facture", evidence.documentDate ? calendarLabel(evidence.documentDate) : null],
+    ["Numéro DEF", evidence.extracted?.defNumber],
     ["Code de vérification", evidence.extracted?.readCode],
-    ["Code DEF", evidence.extracted?.defCode], ["Numéro DEF", evidence.extracted?.defNumber],
+    ["Code DEF", evidence.extracted?.defCode],
   ].filter(([, value]) => value);
-  if (!entries.length) return null;
-  return <section className="grid gap-2 border-t pt-4 text-sm">
-    <h3 className="font-medium">Informations de la facture</h3>
-    <dl className="grid gap-2 break-words">{entries.map(([label, value]) => <div key={label}><dt className="font-medium">{label}</dt><dd>{value}</dd></div>)}</dl>
-  </section>;
+
+  return <dl className="grid grid-cols-2 gap-x-4 gap-y-3 rounded-md border bg-muted/35 p-3 text-sm" aria-label="Éléments de la vérification">
+    {entries.map(([label, value]) => <div key={label} className="min-w-0">
+      <dt className="text-[13px] text-muted-foreground">{label}</dt>
+      <dd className="mt-0.5 font-medium wrap-anywhere tabular-nums">{value}</dd>
+    </div>)}
+  </dl>;
 }

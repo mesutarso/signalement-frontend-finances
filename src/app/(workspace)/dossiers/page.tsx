@@ -37,7 +37,7 @@ async function SellerFiles({ searchParams }: Pick<PageProps<"/dossiers">, "searc
   const files = await readSellerFiles(status, page).catch(() => null);
   return (
     <Page className="max-w-6xl">
-      <PageHeader title="Dossiers" />
+      <PageHeader title="Constats par établissement" />
       <div className="grid gap-5">
         <ViewTabs label="Filtrer les dossiers" items={FILTERS.map((filter) => ({ href: `/dossiers?status=${filter.value}`, label: filter.label, active: filter.value === status }))} />
         {!files ? <Alert variant="destructive"><AlertTitle>Les dossiers sont indisponibles. Actualisez la page.</AlertTitle></Alert> : files.items.length === 0 ? <LedgerEmpty className="border-t-0">{status === "identified" ? "Aucun constat retenu ne porte un numéro d'impôt." : "Aucun constat retenu n'est sans numéro d'impôt."}</LedgerEmpty> : (

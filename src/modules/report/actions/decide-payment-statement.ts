@@ -17,6 +17,7 @@ export async function decidePaymentStatement(_current: string | null, formData: 
     return response.message;
   }
   revalidatePath("/etats");
+  revalidatePath("/paiements");
   revalidatePath(`/etats/${id}`);
   return null;
 }

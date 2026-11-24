@@ -13,6 +13,7 @@ export async function reviewReward(_current: string | null, formData: FormData):
     return response.message;
   }
   revalidatePath("/recompenses");
+  revalidatePath("/paiements");
   if (reportId) {
     revalidatePath(`/signalements/${reportId}`);
   }

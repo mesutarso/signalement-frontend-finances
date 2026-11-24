@@ -1,5 +1,4 @@
 import { can } from "@/modules/access/model/account";
-import Link from "next/link";
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { readJson } from "@/lib/api";
@@ -9,7 +8,7 @@ import { PrepareSampleForm } from "@/modules/report/ui/prepare-sample-form";
 import { Alert, AlertTitle } from "@/components/ui/alert";
 import { Page, PageHeader, PageSkeleton } from "@/components/page";
 import { ActionDialog } from "@/components/action-dialog";
-import { Ledger, LedgerEmpty, LedgerItem } from "@/components/ledger";
+import { Ledger, LedgerEmpty, LedgerItem, LedgerLink } from "@/components/ledger";
 
 type Item = { id: string; reference: string; periodStart: string; periodEnd: string; lines: number; preparedAt: string };
 type Page = { items: Item[]; page: number; size: number; total: number };
@@ -38,7 +37,9 @@ async function Samples() {
       {!samples ? <Alert variant="destructive"><AlertTitle>Les échantillons sont indisponibles. Actualisez la page.</AlertTitle></Alert> : samples.items.length === 0 ? <LedgerEmpty>Aucun échantillon.</LedgerEmpty> : (
         <Ledger>
           {samples.items.map((sample) => (
-            <LedgerItem key={sample.id} title={<Link className="ref text-sm font-medium underline-offset-4 hover:text-primary hover:underline" href={`/echantillons/${sample.id}`}>{sample.reference}</Link>}>
+            <LedgerItem key={sample.id} title={<span className="ref">{sample.reference}</span>} action={
+              <LedgerLink href={`/echantillons/${sample.id}`}>Ouvrir l’échantillon<span className="sr-only"> {sample.reference}</span></LedgerLink>
+            }>
               <p>{sample.lines} récompense{sample.lines > 1 ? "s" : ""}</p>
               <p className="text-muted-foreground">Du {calendarLabel(sample.periodStart)} au {calendarLabel(sample.periodEnd)}.</p>
             </LedgerItem>

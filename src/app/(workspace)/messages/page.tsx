@@ -45,7 +45,7 @@ async function Messages() {
   return (
     <Page className="max-w-6xl">
       <PageHeader
-        title="Messages"
+        title="SMS aux déclarants"
         actions={canPrepare ? (
           <>
             {can(account, "sms.test") ? <TestSmsForm /> : null}

@@ -1,3 +1,6 @@
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import type { ReportAnalysisOverview } from "@/modules/report/model/administration";
 import { can } from "@/modules/access/model/account";
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
@@ -31,12 +34,30 @@ async function Imports({ searchParams }: Pick<PageProps<"/imports">, "searchPara
   const params = await searchParams;
   const number = Number(params.page ?? 0);
   const page = Number.isSafeInteger(number) && number >= 0 ? number : 0;
-  const history = await readJson<History>(`/api/report-imports?page=${page}`).catch(() => null);
+  const [history, analysis] = await Promise.all([
+    readJson<History>(`/api/report-imports?page=${page}`).catch(() => null),
+    readJson<ReportAnalysisOverview>("/api/report-analysis/overview").catch(() => null),
+  ]);
   const today = new Intl.DateTimeFormat("en-CA", { timeZone: "Africa/Kinshasa", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
   return (
     <Page>
       <ImportRefresh />
-      <PageHeader title="Imports" actions={<RefreshButton />} />
+      <PageHeader title="Suivi des signalements" actions={<RefreshButton />} />
+      <PageSection title="Analyse des factures">
+        {!analysis ? <Alert variant="destructive"><AlertTitle>Le suivi de l’analyse est indisponible.</AlertTitle></Alert> : (
+          <>
+            <p className="text-sm text-muted-foreground">Analyse automatique {analysis.enabled ? "activée" : "en pause"}</p>
+            <Figures columns={4}>
+              <Figure compact label="En attente" value={analysis.queued.toLocaleString("fr-FR")} />
+              <Figure compact label="En cours" value={analysis.running.toLocaleString("fr-FR")} />
+              <Figure compact label="Terminées" value={analysis.completed.toLocaleString("fr-FR")} />
+              <Figure compact label="Échecs" value={analysis.failed.toLocaleString("fr-FR")} />
+            </Figures>
+            {analysis.failed > 0 ? <Button size="sm" variant="outline" className="w-fit" nativeButton={false} render={<Link href="/signalements?reading=failed" />}>Voir les analyses en échec</Button> : null}
+          </>
+        )}
+      </PageSection>
+      <PageSection title="Réception des signalements">
       {!history ? <Alert variant="destructive"><AlertTitle>Le suivi des imports est indisponible. Actualisez la page.</AlertTitle></Alert> : (
         <>
           <Figures columns={3}>
@@ -81,6 +102,12 @@ async function Imports({ searchParams }: Pick<PageProps<"/imports">, "searchPara
           </PageSection>
         </>
       )}
+      </PageSection>
+      {account.role === "ADMINISTRATOR" ? <div className="flex flex-wrap gap-2">
+        <Button variant="outline" nativeButton={false} render={<Link href="/indicateurs" />}>Indicateurs</Button>
+        <Button variant="outline" nativeButton={false} render={<Link href="/supervision" />}>Supervision</Button>
+        <Button variant="outline" nativeButton={false} render={<Link href="/indices" />}>Indices d’abus</Button>
+      </div> : null}
     </Page>
   );
 }

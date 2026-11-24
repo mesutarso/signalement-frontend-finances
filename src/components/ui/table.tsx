@@ -3,11 +3,11 @@
 import * as React from "react"
 import { cn } from "cn"
 
-function Table({ className, ...props }: React.ComponentProps<"table">) {
+function Table({ className, containerClassName, ...props }: React.ComponentProps<"table"> & { containerClassName?: string }) {
   return (
     <div
       data-slot="table-container"
-      className="relative -mx-3 overflow-x-auto px-3"
+      className={cn("relative min-w-0 overflow-x-auto rounded-lg border border-input bg-card", containerClassName)}
     >
       <table
         data-slot="table"
@@ -22,7 +22,7 @@ function TableHeader({ className, ...props }: React.ComponentProps<"thead">) {
   return (
     <thead
       data-slot="table-header"
-      className={cn("[&_tr]:border-b [&_tr]:border-foreground [&_tr:hover>th]:bg-transparent", className)}
+      className={cn("bg-muted [&_tr]:border-input", className)}
       {...props}
     />
   )
@@ -32,7 +32,7 @@ function TableBody({ className, ...props }: React.ComponentProps<"tbody">) {
   return (
     <tbody
       data-slot="table-body"
-      className={cn("[&_tr:last-child]:border-0", className)}
+      className={cn("[&>tr:last-child]:border-0", className)}
       {...props}
     />
   )
@@ -56,7 +56,7 @@ function TableRow({ className, ...props }: React.ComponentProps<"tr">) {
     <tr
       data-slot="table-row"
       className={cn(
-        "border-b has-aria-expanded:bg-accent data-[state=selected]:bg-accent",
+        "border-b [&:where(tbody>tr)]:even:bg-muted/50 [&:where(tbody>tr)]:hover:bg-muted has-aria-expanded:bg-accent data-[state=selected]:bg-accent",
         className
       )}
       {...props}
@@ -69,7 +69,7 @@ function TableHead({ className, ...props }: React.ComponentProps<"th">) {
     <th
       data-slot="table-head"
       className={cn(
-        "h-10 px-3 text-left align-middle text-[13px] font-medium whitespace-nowrap text-muted-foreground first:pl-0 last:pr-0 [&:has([role=checkbox])]:pr-0",
+        "h-12 px-3 text-left align-middle text-[13px] font-semibold whitespace-nowrap text-foreground first:pl-4 last:pr-4 not-last:border-r [&:has([role=checkbox])]:pr-0",
         className
       )}
       {...props}
@@ -82,7 +82,7 @@ function TableCell({ className, ...props }: React.ComponentProps<"td">) {
     <td
       data-slot="table-cell"
       className={cn(
-        "px-3 py-3 align-middle whitespace-nowrap first:pl-0 last:pr-0 [&:has([role=checkbox])]:pr-0",
+        "px-3 py-3 align-middle whitespace-nowrap first:pl-4 last:pr-4 not-last:border-r [&:has([role=checkbox])]:pr-0",
         className
       )}
       {...props}

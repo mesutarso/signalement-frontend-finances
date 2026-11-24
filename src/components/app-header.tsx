@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { ArrowRight01Icon } from "@hugeicons/core-free-icons";
 import { CommandMenu } from "@/components/command-menu";
+import { Button } from "@/components/ui/button";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import type { Account } from "@/modules/access/model/account";
 import { breadcrumbFor } from "@/modules/access/model/navigation";
@@ -15,7 +16,7 @@ function Separator() {
 
 export function AppHeader({ account }: { account: Account | null }) {
   const pathname = usePathname();
-  const crumb = breadcrumbFor(pathname);
+  const crumb = breadcrumbFor(pathname, account);
 
   return (
     <header className="sticky top-0 z-10 flex h-14 shrink-0 items-center justify-between gap-3 border-b bg-background px-3 md:px-6 lg:px-8">
@@ -42,7 +43,7 @@ export function AppHeader({ account }: { account: Account | null }) {
       {account ? (
         <CommandMenu account={account} />
       ) : (
-        <Link href="/connexion" className="rounded-md px-3 py-2 text-sm font-medium text-primary hover:bg-accent">Se connecter</Link>
+        <Button size="sm" nativeButton={false} render={<Link href="/connexion" />}>Se connecter</Button>
       )}
     </header>
   );

@@ -26,7 +26,7 @@ export function DuplicateAlerts({
 }) {
   return (
     <section aria-labelledby="report-duplicates" className="grid gap-2 border-t border-foreground pt-3.5">
-      <h2 id="report-duplicates" className="scroll-mt-4 text-[15px] font-bold">Doublons</h2>
+      <h2 id="report-duplicates" tabIndex={-1} className="scroll-mt-20 text-[15px] font-bold">Doublons</h2>
       <ul>
         {alerts.map((alert) => <li key={alert.id}><DuplicateCard reportId={reportId} alert={alert} canDecide={canDecide} reportedAt={reportedAt} /></li>)}
       </ul>

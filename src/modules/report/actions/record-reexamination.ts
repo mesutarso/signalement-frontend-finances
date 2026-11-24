@@ -15,5 +15,6 @@ export async function recordReexamination(_current: string | null, formData: For
     return result.message;
   }
   revalidatePath("/reexamens");
+  revalidatePath("/signalements/[id]", "page");
   return null;
 }

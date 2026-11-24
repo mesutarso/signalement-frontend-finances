@@ -34,6 +34,12 @@ export function reportTitle(title: string | null): string {
   return reportReferenceLabel(title) ?? "Signalement sans titre";
 }
 
+export function formatDeclarantName(name: string | null): string | null {
+  // FACNO can concatenate name parts at a change of case.
+  // Requiring three lowercase letters preserves short mixed-case prefixes such as MacDonald.
+  return name?.trim().replace(/(\p{Lu}{2,}|\p{Ll}{3,})(?=\p{Lu}\p{Ll})/gu, "$1 ") || null;
+}
+
 export type ReportPhoto = {
   id: string;
   contentType: string;
@@ -89,6 +95,8 @@ export type PhotoRequest = {
 };
 
 export type ReportDetail = ReportSummary & {
+  referenceCode?: string;
+  historicalDecision?: string | null;
   assigneeId: string | null;
   description: string | null;
   reporterName: string | null;

@@ -96,6 +96,48 @@ const SECTIONS: NavSection[] = [
   },
 ];
 
+const REPORTS: NavItem = { href: "/signalements", label: "Signalements", icon: InboxIcon, permission: "report.read", keywords: "file de travail factures" };
+const DOSSIERS: NavItem = { href: "/dossiers-valides", label: "Dossiers", icon: FolderOpenIcon, permission: "report.read", keywords: "signalements validés" };
+
+const WORKSPACE_MENU: NavSection = {
+  id: "activite",
+  label: null,
+  items: [
+    REPORTS,
+    DOSSIERS,
+    { href: "/recompenses", label: "Récompenses", icon: Award01Icon, permission: "reward.read" },
+    { href: "/paiements", label: "Paiements", icon: Invoice01Icon, permission: "payment.read" },
+    { href: "/declarants", label: "Déclarants", icon: UserMultipleIcon, permission: "declarant.read" },
+    { href: "/contribuables", label: "Contribuables", icon: Building03Icon, permission: "taxpayer.read" },
+  ],
+};
+
+const ADMIN_MENU: NavSection = {
+  id: "administration",
+  label: "Administration",
+  items: [
+    { href: "/comptes", label: "Utilisateurs", icon: UserSettings01Icon, permission: "user.read" },
+    { href: "/securite", label: "Sécurité", icon: SecurityCheckIcon, permission: "rbac.read" },
+    { href: "/parametres", label: "Paramètres", icon: LegalDocument01Icon, permission: "setting.read" },
+    { href: "/imports", label: "Suivi des signalements", icon: ChartLineData01Icon, permission: "import.read", keywords: "réception FACNO OCR" },
+  ],
+};
+
+const ADMIN_CHILDREN: Record<string, { parent: string; label: string }> = {
+  "/habilitations": { parent: "/securite", label: "Rôles et permissions" },
+  "/journal": { parent: "/securite", label: "Journal d’audit" },
+  "/regles": { parent: "/parametres", label: "Règles" },
+  "/messages": { parent: "/parametres", label: "SMS aux déclarants" },
+  "/courriers": { parent: "/parametres", label: "Courriers aux services" },
+  "/etats": { parent: "/paiements", label: "États de paiement" },
+  "/echantillons": { parent: "/paiements", label: "Échantillons" },
+  "/tirages": { parent: "/recompenses", label: "Tirages" },
+  "/dossiers": { parent: "/contribuables", label: "Constats par établissement" },
+  "/indicateurs": { parent: "/imports", label: "Indicateurs" },
+  "/supervision": { parent: "/imports", label: "Supervision" },
+  "/indices": { parent: "/imports", label: "Indices d’abus" },
+};
+
 export const ACCOUNT_ITEM: NavItem = { href: "/compte", label: "Mon compte", icon: UserAccountIcon, keywords: "mot de passe profil" };
 
 const DETAIL_LABELS: Record<string, string> = {
@@ -109,10 +151,12 @@ export function navigationFor(account: Account | null): NavSection[] {
   if (!account) {
     return [];
   }
-  return SECTIONS.map((section) => ({
+  const sections = account.role === "ADMINISTRATOR" ? [WORKSPACE_MENU, ADMIN_MENU]
+    : account.role === "AGENT" ? [{ ...WORKSPACE_MENU, items: [REPORTS, DOSSIERS] }]
+    : SECTIONS;
+  return sections.map((section) => ({
     ...section,
-    items: section.items.filter((item) => !item.permission || can(account, item.permission))
-      .map(item => account.role === "AGENT" && item.href === "/signalements" ? { ...item, label: "À vérifier" } : item),
+    items: section.items.filter((item) => !item.permission || can(account, item.permission)),
   })).filter((section) => section.items.length > 0);
 }
 
@@ -120,14 +164,25 @@ export function canReadReports(account: Account | null): boolean {
   return can(account, "report.read");
 }
 
-export function isNavActive(pathname: string, href: string): boolean {
+function matchesRoute(pathname: string, href: string): boolean {
   return href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(`${href}/`);
+}
+
+export function isNavActive(pathname: string, href: string, account?: Account | null): boolean {
+  return matchesRoute(pathname, href) || (account?.role === "ADMINISTRATOR"
+    && Object.entries(ADMIN_CHILDREN).some(([route, item]) => item.parent === href && matchesRoute(pathname, route)));
 }
 
 export type Breadcrumb = { section: string | null; page: string; href: string; detail: string | null };
 
-export function breadcrumbFor(pathname: string): Breadcrumb {
-  const all = [...SECTIONS.flatMap((section) => section.items.map((item) => ({ item, section }))), { item: ACCOUNT_ITEM, section: null }];
+export function breadcrumbFor(pathname: string, account: Account | null): Breadcrumb {
+  const sections = [...navigationFor(account), ...SECTIONS];
+  if (account?.role === "ADMINISTRATOR") {
+    const child = Object.entries(ADMIN_CHILDREN).find(([route]) => matchesRoute(pathname, route))?.[1];
+    const parent = [...WORKSPACE_MENU.items, ...ADMIN_MENU.items].find(item => item.href === child?.parent);
+    if (child && parent) return { section: null, page: parent.label, href: parent.href, detail: child.label };
+  }
+  const all = [...sections.flatMap((section) => section.items.map((item) => ({ item, section }))), { item: ACCOUNT_ITEM, section: null }];
   const match = all.find(({ item }) => isNavActive(pathname, item.href));
   if (!match) {
     return { section: null, page: "Page introuvable", href: pathname, detail: null };

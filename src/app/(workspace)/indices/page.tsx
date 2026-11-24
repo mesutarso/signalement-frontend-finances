@@ -1,5 +1,4 @@
 import { can } from "@/modules/access/model/account";
-import Link from "next/link";
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { readJson } from "@/lib/api";
@@ -12,7 +11,7 @@ import { TablePagination } from "@/components/table-pagination";
 import { Page, PageHeader, PageSection, PageSkeleton } from "@/components/page";
 import { Badge } from "@/components/ui/badge";
 import { ActionDialog } from "@/components/action-dialog";
-import { Ledger, LedgerEmpty, LedgerItem } from "@/components/ledger";
+import { Ledger, LedgerEmpty, LedgerItem, ReportLink } from "@/components/ledger";
 
 type IndexReport = { id: string; identifier: string; reportedAt: string };
 type Index = {
@@ -77,11 +76,11 @@ async function Indices({ searchParams }: Pick<PageProps<"/indices">, "searchPara
                       action={canNote ? <ActionDialog label="Statuer" title="Statuer sur l'indice" description={`${index.reportCount} signalements`} variant="default" size="sm"><AbuseNoteForm fingerprint={index.fingerprint} /></ActionDialog> : undefined}
                     >
                       <p>{index.explanation}</p>
-                      <ul className="grid gap-1">
+                      <ul className="grid gap-2">
                         {index.reports.map((report) => (
-                          <li key={report.id}>
-                            <Link href={`/signalements/${report.id}`} className="ref text-primary underline-offset-4 hover:underline">{report.identifier}</Link>
-                            <span className="text-[13px] text-muted-foreground"> · Reçu le {reportedAtLabel(report.reportedAt)}</span>
+                          <li key={report.id} className="flex flex-wrap items-center justify-between gap-2">
+                            <span className="text-[13px] text-muted-foreground">Reçu le {reportedAtLabel(report.reportedAt)}</span>
+                            <ReportLink id={report.id} reference={report.identifier} />
                           </li>
                         ))}
                       </ul>
@@ -144,8 +143,8 @@ async function Indices({ searchParams }: Pick<PageProps<"/indices">, "searchPara
 
 function ReportRefs({ reports }: { reports: IndexedReport[] }) {
   return (
-    <ul className="flex flex-wrap gap-x-4 gap-y-1">
-      {reports.map((report) => <li key={report.id}><Link href={`/signalements/${report.id}`} className="ref text-primary underline-offset-4 hover:underline">{report.reference}</Link></li>)}
+    <ul className="flex flex-wrap gap-2">
+      {reports.map((report) => <li key={report.id}><ReportLink id={report.id} reference={report.reference} /></li>)}
     </ul>
   );
 }

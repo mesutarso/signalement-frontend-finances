@@ -1,7 +1,6 @@
 import { can } from "@/modules/access/model/account";
 import { TransferPanel } from "@/modules/report/ui/transfer-panel";
 import type { PaymentService } from "@/modules/report/model/transfer";
-import Link from "next/link";
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { readJson } from "@/lib/api";
@@ -14,7 +13,7 @@ import { Alert, AlertTitle } from "@/components/ui/alert";
 import { TablePagination } from "@/components/table-pagination";
 import { Page, PageHeader, PageSkeleton } from "@/components/page";
 import { Badge } from "@/components/ui/badge";
-import { Ledger, LedgerEmpty, LedgerItem } from "@/components/ledger";
+import { Ledger, LedgerEmpty, LedgerItem, LedgerLink } from "@/components/ledger";
 
 type Page = { items: PaymentItem[]; page: number; size: number; total: number };
 
@@ -48,8 +47,9 @@ async function Statements({ searchParams }: Pick<PageProps<"/etats">, "searchPar
             {statements.items.map((statement) => (
               <LedgerItem
                 key={statement.id}
-                title={<Link className="ref text-sm font-medium underline-offset-4 hover:text-primary hover:underline" href={`/etats/${statement.id}`}>{statement.reference}</Link>}
+                title={<span className="ref">{statement.reference}</span>}
                 status={<Badge variant={paymentStatusVariant(statement.status)}>{paymentStatusLabel(statement.status)}</Badge>}
+                action={<LedgerLink href={`/etats/${statement.id}`}>Ouvrir l’état<span className="sr-only"> {statement.reference}</span></LedgerLink>}
               >
                 <p className="text-[15px] font-medium tabular-nums">{francs(statement.total)}</p>
                 <p className="text-muted-foreground">Préparé le {reportedAtLabel(statement.preparedAt)}.{statement.dueOn ? ` Paiement groupé dû le ${calendarLabel(statement.dueOn)}.` : ""}</p>

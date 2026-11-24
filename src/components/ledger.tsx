@@ -1,6 +1,8 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { cn } from "cn";
+import { Button } from "@/components/ui/button";
+import { reportReferenceLabel } from "@/modules/report/model/report";
 
 /* Registre : des lignes séparées par des filets, l'identité à gauche et le détail à droite. */
 export function Ledger({ className, ...props }: React.ComponentProps<"ul">) {
@@ -40,9 +42,13 @@ export function LedgerEmpty({ children, className }: { children: ReactNode; clas
 }
 
 export function LedgerLink({ href, children }: { href: string; children: ReactNode }) {
-  return <Link href={href} className="w-fit text-primary underline-offset-4 hover:underline">{children}</Link>;
+  return <Button className="w-fit" variant="outline" size="sm" nativeButton={false} render={<Link href={href} />}>{children}</Button>;
 }
 
 export function ReportLink({ id, reference }: { id: string; reference: string }) {
-  return <LedgerLink href={`/signalements/${id}`}>Ouvrir le signalement <span className="ref">{reference}</span></LedgerLink>;
+  const label = reportReferenceLabel(reference);
+  return <span className="inline-flex flex-wrap items-center gap-2">
+    <LedgerLink href={`/signalements/${id}`}>Ouvrir le signalement{label ? <span className="sr-only"> {label}</span> : null}</LedgerLink>
+    {label ? <span className="ref text-muted-foreground" aria-hidden="true">{label}</span> : null}
+  </span>;
 }

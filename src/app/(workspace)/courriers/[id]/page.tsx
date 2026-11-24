@@ -120,10 +120,14 @@ async function LetterDetail({ params }: { params: Promise<{ id: string }> }) {
         {detail.responses.length === 0 ? <LedgerEmpty className="py-5">Aucune réponse enregistrée.</LedgerEmpty> : (
           <Ledger>
             {detail.responses.map((response) => (
-              <LedgerItem key={response.id} className="py-4" title={response.service} meta={<span className="ref">{response.reference}</span>}>
+              <LedgerItem key={response.id} className="py-4" title={response.service} meta={<span className="ref">{response.reference}</span>} action={
+                <Button variant="outline" size="sm" nativeButton={false} render={<a href={`/courriers/${detail.letter.id}/reponses/${response.id}`} />}>
+                  <HugeiconsIcon icon={Download01Icon} strokeWidth={1.75} data-icon="inline-start" />Télécharger la pièce
+                  <span className="sr-only"> {response.reference}</span>
+                </Button>
+              }>
                 <p>{response.conclusion}</p>
                 <p className="text-muted-foreground">Reçue le {calendarLabel(response.receivedOn)}. Enregistrée le {reportedAtLabel(response.recordedAt)}.</p>
-                <a className="w-fit text-primary underline-offset-4 hover:underline" href={`/courriers/${detail.letter.id}/reponses/${response.id}`}>Télécharger la pièce</a>
               </LedgerItem>
             ))}
           </Ledger>

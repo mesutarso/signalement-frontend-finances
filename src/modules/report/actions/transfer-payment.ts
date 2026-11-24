@@ -23,6 +23,7 @@ export async function transferPayment(_current: Feedback, data: FormData): Promi
     const response = await writeJson<PaymentTransfer>(test ? "/api/payment-transfers/tests" : `/api/payment-statements/${statementId}/transfers`, "POST", body);
     if (!response.ok) return { message: response.message };
     revalidatePath("/etats");
+    revalidatePath("/paiements");
     if (statementId) revalidatePath(`/etats/${statementId}`);
     return { message: response.body ? transferLabel(response.body) : "Demande enregistrée.", terminal: response.body?.state === "paid", requestId };
   } catch {
@@ -41,6 +42,7 @@ export async function checkTransfer(_current: string | null, data: FormData): Pr
     const response = await writeJson<PaymentTransfer>(`/api/payment-transfers/${id}/checks`, "POST");
     if (!response.ok) return response.message;
     revalidatePath("/etats");
+    revalidatePath("/paiements");
     if (UUID.test(statementId)) revalidatePath(`/etats/${statementId}`);
     return response.body ? transferLabel(response.body) : "Statut actualisé.";
   } catch { return "Le statut est indisponible. Réessayez la vérification."; }

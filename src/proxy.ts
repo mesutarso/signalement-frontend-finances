@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-const PROTECTED = ["/compte", "/comptes", "/signalements", "/imports", "/indices", "/journal", "/supervision", "/dossiers", "/dossiers-valides", "/courriers", "/recompenses", "/etats", "/contribuables", "/echantillons", "/tirages", "/declarants", "/indicateurs", "/corrections", "/reexamens", "/messages", "/regles"];
+const PROTECTED = ["/compte", "/comptes", "/securite", "/parametres", "/paiements", "/signalements", "/imports", "/indices", "/journal", "/supervision", "/dossiers", "/dossiers-valides", "/courriers", "/recompenses", "/etats", "/contribuables", "/echantillons", "/tirages", "/declarants", "/indicateurs", "/corrections", "/reexamens", "/messages", "/regles"];
 
 function protectedPath(pathname: string): boolean {
   return PROTECTED.some((path) => pathname === path || pathname.startsWith(`${path}/`));
@@ -48,6 +48,9 @@ export const config = {
     "/compte/:path*",
     "/comptes",
     "/comptes/:path*",
+    "/securite",
+    "/parametres",
+    "/paiements",
     "/signalements",
     "/signalements/:path*",
     "/imports",

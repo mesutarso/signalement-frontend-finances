@@ -8,6 +8,7 @@ import { Page, PageHeader, PageSkeleton } from "@/components/page";
 import { RefreshButton } from "@/components/refresh-button";
 import { Alert, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { readJson } from "@/lib/api";
 import { roleLabel, type Account } from "@/modules/access/model/account";
@@ -19,7 +20,7 @@ import type { AvailabilityView } from "@/modules/availability/model/availability
 import type { Indicators } from "@/modules/report/model/indicators";
 import { paymentStatusLabel, paymentStatusVariant, type PaymentItem } from "@/modules/report/model/payment";
 import { francs } from "@/modules/report/model/reward";
-import { calendarLabel, reportedAtParts } from "@/modules/report/model/report";
+import { calendarLabel, reportedAtParts, reportTitle } from "@/modules/report/model/report";
 import { readReports } from "@/modules/report/queries/read-reports";
 import { ValidationTag } from "@/modules/report/ui/report-marks";
 
@@ -86,26 +87,23 @@ async function Dashboard() {
 
       <div className="grid items-start gap-x-16 gap-y-10 lg:grid-cols-[minmax(0,1fr)_19rem]">
         <section aria-labelledby="derniers" className="grid min-w-0 gap-4">
-          <div className="flex items-baseline justify-between gap-4">
+          <div className="flex items-center justify-between gap-4">
             <h2 id="derniers" className="text-[1.3125rem] leading-tight font-medium tracking-[-0.01em]">Derniers signalements</h2>
-            <Link href="/signalements?scope=all" className="text-[13px] text-primary underline-offset-4 hover:underline">Voir tout</Link>
+            <Button variant="outline" size="sm" nativeButton={false} render={<Link href="/signalements?scope=all" />}>Voir tout</Button>
           </div>
           {recent?.reports.length ? (
             <Ledger>
               {recent.reports.slice(0, 7).map((report) => {
                 const { date } = reportedAtParts(report.reportedAt);
+                const title = reportTitle(report.title);
                 return (
-                  <li key={report.id} className="border-b">
-                    <Link href={`/signalements/${report.id}`} className="group/row flex flex-wrap items-center justify-between gap-x-6 gap-y-2 py-3.5">
-                      <span className="grid min-w-0 flex-1 basis-64 gap-0.5">
-                        <span className="text-sm font-medium break-words transition-colors group-hover/row:text-primary">{report.title ?? "Sans titre"}</span>
-                        <span className="ref text-muted-foreground">{report.identifier}</span>
-                      </span>
-                      <span className="flex items-center gap-4">
-                        <ValidationTag state={report.validationState} assignmentState={report.state} />
-                        <span className="w-[6.75rem] text-right text-[13px] text-muted-foreground tabular-nums max-sm:hidden">{date}</span>
-                      </span>
-                    </Link>
+                  <li key={report.id} className="relative flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-b py-3.5 hover:bg-muted/60 focus-within:bg-muted/60">
+                    <span className="min-w-0 flex-1 basis-40 text-sm font-medium break-words">{title}</span>
+                    <ValidationTag state={report.validationState} assignmentState={report.state} />
+                    <span className="w-[6.75rem] text-right text-[13px] text-muted-foreground tabular-nums max-sm:hidden">{date}</span>
+                    <Button variant="outline" size="sm" className="after:absolute after:inset-0 active:translate-none" nativeButton={false} render={<Link href={`/signalements/${report.id}`} />}>
+                      Voir plus<span className="sr-only"> — {title}</span>
+                    </Button>
                   </li>
                 );
               })}
@@ -131,15 +129,15 @@ async function Dashboard() {
                   ]}
                 />
               ) : <p className="text-sm text-muted-foreground">Indicateurs indisponibles.</p>}
-              <Link href="/indicateurs" className="w-fit text-[13px] text-primary underline-offset-4 hover:underline">Tous les indicateurs</Link>
+              <Button variant="outline" size="sm" className="w-fit" nativeButton={false} render={<Link href="/indicateurs" />}>Tous les indicateurs</Button>
             </CardContent>
           </Card>
           {admin ? (
             <Card size="sm">
               <CardHeader><CardTitle>Comptes utilisateurs</CardTitle></CardHeader>
-              <CardContent className="flex items-baseline justify-between gap-4">
+              <CardContent className="flex flex-wrap items-center justify-between gap-4">
                 <p className="text-[1.75rem] leading-none font-medium tabular-nums">{count(accounts?.total)}</p>
-                <Link href="/comptes" className="text-[13px] text-primary underline-offset-4 hover:underline">Gérer les comptes</Link>
+                <Button variant="outline" size="sm" nativeButton={false} render={<Link href="/comptes" />}>Gérer les comptes</Button>
               </CardContent>
             </Card>
           ) : null}
@@ -169,21 +167,20 @@ async function PaymentDashboard({ account }: { account: Account }) {
       {!statements ? <Alert variant="destructive"><AlertTitle>Les états de paiement sont indisponibles. Actualisez la page.</AlertTitle></Alert> : null}
       <div className="grid items-start gap-x-16 gap-y-10 lg:grid-cols-[minmax(0,1fr)_19rem]">
         <section aria-labelledby="etats-recents" className="grid min-w-0 gap-4">
-          <div className="flex items-baseline justify-between gap-4">
+          <div className="flex items-center justify-between gap-4">
             <h2 id="etats-recents" className="text-[1.3125rem] leading-tight font-medium tracking-[-0.01em]">États de paiement</h2>
-            <Link href="/etats" className="text-[13px] text-primary underline-offset-4 hover:underline">Voir tout</Link>
+            <Button variant="outline" size="sm" nativeButton={false} render={<Link href="/etats" />}>Voir tout</Button>
           </div>
           {statements?.items.length ? (
             <Ledger>
               {statements.items.slice(0, 8).map((statement) => (
-                <li key={statement.id} className="border-b">
-                  <Link href={`/etats/${statement.id}`} className="group/row flex flex-wrap items-center justify-between gap-x-6 gap-y-2 py-3.5">
-                    <span className="ref text-sm font-medium transition-colors group-hover/row:text-primary">{statement.reference}</span>
-                    <span className="flex items-center gap-4">
-                      {awaiting?.status === statement.status ? <Badge variant="warning">{awaiting.label}</Badge> : <Badge variant={paymentStatusVariant(statement.status)}>{paymentStatusLabel(statement.status)}</Badge>}
-                      <span className="w-28 text-right text-sm font-medium tabular-nums">{francs(statement.total)}</span>
-                    </span>
-                  </Link>
+                <li key={statement.id} className="relative flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-b py-3.5 hover:bg-muted/60 focus-within:bg-muted/60">
+                  <span className="ref flex-1 font-medium">{statement.reference}</span>
+                  {awaiting?.status === statement.status ? <Badge variant="warning">{awaiting.label}</Badge> : <Badge variant={paymentStatusVariant(statement.status)}>{paymentStatusLabel(statement.status)}</Badge>}
+                  <span className="w-28 text-right text-sm font-medium tabular-nums">{francs(statement.total)}</span>
+                  <Button variant="outline" size="sm" className="after:absolute after:inset-0 active:translate-none" nativeButton={false} render={<Link href={`/etats/${statement.id}`} />}>
+                    Ouvrir l’état<span className="sr-only"> {statement.reference}</span>
+                  </Button>
                 </li>
               ))}
             </Ledger>

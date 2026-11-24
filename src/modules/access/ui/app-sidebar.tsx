@@ -3,9 +3,8 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { ArrowDown01Icon, Logout01Icon } from "@hugeicons/core-free-icons";
+import { Logout01Icon } from "@hugeicons/core-free-icons";
 import {
   Sidebar,
   SidebarContent,
@@ -28,22 +27,6 @@ export function AppSidebar({ account }: { account: Account | null }) {
   const pathname = usePathname();
   const { setOpenMobile } = useSidebar();
   const sections = navigationFor(account);
-  const activeSection = sections.find((section) => section.items.some((item) => isNavActive(pathname, item.href)))?.id;
-  const primarySection = sections.find((section) => section.label)?.id;
-  const [overrides, setOverrides] = useState<Record<string, boolean>>({});
-  const [lastPath, setLastPath] = useState(pathname);
-
-  // Une navigation ramène toujours sur une rubrique ouverte, même si elle avait été repliée.
-  if (lastPath !== pathname) {
-    setLastPath(pathname);
-    if (activeSection && overrides[activeSection] === false) {
-      setOverrides({ ...overrides, [activeSection]: true });
-    }
-  }
-
-  function isOpen(id: string): boolean {
-    return overrides[id] ?? (id === activeSection || id === "accueil" || id === primarySection);
-  }
 
   const initials = account ? account.username.slice(0, 2).toUpperCase() : "";
   const accountActive = pathname === "/compte";
@@ -72,44 +55,34 @@ export function AppSidebar({ account }: { account: Account | null }) {
       </SidebarHeader>
 
       <SidebarContent className="gap-0 pb-3 group-data-[collapsible=icon]:overflow-y-auto">
-        {sections.map((section) => {
-          const open = isOpen(section.id);
-          return (
-            <SidebarGroup key={section.id} data-open={open} className="nav-section p-0 pl-3">
-              {section.label ? (
-                <SidebarGroupLabel
-                  render={<button type="button" aria-expanded={open} onClick={() => setOverrides({ ...overrides, [section.id]: !open })} />}
-                >
-                  <span>{section.label}</span>
-                  <HugeiconsIcon icon={ArrowDown01Icon} strokeWidth={2} className="size-3.5!" />
-                </SidebarGroupLabel>
-              ) : null}
-              <SidebarGroupContent>
-                <SidebarMenu className="gap-0.5">
-                  {section.items.map((item) => {
-                    const active = isNavActive(pathname, item.href);
-                    return (
-                      <SidebarMenuItem key={item.href}>
-                        <SidebarMenuButton
-                          aria-label={item.label}
-                          aria-current={active ? "page" : undefined}
-                          isActive={active}
-                          tooltip={item.label}
-                          onClick={() => setOpenMobile(false)}
-                          className="group-data-[collapsible=icon]:data-active:w-[52px]! group-data-[collapsible=icon]:data-active:justify-start group-data-[collapsible=icon]:data-active:pl-3!"
-                          render={<Link href={item.href} />}
-                        >
-                          <HugeiconsIcon icon={item.icon} strokeWidth={1.75} />
-                          <span>{item.label}</span>
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
-                    );
-                  })}
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </SidebarGroup>
-          );
-        })}
+        {sections.map((section) => (
+          <SidebarGroup key={section.id} className="nav-section p-0 pl-3">
+            {section.label ? <SidebarGroupLabel>{section.label}</SidebarGroupLabel> : null}
+            <SidebarGroupContent>
+              <SidebarMenu className="gap-0.5">
+                {section.items.map((item) => {
+                  const active = isNavActive(pathname, item.href, account);
+                  return (
+                    <SidebarMenuItem key={item.href}>
+                      <SidebarMenuButton
+                        aria-label={item.label}
+                        aria-current={active ? "page" : undefined}
+                        isActive={active}
+                        tooltip={item.label}
+                        onClick={() => setOpenMobile(false)}
+                        className="group-data-[collapsible=icon]:data-active:w-[52px]! group-data-[collapsible=icon]:data-active:justify-start group-data-[collapsible=icon]:data-active:pl-3!"
+                        render={<Link href={item.href} />}
+                      >
+                        <HugeiconsIcon icon={item.icon} strokeWidth={1.75} />
+                        <span>{item.label}</span>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  );
+                })}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        ))}
       </SidebarContent>
 
       {account ? (

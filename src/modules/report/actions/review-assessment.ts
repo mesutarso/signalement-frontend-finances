@@ -6,6 +6,12 @@ import { revalidatePath } from "next/cache";
 import { writeJson } from "@/lib/api";
 import { readCurrentAccount } from "@/modules/access/queries/read-current-account";
 
+export async function startReportAnalysis(reportId: string): Promise<boolean> {
+  const account = await readCurrentAccount();
+  if (!can(account, "report.analyze") || !/^[a-f\d-]{36}$/i.test(reportId)) return false;
+  const result = await writeJson(`/api/reports/${reportId}/analysis/start`, "POST");
+  return result.ok;
+}
 
 export async function reviewFiscalStatus(_current: string | null, data: FormData): Promise<string | null> {
   const account = await readCurrentAccount();

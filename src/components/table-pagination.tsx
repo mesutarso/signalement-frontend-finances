@@ -8,17 +8,17 @@ import { Button } from "@/components/ui/button";
 
 type Icon = typeof ArrowLeft01Icon;
 
-export function TablePagination({ page, size, total, label }: { page: number; size: number; total: number; label: string }) {
+export function TablePagination({ page, size, total, label, pageParam = "page", anchor, pageCount }: { page: number; size: number; total: number; label: string; pageParam?: string; anchor?: string; pageCount?: number }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const count = Math.max(1, Math.ceil(total / size));
+  const count = Math.max(1, pageCount ?? Math.ceil(total / size));
   const start = Math.max(0, Math.min(page - 2, count - 5));
   const pages = Array.from({ length: Math.min(5, count) }, (_, index) => start + index);
 
   function href(index: number) {
     const params = new URLSearchParams(searchParams.toString());
-    params.set("page", String(index));
-    return `${pathname}?${params}`;
+    params.set(pageParam, String(index));
+    return `${pathname}?${params}${anchor ? `#${anchor}` : ""}`;
   }
 
   function control(text: string, icon: Icon, index: number, disabled: boolean) {

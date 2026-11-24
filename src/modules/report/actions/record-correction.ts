@@ -14,5 +14,10 @@ export async function recordCorrection(_current: string | null, formData: FormDa
     return result.message;
   }
   revalidatePath("/corrections");
+  revalidatePath("/signalements/[id]", "page");
+  revalidatePath("/signalements");
+  revalidatePath("/dossiers-valides");
+  revalidatePath("/recompenses");
+  revalidatePath("/paiements");
   return null;
 }

@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { cn } from "cn";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { ArrowLeft01Icon } from "@hugeicons/core-free-icons";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 
 /* Ossature commune des pages : même marge, même rythme vertical, mêmes niveaux de titre. */
@@ -28,10 +29,10 @@ export function PageHeader({
   return (
     <header className="grid gap-4">
       {back ? (
-        <Link href={back.href} className="flex w-fit items-center gap-1 text-[13px] text-muted-foreground transition-colors hover:text-foreground">
-          <HugeiconsIcon icon={ArrowLeft01Icon} strokeWidth={2} className="size-3.5" />
+        <Button variant="outline" size="sm" className="w-fit" nativeButton={false} render={<Link href={back.href} />}>
+          <HugeiconsIcon icon={ArrowLeft01Icon} strokeWidth={2} data-icon="inline-start" />
           {back.label}
-        </Link>
+        </Button>
       ) : null}
       <div className="flex flex-wrap items-end justify-between gap-x-10 gap-y-5 lg:flex-nowrap">
         <div className={cn("grid min-w-0 gap-3", compact ? "max-w-4xl" : "max-w-3xl")}>

@@ -1,37 +1,201 @@
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { TablePagination } from "@/components/table-pagination";
-import { Empty, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
-import { reportedAtParts, reportTitle, type ReportPage } from "@/modules/report/model/report";
-import { workParams, type WorkFilters } from "@/modules/report/model/work-filters";
-import { ValidationTag } from "@/modules/report/ui/report-marks";
-import { ClickableReportRow } from "@/modules/report/ui/clickable-report-row";
+"use client";
 
-export function ReportsTable({ page, filters }: { page: ReportPage; filters: WorkFilters }) {
-  const list=workParams(filters).toString();
-  return <div className="grid min-w-0 gap-4">
-    <p className="text-sm font-medium">{page.total.toLocaleString("fr-FR")} signalement{page.total > 1 ? "s" : ""}</p>
-    <Table aria-label="Liste des signalements">
-      <TableHeader><TableRow><TableHead>Signalement</TableHead><TableHead>Établissement / NIF</TableHead><TableHead>Facture</TableHead><TableHead>Statut</TableHead><TableHead>À faire</TableHead><TableHead>Agent</TableHead><TableHead>Reçu le</TableHead><TableHead><span className="sr-only">Actions</span></TableHead></TableRow></TableHeader>
-      <TableBody>{page.reports.map(report=>{
-        const work=report.work; const date=reportedAtParts(report.reportedAt);
-        const title = reportTitle(report.title);
-        const href = `/signalements/${report.id}?list=${encodeURIComponent(list)}`;
-        return <ClickableReportRow key={report.id}>
-          <TableCell className="max-w-64 font-medium whitespace-normal">{title}</TableCell>
-          <TableCell className="max-w-52 whitespace-normal"><span className="block">{work?.sellerName || "À compléter"}</span><span className="mt-1 block text-xs text-muted-foreground">{work?.sellerTaxId || "NIF à compléter"}</span></TableCell>
-          <TableCell><span className="block">{work?.documentNumber || "À compléter"}</span><span className="mt-1 block text-xs text-muted-foreground">{work?.totalAmount ? `${work.totalAmount} ${work.currency || ""}` : ""}</span></TableCell>
-          <TableCell><ValidationTag state={report.validationState} assignmentState={report.state} screeningReason={report.screeningReason} /></TableCell>
-          <TableCell className="max-w-64 whitespace-normal text-sm text-muted-foreground">{report.validationState === "doubt" ? work?.photoRequested ? "Nouvelle photo attendue" : work?.reason ?? "Vérifier le dossier" : "—"}</TableCell>
-          <TableCell>{report.assigneeName || "Non affecté"}</TableCell>
-          <TableCell className="tabular-nums">{date.date}<span className="mt-1 block text-xs text-muted-foreground">{date.time}</span></TableCell>
-          <TableCell className="text-right"><Button size="sm" variant="outline" nativeButton={false} render={<Link href={href} />}>
-            Voir plus<span className="sr-only"> — {title}</span>
-          </Button></TableCell>
-        </ClickableReportRow>;
-      })}{page.reports.length === 0 ? <TableRow><TableCell colSpan={8}><Empty><EmptyHeader><EmptyTitle>Aucun signalement</EmptyTitle></EmptyHeader></Empty></TableCell></TableRow> : null}</TableBody>
-    </Table>
-    <TablePagination page={page.page} size={page.size} total={page.total} label="Pagination des signalements" />
-  </div>;
+import Link from "next/link";
+import { createColumnHelper, rowPaginationFeature, tableFeatures, useTable } from "@tanstack/react-table";
+import { TablePagination } from "@/components/table-pagination";
+import { Button } from "@/components/ui/button";
+import { Empty, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { formatDeclarantName, reportedAtParts, type ReportSummary } from "@/modules/report/model/report";
+import { ClickableReportRow } from "@/modules/report/ui/clickable-report-row";
+import { ValidationTag } from "@/modules/report/ui/report-marks";
+
+type ReportRow = Pick<ReportSummary,
+  "id" | "work" | "state" | "validationState" | "screeningReason" | "assigneeName" | "reportedAt" | "reporterName"
+> & { title: string; href: string };
+
+const features = tableFeatures({ rowPaginationFeature });
+const column = createColumnHelper<typeof features, ReportRow>();
+const reportIdentification = column.columns([
+  column.accessor("title", { header: "Signalement" }),
+  column.display({
+    id: "seller",
+    header: "Établissement / NIF",
+    cell: ({ row: { original: { work } } }) => <>
+      <span className="block">{work?.sellerName || "À compléter"}</span>
+      <span className="mt-1 block text-xs text-muted-foreground">{work?.sellerTaxId || "NIF à compléter"}</span>
+    </>,
+  }),
+]);
+
+const statusColumn = column.display({
+  id: "status",
+  header: "Statut",
+  cell: ({ row: { original: report } }) => (
+    <ValidationTag state={report.validationState} assignmentState={report.state} screeningReason={report.screeningReason} />
+  ),
+});
+
+const reportTracking = column.columns([
+  column.accessor("assigneeName", {
+    header: "Agent",
+    cell: ({ getValue }) => getValue() || "Non affecté",
+  }),
+  column.accessor("reportedAt", {
+    header: "Reçu le",
+    cell: ({ getValue }) => {
+      const { date, time } = reportedAtParts(getValue());
+      return <>{date}<span className="mt-1 block text-xs text-muted-foreground">{time}</span></>;
+    },
+  }),
+  column.display({
+    id: "actions",
+    header: () => <span className="sr-only">Actions</span>,
+    cell: ({ row: { original: { href, title } } }) => (
+      <Button size="sm" variant="default" nativeButton={false} render={<Link href={href} />}>
+        Voir plus<span className="sr-only"> — {title}</span>
+      </Button>
+    ),
+  }),
+]);
+
+const signalementColumns = column.columns([
+  ...reportIdentification,
+  column.accessor("reporterName", {
+    header: "Nom du déclarant",
+    cell: ({ getValue }) => formatDeclarantName(getValue()) ?? "—",
+  }),
+  statusColumn,
+  ...reportTracking,
+]);
+
+const dossierColumns = column.columns([
+  ...reportIdentification,
+  column.display({
+    id: "invoice",
+    header: "Facture",
+    cell: ({ row: { original: { work } } }) => <>
+      <span className="block">{work?.documentNumber || "À compléter"}</span>
+      {work?.totalAmount ? <span className="mt-1 block text-xs text-muted-foreground">{work.totalAmount} {work.currency}</span> : null}
+    </>,
+  }),
+  statusColumn,
+  column.display({
+    id: "task",
+    header: "À faire",
+    cell: ({ row: { original: { validationState, work } } }) => {
+      if (validationState !== "doubt") return "—";
+      if (work?.photoRequested) return "Nouvelle photo attendue";
+      return work?.reason ?? "Vérifier le dossier";
+    },
+  }),
+  ...reportTracking,
+]);
+
+const cellClasses: Record<string, string> = {
+  title: "max-w-64 font-medium whitespace-normal",
+  seller: "max-w-52 whitespace-normal",
+  reporterName: "max-w-52 whitespace-normal break-words",
+  task: "max-w-64 whitespace-normal text-muted-foreground",
+  reportedAt: "tabular-nums",
+  actions: "text-right",
+};
+
+export function ReportsTable({ rows, pageIndex, pageSize, total, validatedOnly }: {
+  rows: ReportRow[];
+  pageIndex: number;
+  pageSize: number;
+  total: number;
+  validatedOnly: boolean;
+}) {
+  const columns = validatedOnly ? dossierColumns : signalementColumns;
+  const table = useTable({
+    features,
+    columns,
+    data: rows,
+    getRowId: (report) => report.id,
+    manualPagination: true,
+    rowCount: total,
+    state: { pagination: { pageIndex, pageSize } },
+  });
+
+  return (
+    <div className="grid min-w-0 gap-4">
+      <p className="text-sm font-medium">{total.toLocaleString("fr-FR")} signalement{total > 1 ? "s" : ""}</p>
+      <Table aria-label={validatedOnly ? "Liste des dossiers validés" : "Liste des signalements"} className="min-w-[55rem]">
+        <TableHeader>
+          {table.getHeaderGroups().map((group) => (
+            <TableRow key={group.id}>
+              {group.headers.map((header) => (
+                <TableHead key={header.id} scope="col"><table.FlexRender header={header} /></TableHead>
+              ))}
+            </TableRow>
+          ))}
+        </TableHeader>
+        <TableBody>
+          {table.getRowModel().rows.map((row) => (
+            <ClickableReportRow key={row.id}>
+              {row.getAllCells().map((cell) => (
+                <TableCell key={cell.id} className={cellClasses[cell.column.id]}>
+                  <table.FlexRender cell={cell} />
+                </TableCell>
+              ))}
+            </ClickableReportRow>
+          ))}
+          {rows.length === 0 ? (
+            <TableRow>
+              <TableCell colSpan={columns.length}><Empty><EmptyHeader><EmptyTitle>Aucun signalement</EmptyTitle></EmptyHeader></Empty></TableCell>
+            </TableRow>
+          ) : null}
+        </TableBody>
+      </Table>
+      <TablePagination
+        page={table.state.pagination.pageIndex}
+        size={table.state.pagination.pageSize}
+        total={table.getRowCount()}
+        pageCount={table.getPageCount()}
+        label="Pagination des signalements"
+      />
+    </div>
+  );
+}
+
+const signalementSkeletonWidths = ["w-32", "w-28", "w-28", "w-16", "w-16", "w-20", "w-16"];
+const dossierSkeletonWidths = ["w-32", "w-28", "w-20", "w-16", "w-24", "w-16", "w-20", "w-16"];
+
+export function ReportsTableSkeleton({ validatedOnly = false }: { validatedOnly?: boolean }) {
+  const skeletonWidths = validatedOnly ? dossierSkeletonWidths : signalementSkeletonWidths;
+  return (
+    <div role="status" className="grid min-w-0 gap-4">
+      <span className="sr-only">Chargement des signalements</span>
+      <div aria-hidden="true" className="grid min-w-0 gap-4">
+        <Skeleton className="h-5 w-32" />
+        <Table className="min-w-[55rem]">
+          <TableHeader>
+            <TableRow>
+              {skeletonWidths.map((_, index) => (
+                <TableHead key={index}>{index < skeletonWidths.length - 1 ? <Skeleton className="h-3 w-14 bg-border" /> : null}</TableHead>
+              ))}
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {Array.from({ length: 6 }, (_, row) => (
+              <TableRow key={row} className="h-16">
+                {skeletonWidths.map((width, index) => (
+                  <TableCell key={index}>
+                    <Skeleton className={`${width} ${index === skeletonWidths.length - 1 ? "ml-auto h-8" : "h-4"}`} />
+                  </TableCell>
+                ))}
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+        <div className="flex items-center justify-between gap-4">
+          <Skeleton className="h-4 w-24" />
+          <Skeleton className="h-8 w-36" />
+        </div>
+      </div>
+    </div>
+  );
 }

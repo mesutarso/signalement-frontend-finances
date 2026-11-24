@@ -1,13 +1,14 @@
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
+import { FilterBar, FilterDateRange } from "@/components/filter-bar";
 import { Input } from "@/components/ui/input";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
 import type { Assignee } from "@/modules/report/model/report";
+import { REPORT_STATUS_FILTERS } from "@/modules/report/model/assessment";
 import { workParams, type WorkFilters } from "@/modules/report/model/work-filters";
 
 const choices = {
-  validation: [["all", "Tous les statuts"], ["doubt", "À vérifier"], ["completion", "À compléter"], ["queued", "Lecture en attente"], ["analyzing", "Lecture en cours"], ["validated", "Validés"], ["rejected", "Rejetés"], ["rejected-duplicate", "Doublons écartés"]],
+  validation: REPORT_STATUS_FILTERS,
+  scope: [["all", "Tous les dossiers"], ["mine", "Les miens"], ["unassigned", "Non affectés"]],
   state: [["", "Toutes les affectations"], ["pending", "Non affectés"], ["assigned", "Affectés"]],
   vat: [["", "Tous"], ["unknown", "À confirmer"], ["registered", "Assujetti"], ["unregistered", "Non assujetti"]],
   reading: [["", "Toutes"], ["pending", "En attente"], ["done", "Terminée"], ["failed", "À reprendre"], ["unreadable", "Photo illisible"]],
@@ -16,34 +17,114 @@ const choices = {
   photoRequest: [["", "Toutes"], ["open", "Nouvelle photo attendue"], ["linked", "Photo reçue"], ["none", "Aucune relance en cours"]],
   sort: [["newest", "Plus récents"], ["oldest", "Plus anciens"], ["seller", "Établissement"], ["invoice", "Numéro de facture"], ["status", "Statut"]],
 } as const;
+
 function SelectFilter({ name, label, filters }: { name: keyof typeof choices; label: string; filters: WorkFilters }) {
-  return <Field><FieldLabel htmlFor={`filter-${name}`}>{label}</FieldLabel><NativeSelect className="w-full" id={`filter-${name}`} name={name} defaultValue={filters[name] || (name === "sort" ? "newest" : name === "validation" ? "all" : "")}>
-    {choices[name].map(([value, text]) => <NativeSelectOption key={value} value={value}>{text}</NativeSelectOption>)}
-  </NativeSelect></Field>;
+  return (
+    <Field className="min-w-0">
+      <FieldLabel htmlFor={`filter-${name}`}>{label}</FieldLabel>
+      <NativeSelect className="w-full" id={`filter-${name}`} name={name} defaultValue={filters[name] || choices[name][0][0]}>
+        {choices[name].map(([value, text]) => <NativeSelectOption key={value} value={value}>{text}</NativeSelectOption>)}
+      </NativeSelect>
+    </Field>
+  );
 }
-export function QueueFilters({ filters, assignees, agent, validatedOnly }: { filters: WorkFilters; assignees: Assignee[]; agent: string; validatedOnly: boolean }) {
-  const path = validatedOnly ? "/dossiers-valides" : "/signalements";
-  return <form action={path} method="get" className="grid gap-4">
-    <input type="hidden" name="scope" value={filters.scope || "all"} />
-    <FieldGroup className="grid items-end gap-3 sm:grid-cols-3">
-      <Field><FieldLabel htmlFor="report-search">Rechercher</FieldLabel><Input id="report-search" name="q" defaultValue={filters.q} placeholder="Référence, établissement, NIF, facture…" /></Field>
-      {validatedOnly ? null : <SelectFilter name="validation" label="Statut" filters={filters} />}
-      <SelectFilter name="sort" label="Trier par" filters={filters} />
-    </FieldGroup>
-    <FieldGroup className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
-      <Field><FieldLabel htmlFor="report-start">Reçu à partir du</FieldLabel><Input id="report-start" name="start" type="date" defaultValue={filters.start} /></Field>
-      <Field><FieldLabel htmlFor="report-end">Reçu jusqu’au</FieldLabel><Input id="report-end" name="end" type="date" defaultValue={filters.end} /></Field>
-      <Field><FieldLabel htmlFor="report-agent">Agent</FieldLabel><NativeSelect className="w-full" id="report-agent" name="agent" defaultValue={agent}><NativeSelectOption value="">Tous les agents</NativeSelectOption>{assignees.map(a=><NativeSelectOption key={a.id} value={a.id}>{a.username}</NativeSelectOption>)}</NativeSelect></Field>
-      <SelectFilter name="state" label="Affectation" filters={filters} />
-      <SelectFilter name="vat" label="Assujettissement TVA" filters={filters} />
-      <SelectFilter name="reading" label="Lecture des pièces" filters={filters} />
-      <SelectFilter name="missing" label="Informations à compléter" filters={filters} />
-      <SelectFilter name="duplicates" label="Doublons" filters={filters} />
-      <SelectFilter name="photoRequest" label="Relance photo" filters={filters} />
-    </FieldGroup>
-    <div className="flex flex-wrap gap-2">
-      <Button type="submit">Appliquer les filtres</Button>
-      {workParams(filters).size > 1 ? <Button variant="ghost" nativeButton={false} render={<Link href={`/signalements?scope=${filters.scope || "all"}`} />}>Effacer les filtres</Button> : null}
-    </div>
-  </form>;
+
+function SearchFilter({ value }: { value?: string }) {
+  return (
+    <Field className="min-w-0">
+      <FieldLabel htmlFor="report-search">Recherche</FieldLabel>
+      <Input id="report-search" name="q" type="search" defaultValue={value} placeholder="Référence, établissement, NIF, facture…" />
+    </Field>
+  );
+}
+
+function AgentFilter({ agents, value }: { agents: Assignee[]; value?: string }) {
+  return (
+    <Field className="min-w-0">
+      <FieldLabel htmlFor="report-agent">Agent</FieldLabel>
+      <NativeSelect className="w-full" id="report-agent" name="agent" defaultValue={value}>
+        <NativeSelectOption value="">Tous les agents</NativeSelectOption>
+        {agents.map((agent) => <NativeSelectOption key={agent.id} value={agent.id}>{agent.username}</NativeSelectOption>)}
+      </NativeSelect>
+    </Field>
+  );
+}
+
+function SignalementFilters({ filters, agents }: { filters: WorkFilters; agents: Assignee[] }) {
+  const { q, validation, start, end, agent, sort } = filters;
+  const activeSort = sort && sort !== "newest" ? sort : "";
+  const advancedCount = Number(Boolean(start || end)) + Number(Boolean(agent)) + Number(Boolean(activeSort));
+  const active = workParams({
+    q, start, end, agent, sort: activeSort, validation: validation === "all" ? "" : validation,
+  });
+
+  return (
+    <FilterBar
+      key={active.toString()}
+      action="/signalements"
+      label="Filtres des signalements"
+      secondary={<SelectFilter name="validation" label="Statut" filters={filters} />}
+      clearHref={active.size ? "/signalements" : undefined}
+      advanced={{
+        count: advancedCount,
+        fields: (
+          <FieldGroup className="grid items-end gap-3 @sm:grid-cols-2 @3xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,1fr)]">
+            <FilterDateRange
+              from={{ name: "start", value: start }}
+              to={{ name: "end", value: end }}
+              className="@sm:col-span-2 @3xl:col-span-1"
+            />
+            <SelectFilter name="sort" label="Trier par" filters={filters} />
+            <AgentFilter agents={agents} value={agent} />
+          </FieldGroup>
+        ),
+      }}
+    >
+      <SearchFilter value={q} />
+    </FilterBar>
+  );
+}
+
+const dossierAdvancedFilters = ["agent", "state", "vat", "reading", "missing", "duplicates", "photoRequest"] as const;
+
+export async function QueueFilters({ filters, assignees, validatedOnly }: { filters: WorkFilters; assignees: Assignee[] | Promise<Assignee[]>; validatedOnly: boolean }) {
+  const agents = await assignees;
+  if (!validatedOnly) return <SignalementFilters filters={filters} agents={agents} />;
+
+  const { scope = "all", q, sort, start, end } = filters;
+  const advancedCount = Number(Boolean(start || end)) + Number(Boolean(sort && sort !== "newest"))
+    + dossierAdvancedFilters.filter((name) => filters[name]).length;
+  const hasFilters = Boolean(q || advancedCount || scope !== "all");
+
+  return (
+    <FilterBar
+      key={workParams({ ...filters, page: "" }).toString()}
+      action="/dossiers-valides"
+      label="Filtres des dossiers validés"
+      secondary={<SelectFilter name="scope" label="Affectation" filters={filters} />}
+      clearHref={hasFilters ? "/dossiers-valides" : undefined}
+      advanced={{
+        count: advancedCount,
+        fields: (
+          <FieldGroup className="grid items-end gap-3 @sm:grid-cols-2 @3xl:grid-cols-4">
+            <FilterDateRange
+              from={{ name: "start", value: start }}
+              to={{ name: "end", value: end }}
+              className="@sm:col-span-2"
+            />
+            <SelectFilter name="sort" label="Trier par" filters={filters} />
+            <AgentFilter agents={agents} value={filters.agent} />
+            <SelectFilter name="state" label="État d’affectation" filters={filters} />
+            <SelectFilter name="vat" label="Assujettissement TVA" filters={filters} />
+            <SelectFilter name="reading" label="Lecture des pièces" filters={filters} />
+            <SelectFilter name="missing" label="Informations à compléter" filters={filters} />
+            <SelectFilter name="duplicates" label="Doublons" filters={filters} />
+            <SelectFilter name="photoRequest" label="Relance photo" filters={filters} />
+          </FieldGroup>
+        ),
+      }}
+    >
+      <SearchFilter value={q} />
+    </FilterBar>
+  );
 }
