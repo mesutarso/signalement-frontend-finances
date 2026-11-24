@@ -50,7 +50,7 @@ export type ReportAnalysisOverview = {
   failed: number;
 };
 
-export type Correction = { id: string; reportReference: string; reason: string; recordedAt: string };
+export type Correction = { id: string; reason: string; recordedAt: string };
 export type Reexamination = {
   id: string;
   reference: string;

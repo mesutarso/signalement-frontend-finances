@@ -97,7 +97,7 @@ function SellerFileCard({ file }: { file: SellerFile }) {
               <p className="font-medium">{qualificationDecisionLabel(report.decision)}{finding ? ` · ${finding}` : ""}{proof ? <span className="font-normal text-muted-foreground"> · {proof}</span> : ""}</p>
               <p>{report.justification}</p>
               {report.sellerName ? <p className="text-[13px] text-muted-foreground">Nom saisi : {report.sellerName}</p> : null}
-              <ReportLink id={report.reportId} reference={report.identifier} />
+              <ReportLink id={report.reportId} />
             </li>
           );
         })}

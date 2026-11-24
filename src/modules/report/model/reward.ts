@@ -9,7 +9,6 @@ export type RewardReview = {
 export type Reward = {
   id: string;
   reportId: string;
-  reportReference: string;
   amount: number;
   status: string;
   phone: string | null;

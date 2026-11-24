@@ -80,7 +80,7 @@ async function Indices({ searchParams }: Pick<PageProps<"/indices">, "searchPara
                         {index.reports.map((report) => (
                           <li key={report.id} className="flex flex-wrap items-center justify-between gap-2">
                             <span className="text-[13px] text-muted-foreground">Reçu le {reportedAtLabel(report.reportedAt)}</span>
-                            <ReportLink id={report.id} reference={report.identifier} />
+                            <ReportLink id={report.id} />
                           </li>
                         ))}
                       </ul>
@@ -98,7 +98,7 @@ async function Indices({ searchParams }: Pick<PageProps<"/indices">, "searchPara
                 {indices.series.map((item) => (
                   <LedgerItem key={`${item.reportedOn}-${item.reports[0]?.id ?? item.reportCount}`} title={`${item.reportCount} signalements`} meta={calendarLabel(item.reportedOn)}>
                     <p>{item.explanation}</p>
-                    <ReportRefs reports={item.reports} />
+                    <ReportLinks reports={item.reports} />
                   </LedgerItem>
                 ))}
               </Ledger>
@@ -110,7 +110,7 @@ async function Indices({ searchParams }: Pick<PageProps<"/indices">, "searchPara
                 {indices.accounts.map((item) => (
                   <LedgerItem key={item.reports[0]?.id ?? item.accountCount} title={`${item.accountCount} comptes`} meta={`${item.reportCount} signalements`}>
                     <p>{item.explanation}</p>
-                    <ReportRefs reports={item.reports} />
+                    <ReportLinks reports={item.reports} />
                   </LedgerItem>
                 ))}
               </Ledger>
@@ -130,7 +130,7 @@ async function Indices({ searchParams }: Pick<PageProps<"/indices">, "searchPara
         {!suspensions ? <p className="text-sm text-muted-foreground">Le droit aux récompenses est indisponible.</p> : suspensions.items.length === 0 ? <LedgerEmpty>Aucun droit suspendu.</LedgerEmpty> : (
           <Ledger>
             {suspensions.items.map((item) => (
-              <LedgerItem key={`${item.reference}-${item.recordedAt}`} className="py-3.5" title={<span className="ref text-sm font-medium">{item.reference}</span>} status={<Badge variant={item.action === "suspended" ? "destructive" : "success"}>{item.action === "suspended" ? "Suspendu" : "Rétabli"}</Badge>}>
+              <LedgerItem key={`${item.reference}-${item.recordedAt}`} className="py-3.5" title={item.action === "suspended" ? "Suspension" : "Rétablissement"} status={<Badge variant={item.action === "suspended" ? "destructive" : "success"}>{item.action === "suspended" ? "Suspendu" : "Rétabli"}</Badge>}>
                 <p>{item.reason}</p>
               </LedgerItem>
             ))}
@@ -141,10 +141,10 @@ async function Indices({ searchParams }: Pick<PageProps<"/indices">, "searchPara
   );
 }
 
-function ReportRefs({ reports }: { reports: IndexedReport[] }) {
+function ReportLinks({ reports }: { reports: IndexedReport[] }) {
   return (
     <ul className="flex flex-wrap gap-2">
-      {reports.map((report) => <li key={report.id}><ReportLink id={report.id} reference={report.reference} /></li>)}
+      {reports.map((report) => <li key={report.id}><ReportLink id={report.id} /></li>)}
     </ul>
   );
 }

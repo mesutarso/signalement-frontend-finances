@@ -65,7 +65,7 @@ async function ReportContent({ params, searchParams }: PageProps<"/signalements/
           {payment.statementId ? <Link className="ml-3 text-primary underline" href={`/etats/${payment.statementId}`}>Voir l’état de paiement</Link> : null}
         </p> : <p className="text-sm text-muted-foreground">Aucun versement engagé pour ce dossier.</p>}
     </PageSection> : null}
-    <ReportDecisions reference={report.referenceCode ?? report.identifier} corrections={corrections} reexaminations={reexaminations}
+    <ReportDecisions reference={`id:${report.id}`} corrections={corrections} reexaminations={reexaminations}
       canWithdraw={validated && can(account, "correction.decide")} canReexamine={decided && can(account, "reexam.decide")} />
   </> : null;
   return <ReportScreen

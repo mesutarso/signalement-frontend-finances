@@ -26,13 +26,11 @@ export type ReportPage = {
   total: number;
 };
 
-export function reportReferenceLabel(reference: string | null): string | null {
-  const text = reference?.trim();
-  return text && !/^[\da-f]{8}(?:-[\da-f]{4}){3}-[\da-f]{12}$/i.test(text) ? text : null;
-}
-
-export function reportTitle(title: string | null): string {
-  return reportReferenceLabel(title) ?? "Signalement sans titre";
+export function reportTitle(title: string | null, ...identifiers: (string | null | undefined)[]): string {
+  const text = title?.trim();
+  const isIdentifier = identifiers.some(identifier => identifier?.trim() === text)
+    || /^[\da-f]{8}(?:-[\da-f]{4}){3}-[\da-f]{12}$/i.test(text ?? "");
+  return text && !isIdentifier ? text : "Signalement sans titre";
 }
 
 export function formatDeclarantName(name: string | null): string | null {
@@ -326,7 +324,7 @@ export function duplicatePriorityLabel(alert: DuplicateAlert): string | null {
   }
   const when = reportedAtLabel(alert.priorityReportedAt);
   if (alert.priorityBasis === "reference") {
-    return "Reçus en même temps : la référence la plus petite conserve la priorité.";
+    return "Les signalements ont été reçus au même moment.";
   }
   return alert.currentKeepsPriority
     ? "Premier signalement conservé. Le signalement ultérieur est rejeté."

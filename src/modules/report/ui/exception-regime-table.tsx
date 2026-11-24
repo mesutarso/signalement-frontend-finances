@@ -105,7 +105,7 @@ export function ExceptionRegimeTable({ data, period }: { data: ExceptionPage; pe
           {data.items.map((row) => (
             <TableRow key={row.id}>
               <TableCell>
-                <Link className="font-medium text-primary hover:underline" href={`/signalements/${row.id}`}>{row.reference}</Link>
+                <Link className="font-medium text-primary hover:underline" href={`/signalements/${row.id}`}>Ouvrir le signalement</Link>
                 {row.company && <p className="max-w-44 truncate text-xs text-muted-foreground" title={row.company}>{row.company}</p>}
               </TableCell>
               <TableCell>{calendarLabel(row.date)}</TableCell>
@@ -259,12 +259,12 @@ function PayDialog({ period, candidates, environment, close, finish }: {
                       });
                     }} />
                     <span className="min-w-0 text-sm">
-                      <span className="block break-all font-medium">{row.reference}</span>
+                      <span className="block font-medium">{row.declarant || "Déclarant non renseigné"} · {calendarLabel(row.date)}</span>
                       <span className="block text-xs text-muted-foreground tabular-nums">{row.phone} · {francs(row.amount)}</span>
                     </span>
                   </label>
                   {environment === "sandbox" ? <span className="text-xs text-muted-foreground">{TRANSFER_OPERATORS.find(([id]) => id === operatorFor(row))?.[1]}</span> : (
-                    <select aria-label={`Opérateur du dossier ${row.reference}`} className="min-h-9 max-w-full rounded-md border bg-background px-2 text-xs"
+                    <select aria-label={`Opérateur pour le numéro ${row.phone}`} className="min-h-9 max-w-full rounded-md border bg-background px-2 text-xs"
                       disabled={excluded.has(row.id)} value={operators[row.id] ?? ""} onChange={(event) => {
                         const operator = event.target.value as TransferOperator | "";
                         setOperators((current) => ({ ...current, [row.id]: operator || undefined }));

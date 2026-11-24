@@ -26,10 +26,6 @@ function payable(reward: Reward, environment: TransferEnvironment): reward is Pa
     && (environment === "production" || sandboxTransferOperator(reward.phone)));
 }
 
-function rewardReference(reward: Reward): string {
-  return reward.reportReference ?? reward.id;
-}
-
 export function RewardsTable({ rewards, environment, configured, canPay, canCheck, canReview, canReadReports, canReadStatements }: {
   rewards: Reward[];
   environment: TransferEnvironment;
@@ -114,14 +110,12 @@ export function RewardsTable({ rewards, environment, configured, canPay, canChec
                   {canPay && configured ? (
                     <TableCell>
                       {candidate ? <input type="checkbox" className="size-4 align-middle accent-primary"
-                        aria-label={`Sélectionner ${rewardReference(reward)}`} checked={selected}
+                        aria-label={`Sélectionner la récompense de ${francs(reward.amount)} enregistrée le ${reportedAtLabel(reward.recordedAt)}`} checked={selected}
                         onChange={(event) => toggle(reward.id, event.target.checked)} /> : null}
                     </TableCell>
                   ) : null}
                   <TableCell>
-                    {canReadReports && reward.reportId && reward.reportReference
-                      ? <ReportLink id={reward.reportId} reference={reward.reportReference} />
-                      : <span className="ref">{reward.reportReference ?? "—"}</span>}
+                    {canReadReports && reward.reportId ? <ReportLink id={reward.reportId} /> : "—"}
                   </TableCell>
                   <TableCell className="text-right font-semibold tabular-nums">{francs(reward.amount)}</TableCell>
                   <TableCell className="text-muted-foreground">{reportedAtLabel(reward.recordedAt)}</TableCell>
@@ -232,13 +226,11 @@ function RewardPaymentForm({ rewards, environment, onRunning, onComplete }: {
             const operator = sandbox ? sandboxTransferOperator(reward.phone) : undefined;
             return (
               <li key={reward.id} className="grid gap-2 p-3">
-                <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 text-sm">
-                  <span className="ref font-medium">{rewardReference(reward)}</span>
-                  <span className="tabular-nums">{francs(reward.amount)}</span>
-                </div>
-                <p className="text-sm text-muted-foreground tabular-nums">{reward.phone}</p>
+                <p className="flex flex-wrap justify-between gap-2 text-sm tabular-nums">
+                  <span>{reward.phone}</span><strong>{francs(reward.amount)}</strong>
+                </p>
                 <label className="grid gap-1 text-xs text-muted-foreground">
-                  Opérateur <span className="sr-only">{rewardReference(reward)}</span>
+                  Opérateur <span className="sr-only">pour le numéro {reward.phone}</span>
                   <NativeSelect name={reward.id} defaultValue={operator ?? ""} disabled={running || completed > 0} required>
                     <NativeSelectOption value="" disabled>Choisir un opérateur</NativeSelectOption>
                     {TRANSFER_OPERATORS.filter(([key]) => !operator || operator === key).map(([key, label]) => (

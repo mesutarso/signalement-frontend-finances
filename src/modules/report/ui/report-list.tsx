@@ -33,9 +33,9 @@ export function ReportList({
 async function ReportResults({ page, filters, validatedOnly }: { page: ReportPage | Promise<ReportPage>; filters: WorkFilters; validatedOnly: boolean }) {
   const { reports, page: pageIndex, size, total } = await page;
   const list = encodeURIComponent(workParams({ ...filters, page: pageIndex ? String(pageIndex) : "" }).toString());
-  const rows = reports.map(({ id, title, reportedAt, state, validationState, screeningReason, assigneeName, work, reporterName }) => ({
+  const rows = reports.map(({ id, title, identifier, reportedAt, state, validationState, screeningReason, assigneeName, work, reporterName }) => ({
     id,
-    title: reportTitle(title),
+    title: reportTitle(title, identifier),
     href: `/signalements/${id}?list=${list}`,
     reportedAt,
     state,

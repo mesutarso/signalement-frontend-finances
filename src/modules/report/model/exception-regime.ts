@@ -4,7 +4,6 @@ export type ExceptionPeriod = { start?: string; end?: string };
 
 export type ExceptionReport = {
   id: string;
-  reference: string;
   date: string;
   declarant: string | null;
   company: string | null;
@@ -29,14 +28,15 @@ export type ExceptionPage = {
 
 export type ExceptionCandidate = {
   id: string;
-  reference: string;
+  declarant: string | null;
+  date: string;
   phone: string;
   amount: number;
   lineId: string | null;
   previousTransferId: string | null;
 };
 
-export type ExceptionOrder = Omit<ExceptionCandidate, "reference"> & { operator: TransferOperator };
+export type ExceptionOrder = Omit<ExceptionCandidate, "declarant" | "date"> & { operator: TransferOperator };
 export type ExceptionPayment = {
   requestId: string;
   environment: TransferEnvironment;

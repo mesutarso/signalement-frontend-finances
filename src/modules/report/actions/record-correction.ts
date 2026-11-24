@@ -7,7 +7,7 @@ export async function recordCorrection(_current: string | null, formData: FormDa
   const reference = String(formData.get("reference") ?? "").trim();
   const reason = String(formData.get("reason") ?? "").trim();
   if (!reference || !reason) {
-    return "Indiquez la référence et le motif.";
+    return "Sélectionnez un signalement et indiquez le motif.";
   }
   const result = await writeJson("/api/corrections", "POST", { reference, reason });
   if (!result.ok) {

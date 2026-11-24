@@ -143,7 +143,7 @@ function CommandBody({ account, onClose }: { account: Account; onClose: () => vo
             setActive(0);
           }}
           onKeyDown={onKeyDown}
-          placeholder="Une rubrique, ou la référence d’un signalement"
+          placeholder="Une rubrique ou un signalement"
           className="h-14 min-w-0 flex-1 border-0 bg-transparent text-base outline-none placeholder:text-muted-foreground focus-visible:shadow-none"
         />
       </div>

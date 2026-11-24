@@ -12,7 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { ActionDialog } from "@/components/action-dialog";
 import { Ledger, LedgerEmpty, LedgerItem } from "@/components/ledger";
 
-type Item = { id: string; reference: string; reportReference: string; requestText: string; receivedOn: string; onTime: boolean; status: string; comment: string | null };
+type Item = { id: string; reference: string; requestText: string; receivedOn: string; onTime: boolean; status: string; comment: string | null };
 type Page = { items: Item[]; page: number; size: number; total: number };
 
 const STATUS: Record<string, string> = { received: "Reçue", maintained: "Maintenue", modified: "Modifiée" };
@@ -48,7 +48,6 @@ async function Reexaminations() {
               meta={`Reçue le ${calendarLabel(item.receivedOn)} · ${item.onTime ? "Dans le délai" : "Hors délai"}`}
               action={canRecord && item.status === "received" ? <ActionDialog label="Décider" title="Décider du réexamen" description={item.reference} variant="default" size="sm"><ReexaminationDecisionForm id={item.id} /></ActionDialog> : undefined}
             >
-              <p className="ref text-muted-foreground">{item.reportReference}</p>
               <p>{item.requestText}</p>
               {item.comment ? <p className="text-muted-foreground">{item.comment}</p> : null}
             </LedgerItem>

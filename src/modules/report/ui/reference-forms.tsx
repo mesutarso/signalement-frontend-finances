@@ -3,6 +3,7 @@
 import { useActionState } from "react";
 import { Button } from "@/components/ui/button";
 import { Field, FieldLabel } from "@/components/ui/field";
+import { ReportPicker } from "@/modules/report/ui/report-picker";
 import { prepareMessage } from "@/modules/report/actions/prepare-message";
 import { recordCorrection } from "@/modules/report/actions/record-correction";
 import { recordReexamination } from "@/modules/report/actions/record-reexamination";
@@ -11,7 +12,7 @@ export function CorrectionForm({ reference }: { reference?: string }) {
   const [message, action, pending] = useActionState(recordCorrection, null);
   return (
     <form action={action} className="grid gap-3">
-      {reference ? <input type="hidden" name="reference" value={reference} /> : <ReferenceField id="correction-reference" />}
+      {reference ? <input type="hidden" name="reference" value={reference} /> : <ReportPicker />}
       <Field>
         <FieldLabel htmlFor="correction-reason">Motif</FieldLabel>
         <input id="correction-reason" name="reason" required maxLength={500} className="h-11 rounded-md border border-input bg-card px-3" />
@@ -26,7 +27,7 @@ export function ReexaminationForm({ reference }: { reference?: string }) {
   const [message, action, pending] = useActionState(recordReexamination, null);
   return (
     <form action={action} className="grid gap-3">
-      {reference ? <input type="hidden" name="reference" value={reference} /> : <ReferenceField id="reexamination-reference" />}
+      {reference ? <input type="hidden" name="reference" value={reference} /> : <ReportPicker />}
       <Field>
         <FieldLabel htmlFor="reexamination-text">Demande</FieldLabel>
         <input id="reexamination-text" name="text" required maxLength={500} className="h-11 rounded-md border border-input bg-card px-3" />
@@ -45,7 +46,7 @@ export function MessageForm() {
   const [message, action, pending] = useActionState(prepareMessage, null);
   return (
     <form action={action} className="grid gap-3">
-      <ReferenceField id="message-reference" />
+      <ReportPicker />
       <Field>
         <FieldLabel htmlFor="message-kind">Message</FieldLabel>
         <select id="message-kind" name="kind" required className="h-11 rounded-md border border-input bg-card px-3">
@@ -57,14 +58,5 @@ export function MessageForm() {
       <Button type="submit" disabled={pending}>Préparer le message</Button>
       {message ? <p role="status" className="text-sm font-bold text-primary">{message}</p> : null}
     </form>
-  );
-}
-
-function ReferenceField({ id }: { id: string }) {
-  return (
-    <Field>
-      <FieldLabel htmlFor={id}>Référence du signalement</FieldLabel>
-      <input id={id} name="reference" required maxLength={80} className="h-11 rounded-md border border-input bg-card px-3" />
-    </Field>
   );
 }

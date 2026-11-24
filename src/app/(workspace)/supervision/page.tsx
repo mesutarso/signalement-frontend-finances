@@ -91,12 +91,12 @@ async function Supervision({ searchParams }: Pick<PageProps<"/supervision">, "se
                     title={qualificationDecisionLabel(item.decision)}
                     status={<Badge variant={item.reviewResult === "upheld" ? "success" : item.reviewResult ? "destructive" : "warning"}>{item.reviewResult ? supervisionResultLabel(item.reviewResult) : "À revoir"}</Badge>}
                     meta={`Qualifié le ${reportedAtLabel(item.qualifiedAt)}${item.qualifierName ? ` par ${item.qualifierName}` : ""}`}
-                    action={canReview ? <ActionDialog label="Examiner" title="Examiner la décision" description={item.identifier} variant="default" size="sm"><SupervisionForm reportId={item.reportId} /></ActionDialog> : undefined}
+                    action={canReview ? <ActionDialog label="Examiner" title="Examiner la décision" variant="default" size="sm"><SupervisionForm reportId={item.reportId} /></ActionDialog> : undefined}
                   >
                     {finding ? <p className="font-medium">{finding}{proof ? <span className="font-normal text-muted-foreground"> · {proof}</span> : ""}</p> : null}
                     <p>{item.justification}</p>
                     {item.reviewReason ? <p className="text-muted-foreground">Motif du contrôle : {item.reviewReason}{item.reviewerName ? ` — ${item.reviewerName}` : ""}</p> : null}
-                    <ReportLink id={item.reportId} reference={item.identifier} />
+                    <ReportLink id={item.reportId} />
                   </LedgerItem>
                 );
               })}

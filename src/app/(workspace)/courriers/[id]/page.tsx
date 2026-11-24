@@ -19,7 +19,6 @@ type Line = {
   id: string;
   annex: string;
   reportId: string;
-  reportReference: string;
   taxId: string | null;
   sellerName: string | null;
   decision: string | null;
@@ -152,7 +151,7 @@ function LetterLine({ line }: { line: Line }) {
       {line.missingElements ? <p>Éléments manquants : {line.missingElements}</p> : null}
       {line.dgiReference ? <p>Référence : {line.dgiReference}</p> : null}
       {line.contentType ? <p className="text-muted-foreground">Pièce {line.contentType}</p> : null}
-      <ReportLink id={line.reportId} reference={line.reportReference} />
+      <ReportLink id={line.reportId} />
     </LedgerItem>
   );
 }

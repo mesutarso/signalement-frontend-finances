@@ -10,7 +10,7 @@ import { Page, PageHeader, PageSkeleton } from "@/components/page";
 import { ActionDialog } from "@/components/action-dialog";
 import { Ledger, LedgerEmpty, LedgerItem } from "@/components/ledger";
 
-type Item = { id: string; reportReference: string; reason: string; recordedAt: string };
+type Item = { id: string; reason: string; recordedAt: string };
 type Page = { items: Item[]; page: number; size: number; total: number };
 
 
@@ -38,7 +38,7 @@ async function Corrections() {
       {!corrections ? <Alert variant="destructive"><AlertTitle>Les corrections sont indisponibles. Actualisez la page.</AlertTitle></Alert> : corrections.items.length === 0 ? <LedgerEmpty>Aucune correction.</LedgerEmpty> : (
         <Ledger>
           {corrections.items.map((item) => (
-            <LedgerItem key={item.id} title={<span className="ref text-sm font-medium">{item.reportReference}</span>}>
+            <LedgerItem key={item.id} title="Validation retirée">
               <p>{item.reason}</p>
               <p className="text-muted-foreground">Enregistrée le {reportedAtLabel(item.recordedAt)}.</p>
             </LedgerItem>

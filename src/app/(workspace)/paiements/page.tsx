@@ -62,7 +62,7 @@ async function Payments({ searchParams }: Pick<PageProps<"/paiements">, "searchP
               <TableHeader><TableRow><TableHead>Dossier</TableHead><TableHead>Montant</TableHead><TableHead>Statut</TableHead><TableHead>État de paiement</TableHead></TableRow></TableHeader>
               <TableBody>{payments.items.map(payment => (
                 <TableRow key={payment.reportId}>
-                  <TableCell><Link className="font-medium text-primary hover:underline" href={`/signalements/${payment.reportId}?list=validation%3Dvalidated`}>{payment.reference}</Link></TableCell>
+                  <TableCell><Link className="font-medium text-primary hover:underline" href={`/signalements/${payment.reportId}?list=validation%3Dvalidated`}>Ouvrir le dossier</Link></TableCell>
                   <TableCell className="tabular-nums">{francs(payment.amount)}</TableCell>
                   <TableCell><Badge variant={payment.status === "paid" ? "success" : payment.status === "failed" ? "destructive" : "secondary"}>{DOSSIER_PAYMENT_STATUSES[payment.status]}</Badge></TableCell>
                   <TableCell>{payment.statementId ? <Link className="text-primary hover:underline" href={`/etats/${payment.statementId}`}>Ouvrir l’état</Link> : "—"}</TableCell>

@@ -95,7 +95,7 @@ async function Dashboard() {
             <Ledger>
               {recent.reports.slice(0, 7).map((report) => {
                 const { date } = reportedAtParts(report.reportedAt);
-                const title = reportTitle(report.title);
+                const title = reportTitle(report.title, report.identifier);
                 return (
                   <li key={report.id} className="relative flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-b py-3.5 hover:bg-muted/60 focus-within:bg-muted/60">
                     <span className="min-w-0 flex-1 basis-40 text-sm font-medium break-words">{title}</span>

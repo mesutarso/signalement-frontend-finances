@@ -6,20 +6,18 @@ import { readJson, readOutcome } from "@/lib/api";
 import { readCurrentAccount } from "@/modules/access/queries/read-current-account";
 import { Alert, AlertTitle } from "@/components/ui/alert";
 import { FilterBar } from "@/components/filter-bar";
-import { Field, FieldLabel } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
+import { ReportPicker } from "@/modules/report/ui/report-picker";
 import { Page, PageHeader, PageSection, PageSkeleton } from "@/components/page";
 import { Badge } from "@/components/ui/badge";
 import { Figure, Figures } from "@/components/figures";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { TablePagination } from "@/components/table-pagination";
 import { pageIndex, type DeclarantOverview, type ListPage } from "@/modules/report/model/administration";
-import { Ledger, LedgerEmpty } from "@/components/ledger";
+import { Ledger, LedgerEmpty, ReportLink } from "@/components/ledger";
 import { BeneficiaryForm } from "@/modules/report/ui/beneficiary-form";
 
-type Report = { id: string; reference: string; status: string };
+type Report = { id: string; status: string };
 type Situation = {
-  reference: string;
   rewardAmount: number;
   validatedCount: number;
   validatedRewardAmount: number;
@@ -53,7 +51,8 @@ async function Declarants({ searchParams }: Pick<PageProps<"/declarants">, "sear
     redirect("/signalements");
   }
   const params = await searchParams;
-  const reference = typeof params.reference === "string" ? params.reference.trim() : "";
+  const selectedReport = typeof params.signalement === "string" ? params.signalement.trim() : "";
+  const reference = selectedReport ? `id:${selectedReport}` : typeof params.reference === "string" ? params.reference.trim() : "";
   const page = pageIndex(params.page);
   const canReadOverview = account.role === "ADMINISTRATOR";
   const canVerify = can(account, "beneficiary.verify");
@@ -78,17 +77,13 @@ async function Declarants({ searchParams }: Pick<PageProps<"/declarants">, "sear
           submitLabel="Consulter"
           clearHref={reference ? "/declarants" : undefined}
         >
-          <Field className="min-w-0">
-            <FieldLabel htmlFor="declarant-reference">Référence du signalement</FieldLabel>
-            <Input id="declarant-reference" name="reference" type="search" defaultValue={reference} maxLength={80} required />
-          </Field>
+          <ReportPicker name="signalement" idAsValue />
         </FilterBar>
       </div>
       {!reference && canReadOverview ? <DeclarantTable overview={overview} /> : null}
       {!situation ? null : !situation.ok ? <Alert variant="destructive"><AlertTitle>{situation.message}</AlertTitle></Alert> : (
         <>
           <div className="grid gap-4">
-            <p className="ref text-sm font-medium">{situation.body.reference}</p>
             <Figures>
               <Figure label="Récompenses des dossiers validés (FC)" value={situation.body.validatedRewardAmount.toLocaleString("fr-FR")}
                 note={`${situation.body.validatedCount.toLocaleString("fr-FR")} dossier${situation.body.validatedCount > 1 ? "s validés" : " validé"}`} />
@@ -102,7 +97,7 @@ async function Declarants({ searchParams }: Pick<PageProps<"/declarants">, "sear
             <Ledger>
               {situation.body.reports.map((report) => (
                 <li key={report.id} className="flex flex-wrap items-center justify-between gap-3 border-b py-3 text-sm">
-                  <span className="ref">{report.reference}</span>
+                  {can(account, "report.read") ? <ReportLink id={report.id} /> : null}
                   <span className="flex items-center gap-4"><Badge variant={report.status === "confirmed" ? "success" : "secondary"}>{STATUS[report.status] ?? report.status}</Badge></span>
                 </li>
               ))}
@@ -136,7 +131,7 @@ function DeclarantTable({ overview }: { overview: ListPage<DeclarantOverview> | 
         <TableBody>{overview.items.map(item => (
           <TableRow key={item.reportId}>
             <TableCell>
-              <Link className="font-medium text-primary hover:underline" href={`/declarants?reference=${encodeURIComponent(item.reference)}`}>
+              <Link className="font-medium text-primary hover:underline" href={`/declarants?signalement=${item.reportId}`}>
                 {item.name ?? "Déclarant non renseigné"}
               </Link>
               {!item.identified ? <p className="text-xs text-muted-foreground">Compte non identifié</p> : null}

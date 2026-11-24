@@ -33,7 +33,7 @@ function SearchFilter({ value }: { value?: string }) {
   return (
     <Field className="min-w-0">
       <FieldLabel htmlFor="report-search">Recherche</FieldLabel>
-      <Input id="report-search" name="q" type="search" defaultValue={value} placeholder="Référence, établissement, NIF, facture…" />
+      <Input id="report-search" name="q" type="search" defaultValue={value} placeholder="Établissement, NIF, facture…" />
     </Field>
   );
 }

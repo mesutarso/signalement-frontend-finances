@@ -132,7 +132,7 @@ export function ReportScreen({
           back: { href: backHref, label: backHref.startsWith("/dossiers-valides") ? "Dossiers" : "Signalements" },
           title: (
             <span className="flex flex-wrap items-center gap-x-3 gap-y-2">
-              <span className="min-w-0 wrap-anywhere">{reportTitle(report.title)}</span>
+              <span className="min-w-0 wrap-anywhere">{reportTitle(report.title, report.identifier, report.referenceCode)}</span>
               <ValidationTag state={validationState} assignmentState={report.state} />
             </span>
           ),

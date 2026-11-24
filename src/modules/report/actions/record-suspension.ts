@@ -8,7 +8,7 @@ export async function recordSuspension(_current: string | null, formData: FormDa
   const reason = String(formData.get("reason") ?? "").trim();
   const action = String(formData.get("action") ?? "").trim();
   if (!reference || !reason) {
-    return "Indiquez la référence et le motif.";
+    return "Sélectionnez un signalement et indiquez le motif.";
   }
   const result = await writeJson("/api/reward-suspensions", "POST", { reference, action, reason });
   if (!result.ok) {
