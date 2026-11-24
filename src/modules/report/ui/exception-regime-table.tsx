@@ -13,7 +13,7 @@ import { Field, FieldLabel } from "@/components/ui/field";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
 import { authorizeExceptionPayment, readExceptionCandidates, validateExceptionPeriod } from "@/modules/report/actions/exception-regime";
-import type { ExceptionCandidate, ExceptionOrder, ExceptionPage, ExceptionPayment, ExceptionPeriod } from "@/modules/report/model/exception-regime";
+import type { ExceptionCandidate, ExceptionOrder, ExceptionPage, ExceptionPayment, ExceptionPeriod, ExceptionReport } from "@/modules/report/model/exception-regime";
 import { calendarLabel, findingLabel } from "@/modules/report/model/report";
 import { francs } from "@/modules/report/model/reward";
 import { sandboxTransferOperator, TRANSFER_OPERATORS, type TransferOperator } from "@/modules/report/model/transfer";
@@ -42,6 +42,24 @@ function PeriodLabel({ start, end }: ExceptionPeriod) {
 
 function NoticeAlert({ notice }: { notice: Notice }) {
   return <Alert variant={notice.error ? "destructive" : "default"} role={notice.error ? "alert" : "status"}><AlertTitle>{notice.text}</AlertTitle></Alert>;
+}
+
+function normalizeDecisionText(text: string) {
+  return text.normalize("NFC").toLocaleLowerCase("fr").trim().replace(/\s+/g, " ").replace(/[.!?…\s]+$/, "");
+}
+
+function DecisionCell({ state, finding, reason }: Pick<ExceptionReport, "state" | "finding" | "reason">) {
+  const category = state === "validated" ? findingLabel(finding) : null;
+  const detail = reason?.trim();
+  const showDetail = detail && (!category || normalizeDecisionText(category) !== normalizeDecisionText(detail));
+
+  return (
+    <TableCell className="min-w-48 max-w-72 whitespace-normal">
+      {category && <p className="font-medium">{category}</p>}
+      {showDetail && <p className="text-xs text-muted-foreground">{detail}</p>}
+      {!category && !detail && "—"}
+    </TableCell>
+  );
 }
 
 export function ExceptionRegimeTable({ data, period }: { data: ExceptionPage; period: ExceptionPeriod }) {
@@ -115,10 +133,7 @@ export function ExceptionRegimeTable({ data, period }: { data: ExceptionPage; pe
                   {validationLabels[row.state] ?? row.state}
                 </Badge>
               </TableCell>
-              <TableCell className="min-w-48 max-w-72 whitespace-normal">
-                {row.state === "validated" && row.finding && <p className="font-medium">{findingLabel(row.finding)}</p>}
-                {row.reason ? <p className="text-xs text-muted-foreground">{row.reason}</p> : row.state !== "validated" || !row.finding ? "—" : null}
-              </TableCell>
+              <DecisionCell state={row.state} finding={row.finding} reason={row.reason} />
               <TableCell className="text-right font-medium tabular-nums">{row.amount == null ? "—" : francs(row.amount)}</TableCell>
               <TableCell>
                 <Badge variant={row.paymentState === "paid" ? "success" : ["failed", "blocked"].includes(row.paymentState) ? "destructive"
