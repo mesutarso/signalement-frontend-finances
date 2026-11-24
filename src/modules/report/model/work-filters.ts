@@ -1,7 +1,7 @@
 import { normalizeReportStatusFilter } from "@/modules/report/model/assessment";
 
 export const WORK_FILTER_KEYS = ["agent", "q", "state", "scope", "validation", "start", "end", "vat", "reading", "missing", "duplicates", "photoRequest", "sort", "page", "origin"] as const;
-export const SIGNAL_FILTER_KEYS = ["agent", "q", "validation", "start", "end", "sort", "page"] as const;
+export const SIGNAL_FILTER_KEYS = ["agent", "q", "validation", "start", "end", "sort", "page", "reading"] as const;
 export type WorkFilters = Partial<Record<(typeof WORK_FILTER_KEYS)[number], string>>;
 export function workParams(filters: WorkFilters): URLSearchParams {
   const params = new URLSearchParams();

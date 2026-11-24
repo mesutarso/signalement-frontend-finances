@@ -16,6 +16,7 @@ import { TablePagination } from "@/components/table-pagination";
 import { RefreshButton } from "@/components/refresh-button";
 import { ImportControls, RetryImportButton } from "@/modules/report/ui/import-controls";
 import { ImportRefresh } from "@/modules/report/ui/import-refresh";
+import { retryFailedAnalyses } from "@/modules/report/actions/import-reports";
 
 type Run = { id: string; status: string; createdReports: number; skippedReports: number; createdPhotos: number; errorCode: string | null; startedAt: string; finishedAt: string | null; periodStart: string | null; periodEnd: string | null; triggerType: string };
 type History = { runs: Run[]; page: number; size: number; total: number; scheduleEnabled: boolean; cron: string; timezone: string; active: boolean; nextRun: string | null };
@@ -34,6 +35,7 @@ async function Imports({ searchParams }: Pick<PageProps<"/imports">, "searchPara
   const params = await searchParams;
   const number = Number(params.page ?? 0);
   const page = Number.isSafeInteger(number) && number >= 0 ? number : 0;
+  const retry = typeof params.relance === "string" ? params.relance : "";
   const [history, analysis] = await Promise.all([
     readJson<History>(`/api/report-imports?page=${page}`).catch(() => null),
     readJson<ReportAnalysisOverview>("/api/report-analysis/overview").catch(() => null),
@@ -53,7 +55,18 @@ async function Imports({ searchParams }: Pick<PageProps<"/imports">, "searchPara
               <Figure compact label="Terminées" value={analysis.completed.toLocaleString("fr-FR")} />
               <Figure compact label="Échecs" value={analysis.failed.toLocaleString("fr-FR")} />
             </Figures>
-            {analysis.failed > 0 ? <Button size="sm" variant="outline" className="w-fit" nativeButton={false} render={<Link href="/signalements?reading=failed" />}>Voir les analyses en échec</Button> : null}
+            {analysis.failed > 0 ? <div className="flex flex-wrap gap-2">
+              <Button size="sm" variant="outline" nativeButton={false} render={<Link href="/signalements?reading=failed" />}>Voir les analyses en échec</Button>
+              {analysis.enabled && account.role === "ADMINISTRATOR" ? (
+                <form action={retryFailedAnalyses}>
+                  <Button size="sm" type="submit">Relancer les échecs techniques</Button>
+                </form>
+              ) : null}
+            </div> : null}
+            {retry === "erreur" ? <p role="status" className="text-sm text-destructive">La relance n’a pas pu être confirmée.</p> : null}
+            {/^\d{1,9}$/.test(retry) ? <p role="status" className="text-sm text-muted-foreground">
+              {Number(retry) === 0 ? "Aucune analyse à relancer." : `${Number(retry).toLocaleString("fr-FR")} analyse(s) remise(s) en file.`}
+            </p> : null}
           </>
         )}
       </PageSection>
