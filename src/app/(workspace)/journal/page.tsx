@@ -7,6 +7,9 @@ import { readCurrentAccount } from "@/modules/access/queries/read-current-accoun
 import { reportedAtLabel } from "@/modules/report/model/report";
 import { Alert, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { FilterBar, FilterDateRange } from "@/components/filter-bar";
+import { Field, FieldLabel } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { TablePagination } from "@/components/table-pagination";
 import { Page, PageHeader, PageSkeleton } from "@/components/page";
@@ -166,27 +169,43 @@ async function Journal({ searchParams }: Pick<PageProps<"/journal">, "searchPara
   return (
     <Page className="max-w-6xl">
       <PageHeader title="Journal" />
-      <form className="flex flex-wrap items-end gap-2" method="get">
-        <label className="grid gap-2 text-[13px] font-medium">Du<input className="h-10 rounded-md border border-input bg-card px-3 text-[15px] font-normal" type="date" name="from" defaultValue={from} /></label>
-        <label className="grid gap-2 text-[13px] font-medium">Au<input className="h-10 rounded-md border border-input bg-card px-3 text-[15px] font-normal" type="date" name="to" defaultValue={to} /></label>
-        <label className="grid min-w-64 flex-1 gap-2 text-[13px] font-medium">Objet<input className="h-10 rounded-md border border-input bg-card px-3 text-[15px] font-normal" name="objectId" defaultValue={objectId} maxLength={80} /></label>
-        <Button type="submit" variant="outline">Filtrer</Button>
-      </form>
+      <FilterBar
+        key={JSON.stringify([objectId, from, to])}
+        action="/journal"
+        label="Filtres du journal"
+        clearHref={objectId || from || to ? "/journal" : undefined}
+        advanced={{
+          count: Number(Boolean(objectId)),
+          fields: (
+            <Field className="max-w-lg">
+              <FieldLabel htmlFor="filter-object">Objet</FieldLabel>
+              <Input id="filter-object" name="objectId" type="search" defaultValue={objectId} maxLength={80} />
+            </Field>
+          ),
+        }}
+      >
+        <FilterDateRange from={{ name: "from", value: from }} to={{ name: "to", value: to }} />
+      </FilterBar>
       {!journal ? <Alert variant="destructive"><AlertTitle>Le journal est indisponible. Actualisez la page.</AlertTitle></Alert> : (
         <div className="grid gap-4">
           <Table aria-label="Journal des actions">
             <TableHeader><TableRow><TableHead>Date</TableHead><TableHead>Action</TableHead><TableHead>Objet</TableHead><TableHead>Résultat</TableHead><TableHead>Auteur</TableHead></TableRow></TableHeader>
             <TableBody>
-              {journal.entries.map((entry) => (
-                <TableRow key={entry.id}>
+              {journal.entries.map((entry) => {
+                const href = journalHref(entry.objectType, entry.objectId);
+                const object = OBJECTS[entry.objectType] ?? entry.objectType;
+                return <TableRow key={entry.id}>
                   <TableCell className="text-muted-foreground tabular-nums">{reportedAtLabel(entry.recordedAt)}</TableCell>
                   <TableCell className="font-medium">{ACTIONS[entry.action] ?? entry.action}</TableCell>
-                  <TableCell>{OBJECTS[entry.objectType] ?? entry.objectType}{journalHref(entry.objectType, entry.objectId) ? <> · <Link className="text-primary underline-offset-4 hover:underline" href={journalHref(entry.objectType, entry.objectId) ?? "/journal"}>Ouvrir</Link></> : null}</TableCell>
+                  <TableCell><div className="flex items-center justify-between gap-3">
+                    <span>{object}</span>
+                    {href ? <Button variant="outline" size="sm" nativeButton={false} render={<Link href={href} />}>Ouvrir<span className="sr-only"> · {object}</span></Button> : null}
+                  </div></TableCell>
                   <TableCell><Badge variant={entry.result === "allowed" ? "success" : "destructive"}>{entry.result === "allowed" ? "Aboutie" : "Refusée"}</Badge></TableCell>
                   <TableCell>{entry.actorName ?? <span className="text-muted-foreground">—</span>}</TableCell>
-                </TableRow>
-              ))}
-              {journal.entries.length === 0 ? <TableRow><TableCell colSpan={5} className="py-10 text-center text-muted-foreground">Aucune action sur cette période.</TableCell></TableRow> : null}
+                </TableRow>;
+              })}
+              {journal.entries.length === 0 ? <TableRow><TableCell colSpan={5} className="py-10 text-center text-muted-foreground">Aucune action pour ces critères.</TableCell></TableRow> : null}
             </TableBody>
           </Table>
           <TablePagination page={journal.page} size={journal.size} total={journal.total} label="Pagination du journal" />

@@ -1,8 +1,7 @@
 import { ACCOUNT_ROLES, roleLabel, can } from "@/modules/access/model/account";
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
+import { FilterBar } from "@/components/filter-bar";
 import { Input } from "@/components/ui/input";
-import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
+import { Field, FieldLabel } from "@/components/ui/field";
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
@@ -51,14 +50,39 @@ async function AccountsContent({ searchParams }: Pick<PageProps<"/comptes">, "se
     <Page>
       <PageHeader title="Utilisateurs" actions={can(current, "user.create") ? <CreateAccountDialog /> : undefined} />
       <div className="flex flex-col gap-8">
-        <form action="/comptes" method="get" key={`${search}-${role}-${enabled}`}>
-          <FieldGroup className="grid items-end gap-3 sm:grid-cols-2 xl:grid-cols-[2fr_1fr_1fr_auto]">
-            <Field><FieldLabel htmlFor="search">Rechercher un compte</FieldLabel><Input id="search" name="search" defaultValue={search} maxLength={80} placeholder="Identifiant" className="h-10" /></Field>
-            <Field><FieldLabel htmlFor="filter-role">Rôle</FieldLabel><NativeSelect id="filter-role" name="role" size="sm" defaultValue={role} className="w-full"><NativeSelectOption value="">Tous les rôles</NativeSelectOption>{ACCOUNT_ROLES.map(role => <NativeSelectOption key={role} value={role}>{roleLabel(role)}</NativeSelectOption>)}</NativeSelect></Field>
-            <Field><FieldLabel htmlFor="filter-enabled">État</FieldLabel><NativeSelect id="filter-enabled" name="enabled" size="sm" defaultValue={enabled} className="w-full"><NativeSelectOption value="">Tous les états</NativeSelectOption><NativeSelectOption value="true">Actif</NativeSelectOption><NativeSelectOption value="false">Inactif</NativeSelectOption></NativeSelect></Field>
-            <div className="flex gap-2"><Button type="submit" variant="outline">Filtrer</Button>{search || role || enabled ? <Button variant="ghost" nativeButton={false} render={<Link href="/comptes" />}>Effacer</Button> : null}</div>
-          </FieldGroup>
-        </form>
+        <FilterBar
+          key={JSON.stringify([search, role, enabled])}
+          action="/comptes"
+          label="Filtres des utilisateurs"
+          clearHref={search || role || enabled ? "/comptes" : undefined}
+          secondary={
+            <Field className="min-w-0">
+              <FieldLabel htmlFor="filter-role">Rôle</FieldLabel>
+              <NativeSelect id="filter-role" name="role" defaultValue={role} className="w-full">
+                <NativeSelectOption value="">Tous les rôles</NativeSelectOption>
+                {ACCOUNT_ROLES.map((role) => <NativeSelectOption key={role} value={role}>{roleLabel(role)}</NativeSelectOption>)}
+              </NativeSelect>
+            </Field>
+          }
+          advanced={{
+            count: Number(Boolean(enabled)),
+            fields: (
+              <Field className="max-w-xs">
+                <FieldLabel htmlFor="filter-enabled">État</FieldLabel>
+                <NativeSelect id="filter-enabled" name="enabled" defaultValue={enabled} className="w-full">
+                  <NativeSelectOption value="">Tous les états</NativeSelectOption>
+                  <NativeSelectOption value="true">Actif</NativeSelectOption>
+                  <NativeSelectOption value="false">Inactif</NativeSelectOption>
+                </NativeSelect>
+              </Field>
+            ),
+          }}
+        >
+          <Field className="min-w-0">
+            <FieldLabel htmlFor="search">Recherche</FieldLabel>
+            <Input id="search" name="search" type="search" defaultValue={search} maxLength={80} placeholder="Identifiant" />
+          </Field>
+        </FilterBar>
         <AccountsTable page={page} currentId={current.id} canManage={can(current, "user.update")} />
       </div>
     </Page>

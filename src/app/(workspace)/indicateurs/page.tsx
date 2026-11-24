@@ -7,7 +7,9 @@ import { readJson } from "@/lib/api";
 import { readCurrentAccount } from "@/modules/access/queries/read-current-account";
 import { calendarLabel, findingLabel, reportedAtLabel } from "@/modules/report/model/report";
 import { Alert, AlertTitle } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
+import { FilterBar, FilterDateRange } from "@/components/filter-bar";
+import { Field, FieldLabel } from "@/components/ui/field";
+import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
 import { Figure, Figures as FigureGrid } from "@/components/figures";
 import { Page, PageHeader, PageSection, PageSkeleton } from "@/components/page";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -88,17 +90,23 @@ async function Indicators({ searchParams }: Pick<PageProps<"/indicateurs">, "sea
       <PageSection title="Rapports archivés">
         {reports.length === 0 ? <p className="text-sm text-muted-foreground">Aucun rapport archivé.</p> : reports.map(report => <p key={report.id} className="text-sm">{reportSentence(report.kind === "weekly" ? "Rapport hebdomadaire" : "Note mensuelle", report.figures)} Archivé le {reportedAtLabel(report.generatedAt)}.</p>)}
       </PageSection>
-      <form className="flex flex-wrap items-end gap-2" method="get">
-        <label className="grid gap-2 text-[13px] font-medium">Du<input className="h-10 rounded-md border border-input bg-card px-3 text-[15px] font-normal" type="date" name="from" defaultValue={from} /></label>
-        <label className="grid gap-2 text-[13px] font-medium">Au<input className="h-10 rounded-md border border-input bg-card px-3 text-[15px] font-normal" type="date" name="to" defaultValue={to} /></label>
-        <label className="grid gap-2 text-[13px] font-medium">Constat
-          <select className="h-10 rounded-md border border-input bg-card px-3 text-[15px] font-normal" name="finding" defaultValue={finding}>
-            <option value="">Tous les constats</option>
-            {FINDINGS.map((item) => <option key={item} value={item}>{findingLabel(item)}</option>)}
-          </select>
-        </label>
-        <Button type="submit" variant="outline">Filtrer</Button>
-      </form>
+      <FilterBar
+        key={JSON.stringify([finding, from, to])}
+        action="/indicateurs"
+        label="Filtres des indicateurs"
+        clearHref={finding || from || to ? "/indicateurs" : undefined}
+        secondary={
+          <Field className="min-w-0">
+            <FieldLabel htmlFor="filter-finding">Constat</FieldLabel>
+            <NativeSelect id="filter-finding" name="finding" defaultValue={finding} className="w-full">
+              <NativeSelectOption value="">Tous les constats</NativeSelectOption>
+              {FINDINGS.map((item) => <NativeSelectOption key={item} value={item}>{findingLabel(item)}</NativeSelectOption>)}
+            </NativeSelect>
+          </Field>
+        }
+      >
+        <FilterDateRange from={{ name: "from", value: from }} to={{ name: "to", value: to }} />
+      </FilterBar>
       {!indicators ? <Alert variant="destructive"><AlertTitle>Les indicateurs sont indisponibles. Actualisez la page.</AlertTitle></Alert> : (
         <>
           <div className="grid gap-3">
@@ -118,7 +126,7 @@ async function Indicators({ searchParams }: Pick<PageProps<"/indicateurs">, "sea
                   {columns.map((column) => (
                     <TableHead key={column.title} className="text-right whitespace-normal">
                       <span className="block text-foreground">{column.title}</span>
-                      <span className="block text-xs font-normal">{shortPeriod(column.figures)}</span>
+                      <span className="block text-xs font-normal text-muted-foreground">{shortPeriod(column.figures)}</span>
                     </TableHead>
                   ))}
                 </TableRow>
