@@ -35,7 +35,12 @@ function refreshAssessment(id: string): void {
   revalidatePath("/signalements");
   revalidatePath("/dossiers-valides");
   revalidatePath(`/signalements/${id}`);
+  revalidatePath("/declarants");
+  revalidatePath("/dossiers");
+  revalidatePath("/dossiers/entreprise");
+  revalidatePath("/contribuables");
   revalidatePath("/recompenses");
+  revalidatePath("/paiements");
   revalidatePath("/indicateurs");
 }
 

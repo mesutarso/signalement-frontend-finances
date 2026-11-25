@@ -67,15 +67,17 @@ export function FilterBar({
 export function FilterDateRange({
   from,
   to,
+  legend = "Plage de dates",
   className,
 }: {
   from: { name: string; value?: string };
   to: { name: string; value?: string };
+  legend?: string;
   className?: string;
 }) {
   return (
     <FieldSet className={cn("min-w-0", className)}>
-      <FieldLegend>Plage de dates</FieldLegend>
+      <FieldLegend>{legend}</FieldLegend>
       <FieldGroup className="grid grid-cols-2 gap-3">
         <Field className="min-w-0">
           <FieldLabel htmlFor={`filter-${from.name}`}>Du</FieldLabel>

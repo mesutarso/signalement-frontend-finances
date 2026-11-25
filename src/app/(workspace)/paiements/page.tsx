@@ -24,7 +24,8 @@ export default function PaymentsPage({ searchParams }: PageProps<"/paiements">) 
 async function Payments({ searchParams }: Pick<PageProps<"/paiements">, "searchParams">) {
   const account = await readCurrentAccount();
   if (!account) redirect("/connexion");
-  if (!can(account, "payment.read") || !can(account, "report.read")) redirect("/signalements");
+  if (!can(account, "payment.read")) redirect("/signalements");
+  if (!can(account, "report.read")) redirect("/paiements/journal");
 
   const params = await searchParams;
   const page = pageIndex(params.page);
@@ -38,6 +39,7 @@ async function Payments({ searchParams }: Pick<PageProps<"/paiements">, "searchP
     <Page>
       <PageHeader title="Paiements" actions={
         <>
+          <Button nativeButton={false} render={<Link href="/paiements/journal" />}>Journal des transactions</Button>
           <Button variant="outline" nativeButton={false} render={<Link href="/etats" />}>États de paiement</Button>
           {can(account, "sample.read") ? <Button variant="outline" nativeButton={false} render={<Link href="/echantillons" />}>Échantillons</Button> : null}
         </>

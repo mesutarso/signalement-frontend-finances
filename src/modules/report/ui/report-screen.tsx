@@ -35,7 +35,7 @@ export function ReportScreen({
   assessment: AssessmentView | null;
   followUp?: ReactNode;
   followUpOpen?: boolean;
-  backHref?: string;
+  backHref?: string | null;
 }) {
   const reporterName = formatDeclarantName(report.reporterName);
   const hasReporter = reporterName || report.reporterEmail || report.reporterPhone;
@@ -129,7 +129,7 @@ export function ReportScreen({
         key={report.id}
         header={{
           compact: true,
-          back: { href: backHref, label: backHref.startsWith("/dossiers-valides") ? "Dossiers" : "Signalements" },
+          back: backHref ? { href: backHref, label: backHref.startsWith("/dossiers-valides") ? "Dossiers validés" : "Signalements" } : undefined,
           title: (
             <span className="flex flex-wrap items-center gap-x-3 gap-y-2">
               <span className="min-w-0 wrap-anywhere">{reportTitle(report.title, report.identifier, report.referenceCode)}</span>

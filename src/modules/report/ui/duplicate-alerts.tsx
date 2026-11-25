@@ -66,9 +66,9 @@ function DuplicateCard({
         </li>)}</ol>
       </section> : null}
       <p>{alert.explanation}</p>
-      {alert.otherIdentifier ? (
+      {alert.otherReportId ? (
         <Button className="w-fit" variant="outline" size="sm" nativeButton={false} render={<Link href={`/signalements/${alert.otherReportId}`} />}>
-          Voir l’autre signalement
+          {alert.status === "confirmed" && alert.priorityReportId === alert.otherReportId ? "Voir le signalement conservé" : "Voir l’autre signalement"}
         </Button>
       ) : null}
       {priority ? <p className="font-medium">{priority}</p> : null}

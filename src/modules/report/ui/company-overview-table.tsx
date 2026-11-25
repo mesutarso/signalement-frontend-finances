@@ -1,10 +1,15 @@
+import Link from "next/link";
 import { LedgerEmpty } from "@/components/ledger";
 import { TablePagination } from "@/components/table-pagination";
 import { Alert, AlertTitle } from "@/components/ui/alert";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import type { CompanyOverview, ListPage } from "@/modules/report/model/administration";
 
-export function CompanyOverviewTable({ overview }: { overview: ListPage<CompanyOverview> | null }) {
+export function CompanyOverviewTable({ overview, source, query }: {
+  overview: ListPage<CompanyOverview> | null;
+  source?: "dossiers" | "contribuables";
+  query?: string;
+}) {
   if (!overview) return <Alert variant="destructive"><AlertTitle>Les entreprises sont indisponibles. Actualisez la page.</AlertTitle></Alert>;
   if (!overview.items.length) return <LedgerEmpty>Aucune entreprise sur cette page.</LedgerEmpty>;
 
@@ -21,10 +26,13 @@ export function CompanyOverviewTable({ overview }: { overview: ListPage<CompanyO
             <TableHead scope="col">Doublons</TableHead>
           </TableRow>
         </TableHeader>
-        <TableBody>{overview.items.map(item => (
-          <TableRow key={item.taxId ? `nif:${item.taxId}` : `nom:${item.name}`}>
+        <TableBody>{overview.items.map(item => {
+          const name = item.name ?? "Nom non renseigné";
+          const href = source ? companyHref(item, source, overview.page, query) : null;
+          return <TableRow key={item.taxId ? `nif:${item.taxId}` : `nom:${item.name}`} className={href ? "relative" : undefined}>
             <TableCell>
-              <p className="font-medium">{item.name ?? "Nom non renseigné"}</p>
+              {href ? <Link href={href} className="font-medium text-primary hover:underline after:absolute after:inset-0">{name}</Link>
+                : <p className="font-medium">{name}</p>}
               <p className="text-xs text-muted-foreground">{item.taxId ?? "NIF non renseigné"}</p>
             </TableCell>
             <TableCell className="tabular-nums">{item.total}</TableCell>
@@ -32,10 +40,19 @@ export function CompanyOverviewTable({ overview }: { overview: ListPage<CompanyO
             <TableCell className="tabular-nums">{item.rejected}</TableCell>
             <TableCell className="tabular-nums">{item.pending}</TableCell>
             <TableCell className="tabular-nums">{item.duplicates}</TableCell>
-          </TableRow>
-        ))}</TableBody>
+          </TableRow>;
+        })}</TableBody>
       </Table>
       <TablePagination page={overview.page} size={overview.size} total={overview.total} label="Pagination des entreprises" />
     </div>
   );
+}
+function companyHref(company: CompanyOverview, source: "dossiers" | "contribuables", page: number, query?: string) {
+  const params = new URLSearchParams({ origine: source });
+  if (company.taxId) params.set("nif", company.taxId);
+  else if (company.name) params.set("nom", company.name);
+  else return null;
+  if (page > 0) params.set("retourPage", String(page));
+  if (query) params.set("retourRecherche", query);
+  return `/dossiers/entreprise?${params}`;
 }

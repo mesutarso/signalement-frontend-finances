@@ -36,44 +36,23 @@ async function Imports({ searchParams }: Pick<PageProps<"/imports">, "searchPara
   const number = Number(params.page ?? 0);
   const page = Number.isSafeInteger(number) && number >= 0 ? number : 0;
   const retry = typeof params.relance === "string" ? params.relance : "";
-  const [history, analysis] = await Promise.all([
+  const [history, analysis, firstPage] = await Promise.all([
     readJson<History>(`/api/report-imports?page=${page}`).catch(() => null),
     readJson<ReportAnalysisOverview>("/api/report-analysis/overview").catch(() => null),
+    page > 0 ? readJson<History>("/api/report-imports").catch(() => null) : null,
   ]);
+  const lastImport = (page === 0 ? history : firstPage)?.runs[0];
   const today = new Intl.DateTimeFormat("en-CA", { timeZone: "Africa/Kinshasa", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
   return (
     <Page>
       <ImportRefresh />
-      <PageHeader title="Suivi des signalements" actions={<RefreshButton />} />
-      <PageSection title="Analyse des factures">
-        {!analysis ? <Alert variant="destructive"><AlertTitle>Le suivi de l’analyse est indisponible.</AlertTitle></Alert> : (
-          <>
-            <p className="text-sm text-muted-foreground">Analyse automatique {analysis.enabled ? "activée" : "en pause"}</p>
-            <Figures columns={4}>
-              <Figure compact label="En attente" value={analysis.queued.toLocaleString("fr-FR")} />
-              <Figure compact label="En cours" value={analysis.running.toLocaleString("fr-FR")} />
-              <Figure compact label="Terminées" value={analysis.completed.toLocaleString("fr-FR")} />
-              <Figure compact label="Échecs" value={analysis.failed.toLocaleString("fr-FR")} />
-            </Figures>
-            {analysis.failed > 0 ? <div className="flex flex-wrap gap-2">
-              <Button size="sm" variant="outline" nativeButton={false} render={<Link href="/signalements?reading=failed" />}>Voir les analyses en échec</Button>
-              {analysis.enabled && account.role === "ADMINISTRATOR" ? (
-                <form action={retryFailedAnalyses}>
-                  <Button size="sm" type="submit">Relancer les échecs techniques</Button>
-                </form>
-              ) : null}
-            </div> : null}
-            {retry === "erreur" ? <p role="status" className="text-sm text-destructive">La relance n’a pas pu être confirmée.</p> : null}
-            {/^\d{1,9}$/.test(retry) ? <p role="status" className="text-sm text-muted-foreground">
-              {Number(retry) === 0 ? "Aucune analyse à relancer." : `${Number(retry).toLocaleString("fr-FR")} analyse(s) remise(s) en file.`}
-            </p> : null}
-          </>
-        )}
-      </PageSection>
-      <PageSection title="Réception des signalements">
+      <PageHeader title="Mise à jour des données via l’API FACNO" actions={<RefreshButton />} />
+      <PageSection title="Import des signalements FACNO">
       {!history ? <Alert variant="destructive"><AlertTitle>Le suivi des imports est indisponible. Actualisez la page.</AlertTitle></Alert> : (
         <>
-          <Figures columns={3}>
+          <Figures>
+            <Figure compact label="Dernier import" value={lastImport ? time(lastImport.finishedAt ?? lastImport.startedAt) : "Aucun import"}
+              note={lastImport ? statuses[lastImport.status] ?? lastImport.status : undefined} />
             <Figure compact label="Planification" value={history.scheduleEnabled ? "Activée" : "Désactivée"} note="Toutes les 3 heures · Kinshasa" />
             <Figure compact label="Prochain lancement" value={history.nextRun ? time(history.nextRun) : "Non planifié"} />
             <Figure compact label="Traitement" value={history.active ? "Import en cours" : "Disponible"} />
@@ -115,6 +94,31 @@ async function Imports({ searchParams }: Pick<PageProps<"/imports">, "searchPara
           </PageSection>
         </>
       )}
+      </PageSection>
+      <PageSection title="Analyse des factures">
+        {!analysis ? <Alert variant="destructive"><AlertTitle>Le suivi de l’analyse est indisponible.</AlertTitle></Alert> : (
+          <>
+            <p className="text-sm text-muted-foreground">Analyse automatique {analysis.enabled ? "activée" : "en pause"}</p>
+            <Figures columns={4}>
+              <Figure compact label="En attente" value={analysis.queued.toLocaleString("fr-FR")} />
+              <Figure compact label="En cours" value={analysis.running.toLocaleString("fr-FR")} />
+              <Figure compact label="Terminées" value={analysis.completed.toLocaleString("fr-FR")} />
+              <Figure compact label="Échecs" value={analysis.failed.toLocaleString("fr-FR")} />
+            </Figures>
+            {analysis.failed > 0 ? <div className="flex flex-wrap gap-2">
+              <Button size="sm" variant="outline" nativeButton={false} render={<Link href="/signalements?reading=failed" />}>Voir les analyses en échec</Button>
+              {analysis.enabled && account.role === "ADMINISTRATOR" ? (
+                <form action={retryFailedAnalyses}>
+                  <Button size="sm" type="submit">Relancer les échecs techniques</Button>
+                </form>
+              ) : null}
+            </div> : null}
+            {retry === "erreur" ? <p role="status" className="text-sm text-destructive">La relance n’a pas pu être confirmée.</p> : null}
+            {/^\d{1,9}$/.test(retry) ? <p role="status" className="text-sm text-muted-foreground">
+              {Number(retry) === 0 ? "Aucune analyse à relancer." : `${Number(retry).toLocaleString("fr-FR")} analyse(s) remise(s) en file.`}
+            </p> : null}
+          </>
+        )}
       </PageSection>
       {account.role === "ADMINISTRATOR" ? <div className="flex flex-wrap gap-2">
         <Button variant="outline" nativeButton={false} render={<Link href="/indicateurs" />}>Indicateurs</Button>

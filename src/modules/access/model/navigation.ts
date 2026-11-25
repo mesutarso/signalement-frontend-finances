@@ -53,7 +53,7 @@ const SECTIONS: NavSection[] = [
     items: [
       { href: "/signalements", label: "Signalements", icon: InboxIcon, permission: "report.read", keywords: "file de travail factures" },
       { href: "/dossiers-valides", label: "Dossiers validés", icon: FolderOpenIcon, permission: "report.read", keywords: "signalements acceptés" },
-      { href: "/imports", label: "Imports", icon: FileImportIcon, permission: "import.read", keywords: "suivi récupération" },
+      { href: "/imports", label: "Mise à jour des données via l’API FACNO", icon: FileImportIcon, permission: "import.read", keywords: "suivi récupération" },
       { href: "/dossiers", label: "Établissements", icon: Building03Icon, permission: "dossier.read", keywords: "entreprises vendeurs constats numéro d'impôt" },
       { href: "/corrections", label: "Corrections", icon: PencilEdit02Icon, permission: "correction.read" },
       { href: "/reexamens", label: "Réexamens", icon: RepeatIcon, permission: "reexam.read", keywords: "contestation demande" },
@@ -83,6 +83,7 @@ const SECTIONS: NavSection[] = [
     id: "controle",
     label: "Contrôle",
     items: [
+      { href: "/rapports", label: "Rapports", icon: LegalDocument01Icon, permission: "report.export", keywords: "signalements export CSV services opérationnels" },
       { href: "/indicateurs", label: "Indicateurs", icon: ChartLineData01Icon, permission: "indicator.read", keywords: "statistiques rapport semaine mois" },
       { href: "/supervision", label: "Contrôle", icon: SecurityCheckIcon, permission: "supervision.read", keywords: "supervision revoir décisions" },
       { href: "/indices", label: "Indices", icon: SearchList01Icon, permission: "abuse.read", keywords: "abus fraude suspension" },
@@ -98,7 +99,7 @@ const SECTIONS: NavSection[] = [
 ];
 
 const REPORTS: NavItem = { href: "/signalements", label: "Signalements", icon: InboxIcon, permission: "report.read", keywords: "file de travail factures" };
-const DOSSIERS: NavItem = { href: "/dossiers-valides", label: "Dossiers", icon: FolderOpenIcon, permission: "report.read", keywords: "signalements validés" };
+const DOSSIERS: NavItem = { href: "/dossiers-valides", label: "Dossiers validés", icon: FolderOpenIcon, permission: "report.read", keywords: "signalements validés" };
 
 const WORKSPACE_MENU: NavSection = {
   id: "activite",
@@ -106,6 +107,7 @@ const WORKSPACE_MENU: NavSection = {
   items: [
     REPORTS,
     DOSSIERS,
+    { href: "/rapports", label: "Rapports", icon: LegalDocument01Icon, permission: "report.export", keywords: "signalements export CSV services opérationnels" },
     { href: "/recompenses", label: "Récompenses", icon: Award01Icon, permission: "reward.read" },
     { href: "/paiements", label: "Paiements", icon: Invoice01Icon, permission: "payment.read" },
     { href: "/regime-exception", label: "Régime d’exception", icon: LegalDocument01Icon, keywords: "validation et paiement groupés" },
@@ -121,7 +123,7 @@ const ADMIN_MENU: NavSection = {
     { href: "/comptes", label: "Utilisateurs", icon: UserSettings01Icon, permission: "user.read" },
     { href: "/securite", label: "Sécurité", icon: SecurityCheckIcon, permission: "rbac.read" },
     { href: "/parametres", label: "Paramètres", icon: LegalDocument01Icon, permission: "setting.read" },
-    { href: "/imports", label: "Suivi des signalements", icon: ChartLineData01Icon, permission: "import.read", keywords: "réception FACNO OCR" },
+    { href: "/imports", label: "Mise à jour des données via l’API FACNO", icon: ChartLineData01Icon, permission: "import.read", keywords: "réception FACNO OCR" },
   ],
 };
 

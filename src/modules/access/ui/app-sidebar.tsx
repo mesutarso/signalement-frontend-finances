@@ -3,6 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
+import { cn } from "cn";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Logout01Icon } from "@hugeicons/core-free-icons";
 import {
@@ -70,7 +71,10 @@ export function AppSidebar({ account }: { account: Account | null }) {
                         isActive={active}
                         tooltip={item.label}
                         onClick={() => setOpenMobile(false)}
-                        className="group-data-[collapsible=icon]:data-active:w-[52px]! group-data-[collapsible=icon]:data-active:justify-start group-data-[collapsible=icon]:data-active:pl-3!"
+                        className={cn(
+                          "group-data-[collapsible=icon]:data-active:w-[52px]! group-data-[collapsible=icon]:data-active:justify-start group-data-[collapsible=icon]:data-active:pl-3!",
+                          item.href === "/imports" && "h-auto min-h-10 [&>span:last-child]:whitespace-normal!"
+                        )}
                         render={<Link href={item.href} />}
                       >
                         <HugeiconsIcon icon={item.icon} strokeWidth={1.75} />

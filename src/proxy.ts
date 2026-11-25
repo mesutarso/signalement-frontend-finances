@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-const PROTECTED = ["/compte", "/comptes", "/securite", "/parametres", "/paiements", "/signalements", "/imports", "/indices", "/journal", "/supervision", "/dossiers", "/dossiers-valides", "/courriers", "/recompenses", "/regime-exception", "/etats", "/contribuables", "/echantillons", "/tirages", "/declarants", "/indicateurs", "/corrections", "/reexamens", "/messages", "/regles"];
+const PROTECTED = ["/compte", "/comptes", "/securite", "/parametres", "/paiements", "/signalements", "/imports", "/indices", "/journal", "/supervision", "/dossiers", "/dossiers-valides", "/rapports", "/courriers", "/recompenses", "/regime-exception", "/etats", "/contribuables", "/echantillons", "/tirages", "/declarants", "/indicateurs", "/corrections", "/reexamens", "/messages", "/regles"];
 
 function protectedPath(pathname: string): boolean {
   return PROTECTED.some((path) => pathname === path || pathname.startsWith(`${path}/`));
@@ -51,6 +51,7 @@ export const config = {
     "/securite",
     "/parametres",
     "/paiements",
+    "/paiements/:path*",
     "/signalements",
     "/signalements/:path*",
     "/imports",
@@ -64,6 +65,8 @@ export const config = {
     "/dossiers",
     "/dossiers/:path*",
     "/dossiers-valides",
+    "/rapports",
+    "/rapports/:path*",
     "/courriers",
     "/courriers/:path*",
     "/recompenses",

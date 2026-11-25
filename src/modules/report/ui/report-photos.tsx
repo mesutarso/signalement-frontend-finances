@@ -45,7 +45,7 @@ export function ReportWorkspace({
   administration: ReactNode;
   showAdministration?: boolean;
 }) {
-  const [activeTab, setActiveTab] = useState<Tabs.Tab.Value>(showAdministration && administration ? "administration" : "signalement");
+  const [activeTab, setActiveTab] = useState<Tabs.Tab.Value>(showAdministration && administration ? "administration" : "analysis");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const analysisIndex = photos.findIndex((photo) => photo.id === analysisPhotoId);
   const selectedIndex = photos.findIndex((photo) => photo.id === selectedId);
@@ -90,9 +90,9 @@ export function ReportWorkspace({
         </section>
         <Tabs.Root value={activeTab} onValueChange={setActiveTab} className="min-w-0 rounded-lg border bg-card">
           <Tabs.List aria-label="Informations du dossier" className="flex min-w-0 overflow-x-auto border-b px-2">
+            <Tabs.Tab value="analysis" className={tabClassName}>Analyse automatique</Tabs.Tab>
             <Tabs.Tab value="signalement" className={tabClassName}>Signalement</Tabs.Tab>
             <Tabs.Tab value="ocr" className={tabClassName}>OCR</Tabs.Tab>
-            <Tabs.Tab value="analysis" className={tabClassName}>Analyse automatique</Tabs.Tab>
             {administration ? <Tabs.Tab value="administration" className={tabClassName}>Suivi administratif</Tabs.Tab> : null}
           </Tabs.List>
           <Tabs.Panel value="signalement" className="min-w-0 p-4 sm:p-5">{information}</Tabs.Panel>

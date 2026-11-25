@@ -4,7 +4,7 @@ import { useActionState, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
-import { checkTransfer, transferPayment } from "@/modules/report/actions/transfer-payment";
+import { checkTransfer, retryFailedTransfer, transferPayment } from "@/modules/report/actions/transfer-payment";
 import { TRANSFER_OPERATORS } from "@/modules/report/model/transfer";
 
 export function TransferForm({ requestId: initialId, statementId, lineId, sandbox = false, test = false }: {
@@ -44,6 +44,16 @@ export function TransferCheckForm({ id, statementId }: { id: string; statementId
   return <form action={action} className="grid justify-items-start gap-2">
     <input type="hidden" name="transferId" value={id} /><input type="hidden" name="statementId" value={statementId ?? ""} />
     <Button type="submit" variant="outline" size="sm" disabled={pending}>{pending ? "Vérification…" : "Vérifier le statut"}</Button>
+    {message ? <p role="status" className="text-sm">{message}</p> : null}
+  </form>;
+}
+
+export function TransferRetryForm({ id, statementId }: { id: string; statementId: string }) {
+  const [message, action, pending] = useActionState(retryFailedTransfer, null);
+  return <form action={action} className="grid justify-items-start gap-2">
+    <input type="hidden" name="transferId" value={id} />
+    <input type="hidden" name="statementId" value={statementId} />
+    <Button type="submit" variant="outline" size="sm" disabled={pending}>{pending ? "Relance en cours…" : "Relancer le versement"}</Button>
     {message ? <p role="status" className="text-sm">{message}</p> : null}
   </form>;
 }

@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { can } from "@/modules/access/model/account";
 import { TransferPanel } from "@/modules/report/ui/transfer-panel";
 import type { PaymentService } from "@/modules/report/model/transfer";
@@ -13,6 +14,7 @@ import { Alert, AlertTitle } from "@/components/ui/alert";
 import { TablePagination } from "@/components/table-pagination";
 import { Page, PageHeader, PageSkeleton } from "@/components/page";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Ledger, LedgerEmpty, LedgerItem, LedgerLink } from "@/components/ledger";
 
 type Page = { items: PaymentItem[]; page: number; size: number; total: number };
@@ -39,7 +41,10 @@ async function Statements({ searchParams }: Pick<PageProps<"/etats">, "searchPar
     <Page className="max-w-6xl">
       <PageHeader
         title="États de paiement"
-        actions={canPrepare ? <PreparePaymentForm /> : undefined}
+        actions={<>
+          <Button variant="outline" nativeButton={false} render={<Link href="/paiements/journal" />}>Journal des transactions</Button>
+          {canPrepare ? <PreparePaymentForm /> : null}
+        </>}
       />
       {!statements ? <Alert variant="destructive"><AlertTitle>Les états sont indisponibles. Actualisez la page.</AlertTitle></Alert> : statements.items.length === 0 ? <LedgerEmpty>Aucun état de paiement.</LedgerEmpty> : (
         <div className="grid gap-5">

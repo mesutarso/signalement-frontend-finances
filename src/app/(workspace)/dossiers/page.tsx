@@ -63,7 +63,7 @@ async function Companies({ page, query }: { page: number; query: string }) {
   if (query) params.set("q", query);
   const overview = await readJson<ListPage<CompanyOverview>>(`/api/seller-files/companies?${params}`).catch(() => null);
   if (query && overview?.total === 0) return <LedgerEmpty>Aucun établissement ne correspond à la recherche.</LedgerEmpty>;
-  return <CompanyOverviewTable overview={overview} />;
+  return <CompanyOverviewTable overview={overview} source="dossiers" query={query} />;
 }
 
 async function Findings({ status, page }: { status: string; page: number }) {

@@ -65,7 +65,7 @@ async function Taxpayers({ searchParams }: Pick<PageProps<"/contribuables">, "se
           </FilterBar>
         </div>
       ) : null}
-      {companies ? <CompanyOverviewTable overview={overview} /> : !taxpayers ? <Alert variant="destructive"><AlertTitle>Les contribuables sont indisponibles. Actualisez la page.</AlertTitle></Alert> : taxpayers.items.length === 0 ? <LedgerEmpty>Aucun contribuable.</LedgerEmpty> : (
+      {companies ? <CompanyOverviewTable overview={overview} source={can(account, "dossier.read") ? "contribuables" : undefined} /> : !taxpayers ? <Alert variant="destructive"><AlertTitle>Les contribuables sont indisponibles. Actualisez la page.</AlertTitle></Alert> : taxpayers.items.length === 0 ? <LedgerEmpty>Aucun contribuable.</LedgerEmpty> : (
         <Ledger>
           {taxpayers.items.map((taxpayer) => (
             <LedgerItem
